@@ -1,0 +1,1092 @@
+set time = 1
+setenv pget /bin/cp
+setenv pput /bin/cp
+setenv mm 06
+setenv SG sig2
+setenv NL 30
+setenv P /Net/kronos/ddmitry/hycom/TSIS/relax
+setenv S /Net/kronos/ddmitry/hycom/TSIS/relax/SCRATCH
+setenv D /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp
+setenv DT /Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03
+setenv ALL /nexsan/people/ddmitry/Net_ocean/HYCOM/hycom/ALL4
+setenv DUMP /Net/kronos/ddmitry/hycom/TSIS/relax/DUMP
+setenv DOUT /Net/kronos/ddmitry/hycom/TSIS/relax
+mkdir -pv /Net/kronos/ddmitry/hycom/TSIS/relax/DUMP
+mkdir -pv /Net/kronos/ddmitry/hycom/TSIS/relax/SCRATCH
+cd /Net/kronos/ddmitry/hycom/TSIS/relax/SCRATCH
+touch relax_sig2 blkdat.input fort.51 fort.51A
+/bin/rm relax_sig2 blkdat.input fort.51 fort.51A
+touch fort.73 fort.73A fort.72 fort.72A
+/bin/rm -f fort.73 fort.73A fort.72 fort.72A
+setenv dstamp 01052011
+setenv flnm zlev_hycom_sig2_01052011
+[1] 51810
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/temp_zlev_hycom_sig2_01052011.b fort.72
+[2] 51811
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/temp_zlev_hycom_sig2_01052011.a fort.72A
+[3] 51812
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/saln_zlev_hycom_sig2_01052011.b fort.73
+[4] 51813
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/saln_zlev_hycom_sig2_01052011.a fort.73A
+touch fort.51 fort.51A
+[3]    Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/saln_zlev_hycom_sig2_01052011.b fort.73
+[1]    Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/temp_zlev_hycom_sig2_01052011.b fort.72
+if ( -z fort.51 ) then
+[5] 51815
+endif
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03/regional.depth.b fort.51
+if ( -z fort.51A ) then
+[6] 51816
+[5]    Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03/regional.depth.b fort.51
+endif
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03/regional.depth.a fort.51A
+touch regional.grid.a regional.grid.b
+if ( -z regional.grid.b ) then
+if ( -z regional.grid.a ) then
+[6]    Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03/regional.depth.a fort.51A
+touch blkdat.input
+if ( -z blkdat.input ) then
+[5] 51819
+endif
+/bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/../blkdat.input_clim blkdat.input
+setenv HEX relaxi
+touch relaxi
+[5]    Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/../blkdat.input_clim blkdat.input
+if ( -z relaxi ) then
+[5] 51821
+endif
+/bin/cp /nexsan/people/ddmitry/Net_ocean/HYCOM/hycom/ALL4/relax/src_2.2.35/relaxi .
+wait
+[5]  + Done                          /bin/cp /nexsan/people/ddmitry/Net_ocean/HYCOM/hycom/ALL4/relax/src_2.2.35/relaxi .
+[4]  - Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/saln_zlev_hycom_sig2_01052011.a fort.73A
+[2]  + Done                          /bin/cp /Net/kronos/ddmitry/hycom/TSIS/nemo_glorys_interp/temp_zlev_hycom_sig2_01052011.a fort.72A
+chmod a+rx relaxi
+sed -e s/^[  0-9]*'month ' =/  06   'month ' =/ blkdat.input
+/bin/rm -f core
+touch core
+setenv FOR010A fort.10A
+setenv FOR011A fort.11A
+setenv FOR012A fort.12A
+setenv FOR021A fort.21A
+setenv FOR051A fort.51A
+setenv FOR072A fort.72A
+setenv FOR073A fort.73A
+/bin/rm -f fort.10 fort.11 fort.12 fort.21
+/bin/rm -f fort.10A fort.11A fort.12A fort.21A
+echo Submitting relaxi
+Submitting relaxi
+./relaxi
+
+xcspmd: idm,jdm = 1401  891
+
+ kz =           75
+ 
+Climatology file and relax files                                               
+ 
+month  =     6
+sigver =     6
+levtop =     1
+iversn =    22
+ 
+iexpt  =     1
+yrflag =     3
+ 
+idm    =  1401
+jdm    =   891
+itest  =   850
+jtest  =   250
+kdm    =    30
+nhybrd =    30
+nsigma =     8
+isotop =    6.0000 m
+dp00   =    3.0000 m
+dp00x  =   12.0000 m
+dp00f  =    1.1250 
+ds00   =    3.0000 m
+ds00x  =    4.0000 m
+ds00f  =    1.1250 
+dp00i  =    1.0000 m
+ 
+thflag =     2
+ 
+thbase =   34.0000 sigma-2 (sigver= 6)
+ 
+vsigma =     F
+sigma  =   27.1000 sigma-2 (sigver= 6)
+sigma  =   28.1000 sigma-2 (sigver= 6)
+sigma  =   28.9000 sigma-2 (sigver= 6)
+sigma  =   29.7000 sigma-2 (sigver= 6)
+sigma  =   30.5000 sigma-2 (sigver= 6)
+sigma  =   30.9500 sigma-2 (sigver= 6)
+sigma  =   31.5000 sigma-2 (sigver= 6)
+sigma  =   32.0500 sigma-2 (sigver= 6)
+sigma  =   32.6000 sigma-2 (sigver= 6)
+sigma  =   33.1500 sigma-2 (sigver= 6)
+sigma  =   33.7000 sigma-2 (sigver= 6)
+sigma  =   34.2500 sigma-2 (sigver= 6)
+sigma  =   34.7500 sigma-2 (sigver= 6)
+sigma  =   35.1500 sigma-2 (sigver= 6)
+sigma  =   35.5000 sigma-2 (sigver= 6)
+sigma  =   35.8000 sigma-2 (sigver= 6)
+sigma  =   36.0400 sigma-2 (sigver= 6)
+sigma  =   36.2000 sigma-2 (sigver= 6)
+sigma  =   36.3800 sigma-2 (sigver= 6)
+sigma  =   36.5200 sigma-2 (sigver= 6)
+sigma  =   36.6200 sigma-2 (sigver= 6)
+sigma  =   36.7000 sigma-2 (sigver= 6)
+sigma  =   36.7700 sigma-2 (sigver= 6)
+sigma  =   36.8300 sigma-2 (sigver= 6)
+sigma  =   36.8900 sigma-2 (sigver= 6)
+sigma  =   36.9700 sigma-2 (sigver= 6)
+sigma  =   37.0200 sigma-2 (sigver= 6)
+sigma  =   37.0600 sigma-2 (sigver= 6)
+sigma  =   37.1000 sigma-2 (sigver= 6)
+sigma  =   37.1700 sigma-2 (sigver= 6)
+ 
+thkmin =   19.2000 m
+ 
+k =  1   thkns =   3.0 m   depth =     3.0 m   density = 27.100 Sigma2
+k =  2   thkns =   3.4 m   depth =     6.4 m   density = 28.100 Sigma2
+k =  3   thkns =   3.8 m   depth =    10.2 m   density = 28.900 Sigma2
+k =  4   thkns =   4.3 m   depth =    14.4 m   density = 29.700 Sigma2
+k =  5   thkns =   4.8 m   depth =    19.2 m   density = 30.500 Sigma2
+k =  6   thkns =   5.4 m   depth =    24.7 m   density = 30.950 Sigma2
+k =  7   thkns =   6.1 m   depth =    30.7 m   density = 31.500 Sigma2
+k =  8   thkns =   6.8 m   depth =    37.6 m   density = 32.050 Sigma2
+k =  9   thkns =   7.7 m   depth =    45.3 m   density = 32.600 Sigma2
+k = 10   thkns =   8.7 m   depth =    53.9 m   density = 33.150 Sigma2
+k = 11   thkns =   9.7 m   depth =    63.7 m   density = 33.700 Sigma2
+k = 12   thkns =  11.0 m   depth =    74.6 m   density = 34.250 Sigma2
+k = 13   thkns =  12.0 m   depth =    86.6 m   density = 34.750 Sigma2
+k = 14   thkns =  12.0 m   depth =    98.6 m   density = 35.150 Sigma2
+k = 15   thkns =  12.0 m   depth =   110.6 m   density = 35.500 Sigma2
+k = 16   thkns =  12.0 m   depth =   122.6 m   density = 35.800 Sigma2
+k = 17   thkns =  12.0 m   depth =   134.6 m   density = 36.040 Sigma2
+k = 18   thkns =  12.0 m   depth =   146.6 m   density = 36.200 Sigma2
+k = 19   thkns =  12.0 m   depth =   158.6 m   density = 36.380 Sigma2
+k = 20   thkns =  12.0 m   depth =   170.6 m   density = 36.520 Sigma2
+k = 21   thkns =  12.0 m   depth =   182.6 m   density = 36.620 Sigma2
+k = 22   thkns =  12.0 m   depth =   194.6 m   density = 36.700 Sigma2
+k = 23   thkns =  12.0 m   depth =   206.6 m   density = 36.770 Sigma2
+k = 24   thkns =  12.0 m   depth =   218.6 m   density = 36.830 Sigma2
+k = 25   thkns =  12.0 m   depth =   230.6 m   density = 36.890 Sigma2
+k = 26   thkns =  12.0 m   depth =   242.6 m   density = 36.970 Sigma2
+k = 27   thkns =  12.0 m   depth =   254.6 m   density = 37.020 Sigma2
+k = 28   thkns =  12.0 m   depth =   266.6 m   density = 37.060 Sigma2
+k = 29   thkns =  12.0 m   depth =   278.6 m   density = 37.100 Sigma2
+k = 30   thkns =  12.0 m   depth =   290.6 m   density = 37.170 Sigma2
+ 
+
+ ETOPO interpolated to IASx0.03                                                 
+ smoothed once;onesea;landfilled                                                
+ merged with ATLx0.06                                                           
+ 20 point merge zone                                                            
+ Filled single-width inlets and 1-point seas.                                   
+ min,max depth =      5.000  8398.066                                           
+
+ NEMO+GLORYS on IAS HYCOM-TSIS                                                  
+ Salinity                                                                       
+                                                                                
+                                                                                
+ i/jdm = 1401 891                                                               
+i,j,k =  850  250  1   s = 35.446
+i,j,k =  850  250  2   s = 35.446
+i,j,k =  850  250  3   s = 35.446
+i,j,k =  850  250  4   s = 35.446
+i,j,k =  850  250  5   s = 35.446
+i,j,k =  850  250  6   s = 35.446
+i,j,k =  850  250  7   s = 35.446
+i,j,k =  850  250  8   s = 35.446
+i,j,k =  850  250  9   s = 35.446
+i,j,k =  850  250 10   s = 35.446
+i,j,k =  850  250 11   s = 35.446
+i,j,k =  850  250 12   s = 35.445
+i,j,k =  850  250 13   s = 35.445
+i,j,k =  850  250 14   s = 35.445
+i,j,k =  850  250 15   s = 35.443
+i,j,k =  850  250 16   s = 35.442
+i,j,k =  850  250 17   s = 35.440
+i,j,k =  850  250 18   s = 35.435
+i,j,k =  850  250 19   s = 35.374
+i,j,k =  850  250 20   s = 35.413
+i,j,k =  850  250 21   s = 35.617
+i,j,k =  850  250 22   s = 36.024
+i,j,k =  850  250 23   s = 36.540
+i,j,k =  850  250 24   s = 36.936
+i,j,k =  850  250 25   s = 37.161
+i,j,k =  850  250 26   s = 37.185
+i,j,k =  850  250 27   s = 37.157
+i,j,k =  850  250 28   s = 37.051
+i,j,k =  850  250 29   s = 36.918
+i,j,k =  850  250 30   s = 36.749
+i,j,k =  850  250 31   s = 36.574
+i,j,k =  850  250 32   s = 36.385
+i,j,k =  850  250 33   s = 36.235
+i,j,k =  850  250 34   s = 36.074
+i,j,k =  850  250 35   s = 35.900
+i,j,k =  850  250 36   s = 35.710
+i,j,k =  850  250 37   s = 35.502
+i,j,k =  850  250 38   s = 35.329
+i,j,k =  850  250 39   s = 35.161
+i,j,k =  850  250 40   s = 35.046
+i,j,k =  850  250 41   s = 34.946
+i,j,k =  850  250 42   s = 34.877
+i,j,k =  850  250 43   s = 34.866
+i,j,k =  850  250 44   s = 34.878
+i,j,k =  850  250 45   s = 34.912
+i,j,k =  850  250 46   s = 34.934
+i,j,k =  850  250 47   s = 34.942
+i,j,k =  850  250 48   s = 34.953
+i,j,k =  850  250 49   s = 34.964
+i,j,k =  850  250 50   s = 34.968
+i,j,k =  850  250 51   s = 34.971
+i,j,k =  850  250 52   s = 34.972
+i,j,k =  850  250 53   s = 34.974
+i,j,k =  850  250 54   s = 34.975
+i,j,k =  850  250 55   s = 34.975
+i,j,k =  850  250 56   s = 34.974
+i,j,k =  850  250 57   s = 34.974
+i,j,k =  850  250 58   s = 34.974
+i,j,k =  850  250 59   s = 34.974
+i,j,k =  850  250 60   s = 34.974
+i,j,k =  850  250 61   s = 34.974
+i,j,k =  850  250 62   s = 34.974
+i,j,k =  850  250 63   s = 34.974
+i,j,k =  850  250 64   s = 34.973
+i,j,k =  850  250 65   s = 34.972
+i,j,k =  850  250 66   s = 34.899
+i,j,k =  850  250 67   s = 34.757
+i,j,k =  850  250 68   s = 34.674
+i,j,k =  850  250 69   s = 34.674
+i,j,k =  850  250 70   s = 34.674
+i,j,k =  850  250 71   s = 34.674
+i,j,k =  850  250 72   s = 33.381
+i,j,k =  850  250 73   s = 17.855
+i,j,k =  850  250 74   s =  2.285
+i,j,k =  850  250 75   s =  0.000
+
+ NEMO+GLORYS on IAS HYCOM-TSIS                                                  
+ Potential Temperature                                                          
+                                                                                
+                                                                                
+ i/jdm = 1401 891                                                               
+i,j,k =  850  250  1   r = 31.259
+i,j,k =  850  250  1   t = 27.141
+i,j,k =  850  250  2   r = 31.260
+i,j,k =  850  250  2   t = 27.140
+i,j,k =  850  250  3   r = 31.260
+i,j,k =  850  250  3   t = 27.140
+i,j,k =  850  250  4   r = 31.260
+i,j,k =  850  250  4   t = 27.139
+i,j,k =  850  250  5   r = 31.260
+i,j,k =  850  250  5   t = 27.138
+i,j,k =  850  250  6   r = 31.261
+i,j,k =  850  250  6   t = 27.137
+i,j,k =  850  250  7   r = 31.262
+i,j,k =  850  250  7   t = 27.135
+i,j,k =  850  250  8   r = 31.263
+i,j,k =  850  250  8   t = 27.132
+i,j,k =  850  250  9   r = 31.264
+i,j,k =  850  250  9   t = 27.129
+i,j,k =  850  250 10   r = 31.265
+i,j,k =  850  250 10   t = 27.125
+i,j,k =  850  250 11   r = 31.266
+i,j,k =  850  250 11   t = 27.122
+i,j,k =  850  250 12   r = 31.267
+i,j,k =  850  250 12   t = 27.118
+i,j,k =  850  250 13   r = 31.268
+i,j,k =  850  250 13   t = 27.114
+i,j,k =  850  250 14   r = 31.270
+i,j,k =  850  250 14   t = 27.109
+i,j,k =  850  250 15   r = 31.271
+i,j,k =  850  250 15   t = 27.103
+i,j,k =  850  250 16   r = 31.272
+i,j,k =  850  250 16   t = 27.097
+i,j,k =  850  250 17   r = 31.274
+i,j,k =  850  250 17   t = 27.086
+i,j,k =  850  250 18   r = 31.278
+i,j,k =  850  250 18   t = 27.064
+i,j,k =  850  250 19   r = 31.311
+i,j,k =  850  250 19   t = 26.835
+i,j,k =  850  250 20   r = 31.431
+i,j,k =  850  250 20   t = 26.570
+i,j,k =  850  250 21   r = 31.653
+i,j,k =  850  250 21   t = 26.362
+i,j,k =  850  250 22   r = 31.988
+i,j,k =  850  250 22   t = 26.268
+i,j,k =  850  250 23   r = 32.508
+i,j,k =  850  250 23   t = 25.864
+i,j,k =  850  250 24   r = 33.025
+i,j,k =  850  250 24   t = 25.204
+i,j,k =  850  250 25   r = 33.516
+i,j,k =  850  250 25   t = 24.222
+i,j,k =  850  250 26   r = 33.898
+i,j,k =  850  250 26   t = 23.097
+i,j,k =  850  250 27   r = 34.257
+i,j,k =  850  250 27   t = 21.890
+i,j,k =  850  250 28   r = 34.538
+i,j,k =  850  250 28   t = 20.717
+i,j,k =  850  250 29   r = 34.780
+i,j,k =  850  250 29   t = 19.569
+i,j,k =  850  250 30   r = 34.968
+i,j,k =  850  250 30   t = 18.482
+i,j,k =  850  250 31   r = 35.089
+i,j,k =  850  250 31   t = 17.583
+i,j,k =  850  250 32   r = 35.183
+i,j,k =  850  250 32   t = 16.722
+i,j,k =  850  250 33   r = 35.262
+i,j,k =  850  250 33   t = 16.007
+i,j,k =  850  250 34   r = 35.346
+i,j,k =  850  250 34   t = 15.220
+i,j,k =  850  250 35   r = 35.447
+i,j,k =  850  250 35   t = 14.310
+i,j,k =  850  250 36   r = 35.558
+i,j,k =  850  250 36   t = 13.276
+i,j,k =  850  250 37   r = 35.679
+i,j,k =  850  250 37   t = 12.100
+i,j,k =  850  250 38   r = 35.784
+i,j,k =  850  250 38   t = 11.062
+i,j,k =  850  250 39   r = 35.884
+i,j,k =  850  250 39   t = 10.016
+i,j,k =  850  250 40   r = 35.992
+i,j,k =  850  250 40   t =  9.077
+i,j,k =  850  250 41   r = 36.099
+i,j,k =  850  250 41   t =  8.163
+i,j,k =  850  250 42   r = 36.205
+i,j,k =  850  250 42   t =  7.340
+i,j,k =  850  250 43   r = 36.295
+i,j,k =  850  250 43   t =  6.814
+i,j,k =  850  250 44   r = 36.383
+i,j,k =  850  250 44   t =  6.379
+i,j,k =  850  250 45   r = 36.465
+i,j,k =  850  250 45   t =  6.066
+i,j,k =  850  250 46   r = 36.557
+i,j,k =  850  250 46   t =  5.638
+i,j,k =  850  250 47   r = 36.658
+i,j,k =  850  250 47   t =  5.080
+i,j,k =  850  250 48   r = 36.724
+i,j,k =  850  250 48   t =  4.733
+i,j,k =  850  250 49   r = 36.778
+i,j,k =  850  250 49   t =  4.449
+i,j,k =  850  250 50   r = 36.801
+i,j,k =  850  250 50   t =  4.328
+i,j,k =  850  250 51   r = 36.821
+i,j,k =  850  250 51   t =  4.216
+i,j,k =  850  250 52   r = 36.838
+i,j,k =  850  250 52   t =  4.114
+i,j,k =  850  250 53   r = 36.852
+i,j,k =  850  250 53   t =  4.030
+i,j,k =  850  250 54   r = 36.866
+i,j,k =  850  250 54   t =  3.951
+i,j,k =  850  250 55   r = 36.871
+i,j,k =  850  250 55   t =  3.913
+i,j,k =  850  250 56   r = 36.876
+i,j,k =  850  250 56   t =  3.878
+i,j,k =  850  250 57   r = 36.879
+i,j,k =  850  250 57   t =  3.860
+i,j,k =  850  250 58   r = 36.882
+i,j,k =  850  250 58   t =  3.844
+i,j,k =  850  250 59   r = 36.883
+i,j,k =  850  250 59   t =  3.832
+i,j,k =  850  250 60   r = 36.886
+i,j,k =  850  250 60   t =  3.818
+i,j,k =  850  250 61   r = 36.888
+i,j,k =  850  250 61   t =  3.802
+i,j,k =  850  250 62   r = 36.892
+i,j,k =  850  250 62   t =  3.774
+i,j,k =  850  250 63   r = 36.898
+i,j,k =  850  250 63   t =  3.736
+i,j,k =  850  250 64   r = 36.903
+i,j,k =  850  250 64   t =  3.701
+i,j,k =  850  250 65   r = 36.907
+i,j,k =  850  250 65   t =  3.670
+i,j,k =  850  250 66   r = 36.929
+i,j,k =  850  250 66   t =  3.138
+i,j,k =  850  250 67   r = 36.961
+i,j,k =  850  250 67   t =  2.128
+i,j,k =  850  250 68   r = 36.975
+i,j,k =  850  250 68   t =  1.536
+i,j,k =  850  250 69   r = 36.975
+i,j,k =  850  250 69   t =  1.535
+i,j,k =  850  250 70   r = 36.975
+i,j,k =  850  250 70   t =  1.535
+i,j,k =  850  250 71   r = 36.975
+i,j,k =  850  250 71   t =  1.533
+i,j,k =  850  250 72   r = 36.975
+i,j,k =  850  250 72   t =  1.533
+i,j,k =  850  250 72   w =  1.475
+i,j,k =  850  250 73   r = 36.975
+i,j,k =  850  250 73   t =  1.533
+i,j,k =  850  250 73   w =  0.789
+i,j,k =  850  250 74   r = 36.975
+i,j,k =  850  250 74   t =  1.533
+i,j,k =  850  250 74   w =  0.101
+i,j,k =  850  250 75   r = 36.975
+i,j,k =  850  250 75   t =  1.533
+i,j,k =  850  250 75   w =  0.000
+ 
+I,J,K =  850  250  1  ZLEV =    0.00   R,T,S = 31.259 27.141 35.446
+I,J,K =  850  250  2  ZLEV =    1.60   R,T,S = 31.260 27.140 35.446
+I,J,K =  850  250  3  ZLEV =    2.70   R,T,S = 31.260 27.140 35.446
+I,J,K =  850  250  4  ZLEV =    3.90   R,T,S = 31.260 27.139 35.446
+I,J,K =  850  250  5  ZLEV =    5.10   R,T,S = 31.260 27.138 35.446
+I,J,K =  850  250  6  ZLEV =    6.50   R,T,S = 31.261 27.137 35.446
+I,J,K =  850  250  7  ZLEV =    8.10   R,T,S = 31.262 27.135 35.446
+I,J,K =  850  250  8  ZLEV =    9.80   R,T,S = 31.263 27.132 35.446
+I,J,K =  850  250  9  ZLEV =   11.80   R,T,S = 31.264 27.129 35.446
+I,J,K =  850  250 10  ZLEV =   14.00   R,T,S = 31.265 27.125 35.446
+I,J,K =  850  250 11  ZLEV =   16.50   R,T,S = 31.266 27.122 35.446
+I,J,K =  850  250 12  ZLEV =   19.40   R,T,S = 31.267 27.118 35.445
+I,J,K =  850  250 13  ZLEV =   22.80   R,T,S = 31.268 27.114 35.445
+I,J,K =  850  250 14  ZLEV =   26.60   R,T,S = 31.270 27.109 35.445
+I,J,K =  850  250 15  ZLEV =   30.90   R,T,S = 31.271 27.103 35.443
+I,J,K =  850  250 16  ZLEV =   35.70   R,T,S = 31.272 27.097 35.442
+I,J,K =  850  250 17  ZLEV =   41.20   R,T,S = 31.274 27.086 35.440
+I,J,K =  850  250 18  ZLEV =   47.20   R,T,S = 31.278 27.064 35.435
+I,J,K =  850  250 19  ZLEV =   53.90   R,T,S = 31.311 26.835 35.374
+I,J,K =  850  250 20  ZLEV =   61.10   R,T,S = 31.431 26.570 35.413
+I,J,K =  850  250 21  ZLEV =   69.00   R,T,S = 31.653 26.362 35.617
+I,J,K =  850  250 22  ZLEV =   77.60   R,T,S = 31.988 26.268 36.024
+I,J,K =  850  250 23  ZLEV =   86.90   R,T,S = 32.508 25.864 36.540
+I,J,K =  850  250 24  ZLEV =   97.00   R,T,S = 33.025 25.204 36.936
+I,J,K =  850  250 25  ZLEV =  108.00   R,T,S = 33.516 24.222 37.161
+I,J,K =  850  250 26  ZLEV =  120.00   R,T,S = 33.898 23.097 37.185
+I,J,K =  850  250 27  ZLEV =  133.10   R,T,S = 34.257 21.890 37.157
+I,J,K =  850  250 28  ZLEV =  147.40   R,T,S = 34.538 20.717 37.051
+I,J,K =  850  250 29  ZLEV =  163.20   R,T,S = 34.780 19.569 36.918
+I,J,K =  850  250 30  ZLEV =  180.50   R,T,S = 34.968 18.482 36.749
+I,J,K =  850  250 31  ZLEV =  199.80   R,T,S = 35.089 17.583 36.574
+I,J,K =  850  250 32  ZLEV =  221.10   R,T,S = 35.183 16.722 36.385
+I,J,K =  850  250 33  ZLEV =  244.90   R,T,S = 35.262 16.007 36.235
+I,J,K =  850  250 34  ZLEV =  271.40   R,T,S = 35.346 15.220 36.074
+I,J,K =  850  250 35  ZLEV =  300.90   R,T,S = 35.447 14.310 35.900
+I,J,K =  850  250 36  ZLEV =  333.90   R,T,S = 35.558 13.276 35.710
+I,J,K =  850  250 37  ZLEV =  370.70   R,T,S = 35.679 12.100 35.502
+I,J,K =  850  250 38  ZLEV =  411.80   R,T,S = 35.784 11.062 35.329
+I,J,K =  850  250 39  ZLEV =  457.60   R,T,S = 35.884 10.016 35.161
+I,J,K =  850  250 40  ZLEV =  508.60   R,T,S = 35.992  9.077 35.046
+I,J,K =  850  250 41  ZLEV =  565.30   R,T,S = 36.099  8.163 34.946
+I,J,K =  850  250 42  ZLEV =  628.00   R,T,S = 36.205  7.340 34.877
+I,J,K =  850  250 43  ZLEV =  697.30   R,T,S = 36.295  6.814 34.866
+I,J,K =  850  250 44  ZLEV =  773.40   R,T,S = 36.383  6.379 34.878
+I,J,K =  850  250 45  ZLEV =  856.70   R,T,S = 36.465  6.066 34.912
+I,J,K =  850  250 46  ZLEV =  947.40   R,T,S = 36.557  5.638 34.934
+I,J,K =  850  250 47  ZLEV = 1045.90   R,T,S = 36.658  5.080 34.942
+I,J,K =  850  250 48  ZLEV = 1152.00   R,T,S = 36.724  4.733 34.953
+I,J,K =  850  250 49  ZLEV = 1265.90   R,T,S = 36.778  4.449 34.964
+I,J,K =  850  250 50  ZLEV = 1387.40   R,T,S = 36.801  4.328 34.968
+I,J,K =  850  250 51  ZLEV = 1516.40   R,T,S = 36.821  4.216 34.971
+I,J,K =  850  250 52  ZLEV = 1652.60   R,T,S = 36.838  4.114 34.972
+I,J,K =  850  250 53  ZLEV = 1795.70   R,T,S = 36.852  4.030 34.974
+I,J,K =  850  250 54  ZLEV = 1945.30   R,T,S = 36.866  3.951 34.975
+I,J,K =  850  250 55  ZLEV = 2101.00   R,T,S = 36.871  3.913 34.975
+I,J,K =  850  250 56  ZLEV = 2262.40   R,T,S = 36.876  3.878 34.974
+I,J,K =  850  250 57  ZLEV = 2429.00   R,T,S = 36.879  3.860 34.974
+I,J,K =  850  250 58  ZLEV = 2600.40   R,T,S = 36.882  3.844 34.974
+I,J,K =  850  250 59  ZLEV = 2776.00   R,T,S = 36.883  3.832 34.974
+I,J,K =  850  250 60  ZLEV = 2955.60   R,T,S = 36.886  3.818 34.974
+I,J,K =  850  250 61  ZLEV = 3138.60   R,T,S = 36.888  3.802 34.974
+I,J,K =  850  250 62  ZLEV = 3324.60   R,T,S = 36.892  3.774 34.974
+I,J,K =  850  250 63  ZLEV = 3513.40   R,T,S = 36.898  3.736 34.974
+I,J,K =  850  250 64  ZLEV = 3704.70   R,T,S = 36.903  3.701 34.973
+I,J,K =  850  250 65  ZLEV = 3898.00   R,T,S = 36.907  3.670 34.972
+I,J,K =  850  250 66  ZLEV = 4093.20   R,T,S = 36.929  3.138 34.899
+I,J,K =  850  250 67  ZLEV = 4290.00   R,T,S = 36.961  2.128 34.757
+I,J,K =  850  250 68  ZLEV = 4488.20   R,T,S = 36.975  1.536 34.674
+I,J,K =  850  250 69  ZLEV = 4687.60   R,T,S = 36.975  1.535 34.674
+I,J,K =  850  250 70  ZLEV = 4888.10   R,T,S = 36.975  1.535 34.674
+I,J,K =  850  250 71  ZLEV = 5089.50   R,T,S = 36.975  1.533 34.674
+I,J,K =  850  250 72  ZLEV = 5291.70   R,T,S = 36.975  1.533 33.381
+I,J,K =  850  250 73  ZLEV = 5494.60   R,T,S = 36.975  1.533 17.855
+I,J,K =  850  250 74  ZLEV = 5698.10   R,T,S = 36.975  1.533  2.285
+I,J,K =  850  250 75  ZLEV = 5902.10   R,T,S = 36.975  1.533  0.000
+ 
+Climatology file and relax files                                               
+Expt 00.1  nhybrd=30 nsigma= 8 ds00= 3.00 dp00= 3.00 dp00x=  12.0 dp00f=1.125  
+Layered averages w.r.t. Sigma-2,  levtop=1 (sigver= 6)                         
+Potential Temperature, or Salinity, or Interface Depths                        
+i/jdm = 1401  891                                                              
+ 
+PMIX,RZLOC =    61.083    19.998
+ISOTOP - K,DMIN =  1     0.000
+FIXED - K,PM =  1     3.000
+PM,PZBOT =     3.000     3.250
+RZ,RZLOC =    27.100     0.000
+XX,PZMID =    27.100     2.125
+PM,PZBOT =     3.000     3.250
+PM,PZMID =     3.000     2.125
+HYBRID - K,PKM1,PM =  1     0.000     3.000
+HRM: L,Q =   2  0.1250
+ TM: L,Q =   2  0.1250
+  tem: min=     9.64 ave=    25.97 max=    30.23   (k,sigma =  1  27.10)
+  sal: min=     8.59 ave=    36.01 max=    39.41   (k,sigma =  1  27.10)
+  den: min=    12.08 ave=    32.07 max=    34.43   (k,sigma =  1  27.10)
+  inf: min=     0.00 ave=     0.00 max=     0.00   (k,sigma =  1  27.10)
+  thk: min=     3.00 ave=     3.00 max=     3.00   (k,sigma =  1  27.10)
+ 
+I,J,K =  850  250  1   INF,THK =     0.00     3.00   R,T,S = 31.260 27.140 35.446
+ 
+          WRITING CLIM LAYER    1    SIGMA = 27.100
+
+ISOTOP - K,DMIN =  2     3.000
+FIXED - K,PM =  2     6.375
+PM,PZBOT =     6.375     5.911
+RZ,RZLOC =    28.100     0.000
+XX,PZMID =    28.100     4.580
+PKM1,PCM1,S =     3.000     3.000     1.000
+DP0K,Q,DPMS =     3.375     3.375     6.375
+PM,PZBOT =     6.375     5.911
+PM,PZMID =     6.375     4.580
+HYBRID - K,PKM1,PM =  2     3.000     6.375
+HRM: L,Q =   4  0.5804
+ TM: L,Q =   4  0.5804
+  tem: min=     9.63 ave=    25.95 max=    30.52   (k,sigma =  2  28.10)
+  sal: min=     9.56 ave=    36.02 max=    39.41   (k,sigma =  2  28.10)
+  den: min=    12.89 ave=    32.08 max=    34.50   (k,sigma =  2  28.10)
+  inf: min=     3.00 ave=     3.00 max=     3.00   (k,sigma =  2  28.10)
+  thk: min=     2.00 ave=     3.33 max=     3.38   (k,sigma =  2  28.10)
+ 
+I,J,K =  850  250  2   INF,THK =     3.00     3.38   R,T,S = 31.260 27.138 35.446
+ 
+          WRITING CLIM LAYER    2    SIGMA = 28.100
+
+ISOTOP - K,DMIN =  3     6.375
+PM,PZBOT =     6.375     5.911
+RZ,RZLOC =    28.900     0.000
+XX,PZMID =    28.900     5.911
+PKM1,PCM1,S =     6.375     6.375     1.000
+DP0K,Q,DPMS =     3.797     3.797    10.172
+PM,PZBOT =    10.172     8.186
+PM,PZMID =    10.172     7.048
+HYBRID - K,PKM1,PM =  3     6.375    10.172
+HRM: L,Q =   7  0.0483
+ TM: L,Q =   7  0.0483
+  tem: min=    15.01 ave=    25.87 max=    30.30   (k,sigma =  3  28.90)
+  sal: min=    18.96 ave=    36.07 max=    39.37   (k,sigma =  3  28.90)
+  den: min=    20.95 ave=    32.15 max=    35.16   (k,sigma =  3  28.90)
+  inf: min=     6.37 ave=     6.38 max=     6.38   (k,sigma =  3  28.90)
+  thk: min=     0.10 ave=     3.84 max=   203.05   (k,sigma =  3  28.90)
+ 
+I,J,K =  850  250  3   INF,THK =     6.38     3.80   R,T,S = 31.262 27.135 35.446
+ 
+          WRITING CLIM LAYER    3    SIGMA = 28.900
+
+ISOTOP - K,DMIN =  4    10.172
+PM,PZBOT =    10.172     8.186
+RZ,RZLOC =    29.700     0.000
+XX,PZMID =    29.700     8.186
+PKM1,PCM1,S =    10.172    10.172     1.000
+DP0K,Q,DPMS =     4.271     4.271    14.443
+PM,PZBOT =    14.443    10.177
+PM,PZMID =    14.443     9.182
+HYBRID - K,PKM1,PM =  4    10.172    14.443
+HRM: L,Q =   9  0.1816
+ TM: L,Q =   9  0.1816
+  tem: min=    15.21 ave=    25.82 max=    29.36   (k,sigma =  4  29.70)
+  sal: min=    29.43 ave=    36.11 max=    37.74   (k,sigma =  4  29.70)
+  den: min=    28.94 ave=    32.20 max=    35.24   (k,sigma =  4  29.70)
+  inf: min=    10.17 ave=    10.23 max=   133.07   (k,sigma =  4  29.70)
+  thk: min=     0.10 ave=     4.39 max=   124.77   (k,sigma =  4  29.70)
+ 
+I,J,K =  850  250  4   INF,THK =    10.17     4.27   R,T,S = 31.264 27.128 35.446
+ 
+          WRITING CLIM LAYER    4    SIGMA = 29.700
+
+ISOTOP - K,DMIN =  5    14.443
+PM,PZBOT =    14.443    10.177
+RZ,RZLOC =    30.500     0.000
+XX,PZMID =    30.500    10.177
+PKM1,PCM1,S =    14.443    14.443     1.000
+DP0K,Q,DPMS =     4.805     4.805    19.249
+PM,PZBOT =    19.249    11.948
+PM,PZMID =    19.249    11.063
+HYBRID - K,PKM1,PM =  5    14.443    19.249
+HRM: L,Q =  11  0.0626
+ TM: L,Q =  11  0.0626
+  tem: min=    13.19 ave=    25.72 max=    29.28   (k,sigma =  5  30.50)
+  sal: min=    29.07 ave=    36.17 max=    37.41   (k,sigma =  5  30.50)
+  den: min=    29.71 ave=    32.27 max=    35.29   (k,sigma =  5  30.50)
+  inf: min=    14.17 ave=    14.63 max=   208.55   (k,sigma =  5  30.50)
+  thk: min=     0.10 ave=     4.89 max=   165.96   (k,sigma =  5  30.50)
+ 
+I,J,K =  850  250  5   INF,THK =    14.44     4.81   R,T,S = 31.266 27.122 35.446
+ 
+          WRITING CLIM LAYER    5    SIGMA = 30.500
+
+ISOTOP - K,DMIN =  6    19.249
+PM,PZBOT =    19.249    11.948
+RZ,RZLOC =    30.950     0.000
+XX,PZMID =    30.950    11.948
+PKM1,PCM1,S =    19.249    19.249     1.000
+DP0K,Q,DPMS =     5.406     5.406    24.655
+PM,PZBOT =    24.655    13.488
+PM,PZMID =    24.655    12.718
+HYBRID - K,PKM1,PM =  6    19.249    24.655
+HRM: L,Q =  12  0.7180
+ TM: L,Q =  12  0.7180
+  tem: min=    13.92 ave=    25.58 max=    29.17   (k,sigma =  6  30.95)
+  sal: min=    32.24 ave=    36.21 max=    37.37   (k,sigma =  6  30.95)
+  den: min=    30.46 ave=    32.35 max=    35.37   (k,sigma =  6  30.95)
+  inf: min=    18.17 ave=    19.55 max=   129.33   (k,sigma =  6  30.95)
+  thk: min=     0.10 ave=     6.03 max=    66.16   (k,sigma =  6  30.95)
+ 
+I,J,K =  850  250  6   INF,THK =    19.25     5.41   R,T,S = 31.268 27.115 35.445
+ 
+          WRITING CLIM LAYER    6    SIGMA = 30.950
+
+ISOTOP - K,DMIN =  7    24.655
+PM,PZBOT =    72.129    21.364
+PM,PZBOT =    72.129    21.364
+RZ,RZLOC =    31.500    20.310
+XX,PZMID =    31.500    20.310
+PKM1,PCM1,S =    24.655    24.655     1.000
+DP0K,Q,DPMS =     6.082     6.082    30.737
+IRM: L,Q =  20  0.3097
+ TM: L,Q =  20  0.3097
+  tem: min=    11.80 ave=    25.32 max=    28.51   (k,sigma =  7  31.50)
+  sal: min=    32.27 ave=    36.30 max=    37.38   (k,sigma =  7  31.50)
+  den: min=    30.22 ave=    32.50 max=    35.52   (k,sigma =  7  31.50)
+  inf: min=    22.17 ave=    25.61 max=   156.17   (k,sigma =  7  31.50)
+  thk: min=     0.10 ave=    12.10 max=   110.22   (k,sigma =  7  31.50)
+ 
+I,J,K =  850  250  7   INF,THK =    24.65    47.47   R,T,S = 31.500 26.506 35.476
+ 
+          WRITING CLIM LAYER    7    SIGMA = 31.500
+
+ISOTOP - K,DMIN =  8    30.737
+PM,PZBOT =    83.622    22.648
+PM,PZBOT =    83.622    22.648
+RZ,RZLOC =    32.050    22.119
+XX,PZMID =    32.050    22.119
+PKM1,PCM1,S =    72.129    30.737     0.165
+DP0K,Q,DPMS =     6.842     1.131    73.260
+IRM: L,Q =  22  0.1191
+ TM: L,Q =  22  0.1191
+  tem: min=    11.15 ave=    24.85 max=    28.10   (k,sigma =  8  32.05)
+  sal: min=    32.08 ave=    36.45 max=    37.38   (k,sigma =  8  32.05)
+  den: min=    31.50 ave=    32.77 max=    35.87   (k,sigma =  8  32.05)
+  inf: min=    26.17 ave=    37.81 max=   205.56   (k,sigma =  8  32.05)
+  thk: min=     0.10 ave=    13.26 max=   234.34   (k,sigma =  8  32.05)
+ 
+I,J,K =  850  250  8   INF,THK =    72.13    11.49   R,T,S = 32.050 26.220 36.086
+ 
+          WRITING CLIM LAYER    8    SIGMA = 32.050
+
+ISOTOP - K,DMIN =  9    37.579
+PM,PZBOT =    94.070    23.710
+PM,PZBOT =    94.070    23.710
+RZ,RZLOC =    32.600    23.177
+XX,PZMID =    32.600    23.177
+PKM1,PCM1,S =    83.622    31.868     0.149
+DP0K,Q,DPMS =     7.697     1.145    84.767
+IRM: L,Q =  23  0.1774
+ TM: L,Q =  23  0.1774
+  tem: min=    10.74 ave=    24.28 max=    26.88   (k,sigma =  9  32.60)
+  sal: min=    32.01 ave=    36.62 max=    37.38   (k,sigma =  9  32.60)
+  den: min=    32.07 ave=    33.09 max=    35.92   (k,sigma =  9  32.60)
+  inf: min=    37.58 ave=    51.40 max=   376.58   (k,sigma =  9  32.60)
+  thk: min=     0.10 ave=    14.06 max=    97.61   (k,sigma =  9  32.60)
+ 
+I,J,K =  850  250  9   INF,THK =    83.62    10.45   R,T,S = 32.600 25.747 36.610
+ 
+          WRITING CLIM LAYER    9    SIGMA = 32.600
+
+ISOTOP - K,DMIN = 10    45.276
+PM,PZBOT =   105.954    24.814
+PM,PZBOT =   105.954    24.814
+RZ,RZLOC =    33.150    24.255
+XX,PZMID =    33.150    24.255
+PKM1,PCM1,S =    94.070    33.013     0.142
+DP0K,Q,DPMS =     8.660     1.228    95.298
+IRM: L,Q =  24  0.2547
+ TM: L,Q =  24  0.2547
+  tem: min=    10.42 ave=    23.53 max=    25.72   (k,sigma = 10  33.15)
+  sal: min=    33.84 ave=    36.77 max=    37.38   (k,sigma = 10  33.15)
+  den: min=    31.86 ave=    33.44 max=    35.95   (k,sigma = 10  33.15)
+  inf: min=    45.28 ave=    65.73 max=   210.18   (k,sigma = 10  33.15)
+  thk: min=     0.10 ave=    17.38 max=   201.49   (k,sigma = 10  33.15)
+ 
+I,J,K =  850  250 10   INF,THK =    94.07    11.88   R,T,S = 33.150 24.954 36.993
+ 
+          WRITING CLIM LAYER   10    SIGMA = 33.150
+
+ISOTOP - K,DMIN = 11    53.936
+PM,PZBOT =   122.805    26.214
+PM,PZBOT =   122.805    26.214
+RZ,RZLOC =    33.700    25.481
+XX,PZMID =    33.700    25.481
+PKM1,PCM1,S =   105.954    34.241     0.136
+DP0K,Q,DPMS =     9.742     1.323   107.277
+IRM: L,Q =  25  0.4810
+ TM: L,Q =  25  0.4810
+  tem: min=    10.01 ave=    22.52 max=    24.63   (k,sigma = 11  33.70)
+  sal: min=    33.04 ave=    36.85 max=    37.59   (k,sigma = 11  33.70)
+  den: min=    32.67 ave=    33.83 max=    35.99   (k,sigma = 11  33.70)
+  inf: min=    53.94 ave=    83.38 max=   340.29   (k,sigma = 11  33.70)
+  thk: min=     0.10 ave=    23.70 max=   239.13   (k,sigma = 11  33.70)
+ 
+I,J,K =  850  250 11   INF,THK =   105.95    16.85   R,T,S = 33.700 23.681 37.171
+ 
+          WRITING CLIM LAYER   11    SIGMA = 33.700
+
+ISOTOP - K,DMIN = 12    63.678
+PM,PZBOT =   145.462    27.864
+PM,PZBOT =   145.462    27.864
+RZ,RZLOC =    34.250    26.980
+XX,PZMID =    34.250    26.980
+PKM1,PCM1,S =   122.805    35.564     0.126
+DP0K,Q,DPMS =    10.960     1.377   124.182
+IRM: L,Q =  26  0.9798
+ TM: L,Q =  26  0.9798
+  tem: min=     7.45 ave=    21.01 max=    23.07   (k,sigma = 12  34.25)
+  sal: min=    32.37 ave=    36.83 max=    37.64   (k,sigma = 12  34.25)
+  den: min=    33.73 ave=    34.28 max=    36.03   (k,sigma = 12  34.25)
+  inf: min=    63.68 ave=   107.42 max=   557.50   (k,sigma = 12  34.25)
+  thk: min=     0.10 ave=    40.36 max=   238.85   (k,sigma = 12  34.25)
+ 
+I,J,K =  850  250 12   INF,THK =   122.81    22.66   R,T,S = 34.250 21.914 37.157
+ 
+          WRITING CLIM LAYER   12    SIGMA = 34.250
+
+ISOTOP - K,DMIN = 13    74.637
+PM,PZBOT =   178.845    29.904
+PM,PZBOT =   178.845    29.904
+RZ,RZLOC =    34.750    28.875
+XX,PZMID =    34.750    28.875
+PKM1,PCM1,S =   145.462    36.941     0.111
+DP0K,Q,DPMS =    12.000     1.327   146.789
+IRM: L,Q =  28  0.8746
+ TM: L,Q =  28  0.8746
+  tem: min=     9.57 ave=    18.97 max=    21.91   (k,sigma = 13  34.75)
+  sal: min=    34.96 ave=    36.65 max=    37.48   (k,sigma = 13  34.75)
+  den: min=    34.02 ave=    34.75 max=    36.04   (k,sigma = 13  34.75)
+  inf: min=    70.89 ave=   148.41 max=   253.77   (k,sigma = 13  34.75)
+  thk: min=     0.10 ave=    98.02 max=   458.31   (k,sigma = 13  34.75)
+ 
+I,J,K =  850  250 13   INF,THK =   145.46    33.38   R,T,S = 34.750 19.713 36.934
+ 
+          WRITING CLIM LAYER   13    SIGMA = 34.750
+
+ISOTOP - K,DMIN = 14    86.637
+PM,PZBOT =   264.670    33.746
+PM,PZBOT =   264.670    33.746
+RZ,RZLOC =    35.150    31.648
+XX,PZMID =    35.150    31.648
+PKM1,PCM1,S =   178.845    38.268     0.085
+DP0K,Q,DPMS =    12.000     1.024   179.870
+IRM: L,Q =  31  0.6482
+ TM: L,Q =  31  0.6482
+  tem: min=     8.94 ave=    16.56 max=    19.18   (k,sigma = 14  35.15)
+  sal: min=    34.84 ave=    36.29 max=    37.26   (k,sigma = 14  35.15)
+  den: min=    34.73 ave=    35.15 max=    36.11   (k,sigma = 14  35.15)
+  inf: min=    86.64 ave=   247.76 max=   544.06   (k,sigma = 14  35.15)
+  thk: min=     0.11 ave=   136.36 max=   616.90   (k,sigma = 14  35.15)
+ 
+I,J,K =  850  250 14   INF,THK =   178.85    85.82   R,T,S = 35.150 17.025 36.450
+ 
+          WRITING CLIM LAYER   14    SIGMA = 35.150
+
+ISOTOP - K,DMIN = 15    98.637
+PM,PZBOT =   361.849    36.759
+PM,PZBOT =   361.849    36.759
+RZ,RZLOC =    35.500    35.479
+XX,PZMID =    35.500    35.479
+PKM1,PCM1,S =   264.670    39.292     0.053
+DP0K,Q,DPMS =    12.000     1.000   265.670
+IRM: L,Q =  35  0.4788
+ TM: L,Q =  35  0.4788
+  tem: min=     8.30 ave=    13.88 max=    16.42   (k,sigma = 15  35.50)
+  sal: min=    34.79 ave=    35.83 max=    36.69   (k,sigma = 15  35.50)
+  den: min=    35.25 ave=    35.50 max=    36.18   (k,sigma = 15  35.50)
+  inf: min=    98.64 ave=   386.02 max=   726.54   (k,sigma = 15  35.50)
+  thk: min=     0.11 ave=    99.32 max=   263.43   (k,sigma = 15  35.50)
+ 
+I,J,K =  850  250 15   INF,THK =   264.67    97.18   R,T,S = 35.500 13.815 35.807
+ 
+          WRITING CLIM LAYER   15    SIGMA = 35.500
+
+ISOTOP - K,DMIN = 16   110.637
+PM,PZBOT =   474.528    39.332
+PM,PZBOT =   474.528    39.332
+RZ,RZLOC =    35.800    38.164
+XX,PZMID =    35.800    38.164
+PKM1,PCM1,S =   361.849    40.292     0.037
+DP0K,Q,DPMS =    12.000     1.000   362.849
+IRM: L,Q =  38  0.1637
+ TM: L,Q =  38  0.1637
+  tem: min=     8.01 ave=    11.42 max=    13.87   (k,sigma = 16  35.80)
+  sal: min=    34.64 ave=    35.46 max=    36.22   (k,sigma = 16  35.80)
+  den: min=    35.53 ave=    35.80 max=    36.22   (k,sigma = 16  35.80)
+  inf: min=   110.64 ave=   487.70 max=   861.67   (k,sigma = 16  35.80)
+  thk: min=     0.10 ave=   103.50 max=   329.19   (k,sigma = 16  35.80)
+ 
+I,J,K =  850  250 16   INF,THK =   361.85   112.68   R,T,S = 35.800 10.891 35.300
+ 
+          WRITING CLIM LAYER   16    SIGMA = 35.800
+
+ISOTOP - K,DMIN = 17   122.637
+PM,PZBOT =   577.513    41.195
+PM,PZBOT =   577.513    41.195
+RZ,RZLOC =    36.040    40.445
+XX,PZMID =    36.040    40.445
+PKM1,PCM1,S =   474.528    41.292     0.028
+DP0K,Q,DPMS =    12.000     1.000   475.528
+IRM: L,Q =  40  0.4445
+ TM: L,Q =  40  0.4445
+  tem: min=     2.81 ave=     9.37 max=    12.26   (k,sigma = 17  36.04)
+  sal: min=    33.70 ave=    35.19 max=    36.02   (k,sigma = 17  36.04)
+  den: min=    35.81 ave=    36.04 max=    36.24   (k,sigma = 17  36.04)
+  inf: min=   122.64 ave=   593.54 max=   966.43   (k,sigma = 17  36.04)
+  thk: min=     0.10 ave=   295.10 max=  6833.29   (k,sigma = 17  36.04)
+ 
+I,J,K =  850  250 17   INF,THK =   474.53   102.98   R,T,S = 36.040  8.671 35.000
+ 
+          WRITING CLIM LAYER   17    SIGMA = 36.040
+
+ISOTOP - K,DMIN = 18   134.637
+PM,PZBOT =   693.761    42.949
+PM,PZBOT =   693.761    42.949
+RZ,RZLOC =    36.200    41.953
+XX,PZMID =    36.200    41.953
+PKM1,PCM1,S =   577.513    42.292     0.022
+DP0K,Q,DPMS =    12.000     1.000   578.513
+IRM: L,Q =  41  0.9532
+ TM: L,Q =  41  0.9532
+  tem: min=     2.52 ave=     8.00 max=    10.80   (k,sigma = 18  36.20)
+  sal: min=    33.85 ave=    35.04 max=    35.80   (k,sigma = 18  36.20)
+  den: min=    36.04 ave=    36.20 max=    36.29   (k,sigma = 18  36.20)
+  inf: min=   134.64 ave=   690.17 max=  1028.67   (k,sigma = 18  36.20)
+  thk: min=     0.11 ave=   173.38 max=  7666.60   (k,sigma = 18  36.20)
+ 
+I,J,K =  850  250 18   INF,THK =   577.51   116.25   R,T,S = 36.200  7.379 34.880
+ 
+          WRITING CLIM LAYER   18    SIGMA = 36.200
+
+ISOTOP - K,DMIN = 19   146.637
+PM,PZBOT =   841.826    44.821
+PM,PZBOT =   841.826    44.821
+RZ,RZLOC =    36.380    43.971
+XX,PZMID =    36.380    43.971
+PKM1,PCM1,S =   693.761    43.292     0.018
+DP0K,Q,DPMS =    12.000     1.000   694.761
+IRM: L,Q =  43  0.9707
+ TM: L,Q =  43  0.9707
+  tem: min=     4.27 ave=     6.84 max=     9.28   (k,sigma = 19  36.38)
+  sal: min=    34.42 ave=    34.99 max=    35.60   (k,sigma = 19  36.38)
+  den: min=    36.22 ave=    36.38 max=    36.38   (k,sigma = 19  36.38)
+  inf: min=   146.64 ave=   792.47 max=  1100.65   (k,sigma = 19  36.38)
+  thk: min=     0.11 ave=   114.49 max=  1470.40   (k,sigma = 19  36.38)
+ 
+I,J,K =  850  250 19   INF,THK =   693.76   148.07   R,T,S = 36.380  6.391 34.877
+ 
+          WRITING CLIM LAYER   19    SIGMA = 36.380
+
+ISOTOP - K,DMIN = 20   158.637
+PM,PZBOT =   960.409    46.132
+PM,PZBOT =   960.409    46.132
+RZ,RZLOC =    36.520    45.602
+XX,PZMID =    36.520    45.602
+PKM1,PCM1,S =   841.826    44.292     0.015
+DP0K,Q,DPMS =    12.000     1.000   842.826
+IRM: L,Q =  45  0.6017
+ TM: L,Q =  45  0.6017
+  tem: min=     3.68 ave=     6.06 max=     8.45   (k,sigma = 20  36.52)
+  sal: min=    34.48 ave=    34.98 max=    35.56   (k,sigma = 20  36.52)
+  den: min=    36.52 ave=    36.52 max=    36.52   (k,sigma = 20  36.52)
+  inf: min=   309.25 ave=   909.83 max=  1200.74   (k,sigma = 20  36.52)
+  thk: min=     0.10 ave=    99.60 max=  5054.46   (k,sigma = 20  36.52)
+ 
+I,J,K =  850  250 20   INF,THK =   841.83   118.58   R,T,S = 36.520  5.808 34.925
+ 
+          WRITING CLIM LAYER   20    SIGMA = 36.520
+
+ISOTOP - K,DMIN = 21   170.637
+PM,PZBOT =  1049.452    47.033
+PM,PZBOT =  1049.452    47.033
+RZ,RZLOC =    36.620    46.626
+XX,PZMID =    36.620    46.626
+PKM1,PCM1,S =   960.409    45.292     0.013
+DP0K,Q,DPMS =    12.000     1.000   961.409
+IRM: L,Q =  46  0.6264
+ TM: L,Q =  46  0.6264
+  tem: min=     3.34 ave=     5.53 max=    10.54   (k,sigma = 21  36.62)
+  sal: min=    34.54 ave=    34.99 max=    36.27   (k,sigma = 21  36.62)
+  den: min=    36.62 ave=    36.62 max=    36.62   (k,sigma = 21  36.62)
+  inf: min=   320.59 ave=  1011.43 max=  1308.76   (k,sigma = 21  36.62)
+  thk: min=     0.10 ave=    94.65 max=  5047.87   (k,sigma = 21  36.62)
+ 
+I,J,K =  850  250 21   INF,THK =   960.41    89.04   R,T,S = 36.620  5.289 34.939
+ 
+          WRITING CLIM LAYER   21    SIGMA = 36.620
+
+ISOTOP - K,DMIN = 22   182.637
+PM,PZBOT =  1175.511    48.206
+PM,PZBOT =  1175.511    48.206
+RZ,RZLOC =    36.700    47.640
+XX,PZMID =    36.700    47.640
+PKM1,PCM1,S =  1049.452    46.292     0.012
+DP0K,Q,DPMS =    12.000     1.000  1050.452
+IRM: L,Q =  47  0.6399
+ TM: L,Q =  47  0.6399
+  tem: min=     3.35 ave=     5.08 max=     8.36   (k,sigma = 22  36.70)
+  sal: min=    34.65 ave=    35.00 max=    35.78   (k,sigma = 22  36.70)
+  den: min=    36.70 ave=    36.70 max=    36.70   (k,sigma = 22  36.70)
+  inf: min=   329.10 ave=  1107.57 max=  1449.59   (k,sigma = 22  36.70)
+  thk: min=     0.11 ave=   108.78 max=  5069.18   (k,sigma = 22  36.70)
+ 
+I,J,K =  850  250 22   INF,THK =  1049.45   126.06   R,T,S = 36.700  4.858 34.949
+ 
+          WRITING CLIM LAYER   22    SIGMA = 36.700
+
+ISOTOP - K,DMIN = 23   194.637
+PM,PZBOT =  1382.774    49.962
+PM,PZBOT =  1382.774    49.962
+RZ,RZLOC =    36.770    48.849
+XX,PZMID =    36.770    48.849
+PKM1,PCM1,S =  1175.511    47.292     0.011
+DP0K,Q,DPMS =    12.000     1.000  1176.511
+IRM: L,Q =  48  0.8491
+ TM: L,Q =  48  0.8491
+  tem: min=     2.98 ave=     4.67 max=     8.36   (k,sigma = 23  36.77)
+  sal: min=    34.67 ave=    35.00 max=    35.87   (k,sigma = 23  36.77)
+  den: min=    36.77 ave=    36.77 max=    36.77   (k,sigma = 23  36.77)
+  inf: min=   821.28 ave=  1218.30 max=  1585.21   (k,sigma = 23  36.77)
+  thk: min=     0.12 ave=   152.81 max=  5046.83   (k,sigma = 23  36.77)
+ 
+I,J,K =  850  250 23   INF,THK =  1175.51   207.26   R,T,S = 36.770  4.492 34.962
+ 
+          WRITING CLIM LAYER   23    SIGMA = 36.770
+
+ISOTOP - K,DMIN = 24   206.637
+PM,PZBOT =  1881.935    53.576
+PM,PZBOT =  1881.935    53.576
+RZ,RZLOC =    36.830    51.530
+XX,PZMID =    36.830    51.530
+PKM1,PCM1,S =  1382.774    48.292     0.009
+DP0K,Q,DPMS =    12.000     1.000  1383.774
+IRM: L,Q =  51  0.5295
+ TM: L,Q =  51  0.5295
+  tem: min=     2.56 ave=     4.28 max=     8.35   (k,sigma = 24  36.83)
+  sal: min=    34.66 ave=    35.00 max=    35.94   (k,sigma = 24  36.83)
+  den: min=    36.83 ave=    36.83 max=    36.83   (k,sigma = 24  36.83)
+  inf: min=   826.93 ave=  1373.68 max=  1799.85   (k,sigma = 24  36.83)
+  thk: min=     0.11 ave=   343.57 max=  1456.32   (k,sigma = 24  36.83)
+ 
+I,J,K =  850  250 24   INF,THK =  1382.77   499.16   R,T,S = 36.830  4.162 34.972
+ 
+          WRITING CLIM LAYER   24    SIGMA = 36.830
+
+ISOTOP - K,DMIN = 25   218.637
+PM,PZBOT =  3500.854    66.027
+PM,PZBOT =  3500.854    62.934
+RZ,RZLOC =    36.890    61.454
+XX,PZMID =    36.890    61.454
+PKM1,PCM1,S =  1881.935    49.292     0.007
+DP0K,Q,DPMS =    12.000     1.000  1882.935
+ TM: L,Q =  61  0.4544
+  tem: min=     2.25 ave=     3.87 max=     8.12   (k,sigma = 25  36.89)
+  sal: min=    34.69 ave=    34.99 max=    35.96   (k,sigma = 25  36.89)
+  den: min=    36.89 ave=    36.89 max=    36.89   (k,sigma = 25  36.89)
+  inf: min=   831.98 ave=  1723.43 max=  2743.59   (k,sigma = 25  36.89)
+  thk: min=     0.10 ave=   845.89 max=  4515.55   (k,sigma = 25  36.89)
+ 
+I,J,K =  850  250 25   INF,THK =  1881.93  1618.92   R,T,S = 36.890  3.789 34.974
+ 
+          WRITING CLIM LAYER   25    SIGMA = 36.890
+
+ISOTOP - K,DMIN = 26   230.637
+PM,PZBOT =  3500.854    76.000
+PM,PZBOT =  3500.854    62.934
+RZ,RZLOC =    36.970    67.648
+XX,PZMID =    36.970    62.934
+PKM1,PCM1,S =  3500.854    50.292     0.003
+DP0K,Q,DPMS =    12.000     1.000  3501.854
+  tem: min=     1.72 ave=     3.22 max=     3.68   (k,sigma = 26  36.97)
+  sal: min=    34.70 ave=    34.97 max=    35.06   (k,sigma = 26  36.97)
+  den: min=    36.97 ave=    36.97 max=    36.97   (k,sigma = 26  36.97)
+  inf: min=  1589.44 ave=  2232.16 max=  4918.47   (k,sigma = 26  36.97)
+  thk: min=     0.10 ave=   463.10 max=  3762.69   (k,sigma = 26  36.97)
+ 
+I,J,K =  850  250 26   INF,THK =  3500.85     0.00   R,T,S = 36.890  3.789 34.974
+ 
+          WRITING CLIM LAYER   26    SIGMA = 36.970
+
+ISOTOP - K,DMIN = 27   242.637
+PM,PZBOT =  3500.854    76.000
+PM,PZBOT =  3500.854    62.934
+RZ,RZLOC =    37.020    76.000
+XX,PZMID =    37.020    62.934
+PKM1,PCM1,S =  3500.854    51.292     0.003
+DP0K,Q,DPMS =    12.000     1.000  3501.854
+  tem: min=     1.59 ave=     2.78 max=     3.64   (k,sigma = 27  37.02)
+  sal: min=    34.74 ave=    34.95 max=    35.11   (k,sigma = 27  37.02)
+  den: min=    37.02 ave=    37.02 max=    37.02   (k,sigma = 27  37.02)
+  inf: min=  2079.27 ave=  2442.60 max=  5089.44   (k,sigma = 27  37.02)
+  thk: min=     0.19 ave=   435.86 max=  3268.10   (k,sigma = 27  37.02)
+ 
+I,J,K =  850  250 27   INF,THK =  3500.85     0.00   R,T,S = 36.890  3.789 34.974
+ 
+          WRITING CLIM LAYER   27    SIGMA = 37.020
+
+ISOTOP - K,DMIN = 28   254.637
+PM,PZBOT =  3500.854    76.000
+PM,PZBOT =  3500.854    62.934
+RZ,RZLOC =    37.060    76.000
+XX,PZMID =    37.060    62.934
+PKM1,PCM1,S =  3500.854    52.292     0.003
+DP0K,Q,DPMS =    12.000     1.000  3501.854
+  tem: min=     1.48 ave=     2.38 max=     3.64   (k,sigma = 28  37.06)
+  sal: min=    34.77 ave=    34.93 max=    35.16   (k,sigma = 28  37.06)
+  den: min=    37.06 ave=    37.06 max=    37.06   (k,sigma = 28  37.06)
+  inf: min=  2401.17 ave=  2874.40 max=  5072.37   (k,sigma = 28  37.06)
+  thk: min=     0.72 ave=   697.32 max=  2934.55   (k,sigma = 28  37.06)
+ 
+I,J,K =  850  250 28   INF,THK =  3500.85     0.00   R,T,S = 36.890  3.789 34.974
+ 
+          WRITING CLIM LAYER   28    SIGMA = 37.060
+
+ISOTOP - K,DMIN = 29   266.637
+PM,PZBOT =  3500.854    76.000
+PM,PZBOT =  3500.854    62.934
+RZ,RZLOC =    37.100    76.000
+XX,PZMID =    37.100    62.934
+PKM1,PCM1,S =  3500.854    53.292     0.003
+DP0K,Q,DPMS =    12.000     1.000  3501.854
+  tem: min=     1.61 ave=     1.90 max=     3.63   (k,sigma = 29  37.10)
+  sal: min=    34.85 ave=    34.90 max=    35.21   (k,sigma = 29  37.10)
+  den: min=    37.10 ave=    37.10 max=    37.10   (k,sigma = 29  37.10)
+  inf: min=  2616.29 ave=  3567.26 max=  4909.91   (k,sigma = 29  37.10)
+  thk: min=     0.84 ave=  1712.32 max=  2621.88   (k,sigma = 29  37.10)
+ 
+I,J,K =  850  250 29   INF,THK =  3500.85     0.00   R,T,S = 36.890  3.789 34.974
+ 
+          WRITING CLIM LAYER   29    SIGMA = 37.100
+
+ISOTOP - K,DMIN = 30   278.637
+PM,PZBOT =  3500.854    62.934
+RZ,RZLOC =    37.170    76.000
+XX,PZMID =    37.170    62.934
+PKM1,PCM1,S =  3500.854    54.292     0.003
+DP0K,Q,DPMS =    12.000     1.000  3501.854
+  tem: min=     1.44 ave=     1.55 max=     3.62   (k,sigma = 30  37.17)
+  sal: min=    34.91 ave=    34.92 max=    35.30   (k,sigma = 30  37.17)
+  den: min=    37.17 ave=    37.17 max=    37.17   (k,sigma = 30  37.17)
+  inf: min=  2620.99 ave=  4937.81 max=  5089.50   (k,sigma = 30  37.17)
+  thk: min=     3.16 ave=   368.60 max=   820.85   (k,sigma = 30  37.17)
+ 
+I,J,K =  850  250 30   INF,THK =  3500.85     0.00   R,T,S = 36.890  3.789 34.974
+ 
+          WRITING CLIM LAYER   30    SIGMA = 37.170
+
+28.634u 2.101s 0:45.43 67.6%	0+0k 31456+2762288io 1pf+0w
+/bin/mv -f fort.10 /Net/kronos/ddmitry/hycom/TSIS/relax/relax_tem_m01052011.b
+/bin/mv -f fort.10A /Net/kronos/ddmitry/hycom/TSIS/relax/relax_tem_m01052011.a
+/bin/mv -f fort.11 /Net/kronos/ddmitry/hycom/TSIS/relax/relax_sal_m01052011.b
+/bin/mv -f fort.11A /Net/kronos/ddmitry/hycom/TSIS/relax/relax_sal_m01052011.a
+/bin/mv -f fort.12 /Net/kronos/ddmitry/hycom/TSIS/relax/relax_int_m01052011.b
+/bin/mv -f fort.12A /Net/kronos/ddmitry/hycom/TSIS/relax/relax_int_m01052011.a
+/bin/mv -f fort.21 /Net/kronos/ddmitry/hycom/TSIS/relax/relax.m01052011.b
+/bin/mv -f fort.21A /Net/kronos/ddmitry/hycom/TSIS/relax/relax.m01052011.a
+/bin/rm fort.72
+/bin/rm fort.72A
+exit 0

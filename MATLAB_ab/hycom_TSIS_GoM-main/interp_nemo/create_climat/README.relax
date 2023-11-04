@@ -1,0 +1,12 @@
+Create HYCOM-TSIS IAS interpolated fields
+from NEMO  (1km) and GLORYS (outside NEMO)
+Output: "relax" Fields interpolated into HYCOM hybrid layers
+and ready for U/V interpolation
+
+1. Interpolate T/S/U/V from NEMO + merge GLORYS --> NEMO Z-levels
+   see ../interp3D_nemo_glorys_hycom.m
+
+2. Run: write_hycom_clim.m to prepare climatology *a, *b files in HYCOM format
+
+3. Run relax script
+

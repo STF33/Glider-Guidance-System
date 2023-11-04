@@ -1,0 +1,39 @@
+GGS NOTES:
+
+- Fix repeated and stacking "input error" message for config setup
+- Ensure new config has a check exit funciton
+
+- Switch to copernicus model
+- If download size errors arise, use xarray to chunk the downloads and get around the limit
+
+env_ggs0 packages:
+
+- cartopy
+- cmocean
+- dask
+- h5netcdf
+- matplotlib
+- netCDF4
+- numpy
+- pandas
+- plotly
+- scipy
+- tqdm
+- xarray
+
+
+import cartopy
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from cartopy.mpl.gridliner import LongitudeFormatter, LatitudeFormatter
+import cmocean
+import dask
+from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.io as pio
+from tqdm import tqdm
+import xarray as xr

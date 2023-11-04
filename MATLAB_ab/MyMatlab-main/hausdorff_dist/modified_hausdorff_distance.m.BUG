@@ -1,0 +1,167 @@
+   function MHD = modified_hausdorff_distance(P,Q,varargin);
+%
+%  MHD = modified_hausdorff_distance(P,Q) - calc. Hausd. dist, P,Q are 
+%                            geogr. coord.
+%
+%  modified_hausdorff_distance(P,Q,'cart') - calc. Hausd. dist, P,Q are 
+%                            cartesian coord.
+% Compute Hausdorff distance between two polygonal curves
+% to measure similarity between two curves 2-dim, 
+%  P and Q
+% Default Coordinates are GEOGRAPHIC coordinates, (lon,lat)
+% Other option: 'cart' - cartesian coord.
+% Euclidian distance is computed
+% Arrays are structured as: rows locations, columns - dimension
+% e.g., Npoints, size(Py)=[Npoints,2];
+% This is a maximum distance of a set to the nearest point 
+% in the other set
+% 
+% Option 'ipdm' - use ipdm (inter-point distance matrix) 
+%                 to find Hausd. distance
+%                 >6 times faster routine
+%                 but may not be correct for geographic
+%                 coordinates and units are meaningless
+%                 
+%  modified_hausdorff_distance(P,Q,'cart','ipdm') - use cart. coord
+%            calculate Hausd. using ipdm function
+%
+
+% This function computes the modified Hausdorff distance between two sets
+% P,Q entered as n x k matrices with dimension k constant (the sets can
+% have different numbers of points, however). It improves over its
+% predecessor by being much less sensitive to outlier points.  The function
+% is defined by
+%
+% d_MH(P,Q) = max{1/|P|\sum_{p\in P}d(p,Q),1/|Q|\sum_{q\in Q}d(q,P)}
+%
+% where d(p,Q) = min_{q\in Q}d(p,q), and similarly for d(P,q).
+%
+% The function is not a true topological metric since it fails the triangle
+% inquality requirement.  In practice, this does not appear to be a
+% problem.  Indeed, the function corresponds strongly with the human
+% perception of shape.
+%
+% Reference: "A Modified Hausdorff Distance for Object Matching," Dubuisson
+% & Jain.  Proc. International Conference on Pattern Recognition,
+% Jerusalem, Israel.  1994.
+%
+% Modified Jonathan Ubnoske's code - no ipdm 
+% as it cannot be done for large matrices
+% Dmitry Dukhovskoy, 2013
+% 
+%
+%keyboard
+if nargin<3
+  fgeogr=logical(1);
+else
+  aa=varargin{1};
+  if strcmp(lower(aa),'geo');
+    fgeogr=logical(1);
+  elseif strcmp(lower(aa),'cart');
+    fgeogr=logical(0);
+  else
+    error('coordinate specification is not clear',aa);
+  end
+end
+
+fipdm=logical(0);
+if nargin==4
+  aa=varargin{2};
+  if strcmp(lower(aa),'ipdm');
+    fipdm=logical(1);
+  end
+end
+
+if fipdm
+  MHD  = modified_hausdorff_dist_ipdm( P,Q );
+  return
+end
+
+
+% Check: 
+
+p=size(P,1);
+q=size(Q,1);
+
+if fipdm
+%  tic
+  idst = ipdm(P,Q);
+  DPmin=min(idst,[],2); % min distances P to Q
+  DQmin=min(idst,[],1); % min distance Q to P
+  DQmin=DQmin';  
+%  toc
+else
+% Min distance from points P to Q
+%tic
+  for k=1:p
+    x0=P(k,1);
+    y0=P(k,2);
+    if fgeogr,
+      dst=distance_spheric_coord(y0,x0,Q(:,2),Q(:,1));
+    else
+      dst=sqrt((Q(:,1)-x0).^2+(Q(:,2)-y0).^2);
+    end
+    DPmin(k,1)=min(dst);
+  end
+
+  % Min distance from Q to P
+  for k=1:q
+    x0=Q(k,1);
+    y0=Q(k,2);
+    if fgeogr,
+      dst=distance_spheric_coord(y0,x0,P(:,2),P(:,1));
+    else
+      dst=sqrt((P(:,1)-x0).^2+(P(:,2)-y0).^2);
+    end
+    DQmin(k,1)=min(dst);
+  end
+
+  %keyboard
+  % Example - works only for geogr. coord
+  aa=logical(0);
+  if aa,
+    mxP=max(DPmin);
+    mxQ=max(DQmin);
+    if mxP>mxQ,
+      k1=find(DPmin==mxP);
+      x0=P(k1,1);
+      y0=P(k1,2);
+      dd = abs(distance_spheric_coord(y0,x0,Q(:,2),Q(:,1))-mxP);
+      I=find(dd==min(dd));
+      x1=Q(I,1);
+      y1=Q(I,2);
+    else
+      k1=find(DQmin==mxQ);
+      x0=Q(k1,1);
+      y0=Q(k1,2);
+      dd = abs(distance_spheric_coord(y0,x0,P(:,2),P(:,1))-mxQ);
+      I=find(dd==min(dd));
+      x1=P(I,1);
+      y1=P(I,2);
+    end
+
+
+    plot([x0 x1],[y0 y1],'g-','linewidth',2);
+    plot(x0,y0,'k*')
+
+  end;
+%toc
+end;  % if fipdm
+
+dist_P_Q = 1/length(DQmin)*sum(DQmin);
+dist_Q_P = 1/length(DPmin)*sum(DPmin);
+MHD = max(dist_P_Q,dist_Q_P);
+
+
+return
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,104 @@
+Prepare restart/archive file to initialize
+IAS HYCOM-TSIS from NEMO
+
+1. Interpolate NEMO + GLORYS (outsied NEMO domain) --> HYCOM horiz grid
+ssh: interp2D_nemo_glorys_hycom.m
+T,S,U,V: interp3D_nemo_glorys_hycom.m
+
+2. Create relax/"climat" files: Interpolate T/S into HYCOM vertical grid (climat relax files);
+  %%%%  (This is not needed anymore :  (interp3D_nemo should 
+         automatically create *a and *b): 
+         (a) run write_hycom_clim.m 
+          (to generate *a, *b clim files from interpolated 
+           fields in step 1)  )  %%%% go to step (*) 
+  (*) run create_climat/relax_hycom_tsis.csh <--- edit dstamp 
+
+Create nest HYCOM files (or archv-type files) that will be used
+to prodcuce restart files:
+   cd create_nest/
+   run remapUV_z2nest.m  <---- change date
+
+NEMO output and GLORYS fields are daily average
+created nest (or archive) files are in fact daily mean, 
+however for ease of processing (archv files have fewer fields
+compared to archm), HYCOM files are created as archv-type (instant):
+ddmitry@h22-login-25:hind02\> more archv.2012_002_00.b
+CFSR 1993-2009 wind + CFSR 6hr anom; PHC3.0 SSS relax;                          
+Sigma2*; GDEM3i Jan. init; KPP mixed layer; SeaWiFS mon KPAR; energy-loan ice;  
+Z(32): dp00/f/x/i=3m/1.18/450m/1m; GLBa0.24/src_2.2.35; flxflg=4;               
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+   22    'iversn' = hycom version number x10
+   22    'iexpt ' = experiment number x10
+    3    'yrflag' = days in year flag
+ 1401    'idm   ' = longitudinal array size
+  891    'jdm   ' = latitudinal  array size
+field       time step  model day  k  dens        min              max
+montg1   =   19461120  40544.000  4 34.000  -4.1739287E+00   6.7303381E+00
+srfhgt   =   19461120  40544.000  0  0.000  -5.8099298E+00   1.0774854E+01
+surflx   =   19461120  40544.000  0  0.000  -3.7044107E+02   8.2389778E+01
+salflx   =   19461120  40544.000  0  0.000  -5.5422425E-01   3.1259069E-03
+bl_dpth  =   19461120  40544.000  0  0.000   2.7916215E+04   1.4618901E+06
+mix_dpth =   19461120  40544.000  0  0.000   1.5289724E+04   1.8556365E+06
+u_btrop  =   19461120  40544.000  0  0.000  -1.2463388E+00   1.1492336E+00
+v_btrop  =   19461120  40544.000  0  0.000  -5.1606995E-01   1.2498751E+00
+u-vel.   =   19461120  40544.000  1 27.100  -1.2220721E+00   1.0863510E+00
+v-vel.   =   19461120  40544.000  1 27.100  -1.0012273E+00   1.6413496E+00
+thknss   =   19461120  40544.000  1 27.100   2.9418000E+04   2.9418000E+04
+temp     =   19461120  40544.000  1 27.100   1.5384747E+01   2.9753130E+01
+salin    =   19461120  40544.000  1 27.100   1.1109797E+01   4.0501354E+01
+u-vel.   =   19461120  40544.000  2 28.100  -1.2029856E+00   1.1052716E+00
+v-vel.   =   19461120  40544.000  2 28.100  -9.7167742E-01   1.6632429E+00
+thknss   =   19461120  40544.000  2 28.100   1.9612000E+04   3.3095250E+04
+
+
+Daily mean file:
+ddmitry@pegasus: /2017_mean> more 022_archm.2017_173_12.b
+NCEP_CFSR/CFSv2-sec 1-hourly; sec-precip; LWcorr; 17DDT Sigma2*;                
+Nest in GLBc0.04-GOFS3.5; KPP mixed layer; SeaWiFS mon KPAR; HYCOM+CICE5 fully c
+Z(7): 1-7,Z(16):8,Z(2):10-16,Z(13):dp00/f/x=36/1.18/262;Z(3):400-600m; src_2.2.9
+Initial condtions GLBc0.04-GOFS3.5;                                             
+   22    'iversn' = hycom version number x10
+   22    'iexpt ' = experiment number x10
+    3    'yrflag' = days in year flag
+ 3200    'idm   ' = longitudinal array size
+ 5040    'jdm   ' = latitudinal  array size
+field       time step   mean day  k  dens        min              max
+montg1   =       1600  42542.000  0  0.000  -6.6779118E+00   2.8637648E+01
+srfhgt   =       1600  42543.000  0  0.000  -1.2368569E+01   4.3031578E+00
+surflx   =       1600  42542.500  0  0.000  -8.9728027E+02   5.5726959E+02
+salflx   =       1600  42542.500  0  0.000  -3.2610252E+00   1.0665296E-01
+bl_dpth  =       1600  42542.500  0  0.000   8.4502168E+03   3.2807405E+06
+mix_dpth =       1600  42542.500  0  0.000   4.8725771E+03   1.1262886E+07
+tmix     =       1600  42542.500  0  0.000  -1.8558809E+00   2.4872467E+01
+smix     =       1600  42542.500  0  0.000   1.1634288E-04   3.6466270E+01
+thmix    =       1600  42542.500  0 34.000  -2.5459064E+01   3.0963504E+00
+umix     =       1600  42542.500  0  0.000  -1.9293791E+00   1.7389363E+00
+vmix     =       1600  42542.500  0  0.000  -1.8172160E+00   1.6582984E+00
+kemix    =       1600  42542.500  0 34.000   2.5412575E-07   2.1639538E+00
+covice   =       1600  42542.500  0  0.000   0.0000000E+00   9.9999887E-01
+thkice   =       1600  42542.500  0  0.000   0.0000000E+00   2.4025513E+01
+temice   =       1600  42542.500  0  0.000  -2.3049587E+01   0.0000000E+00
+u_btrop  =       1600  42542.500  0  0.000  -1.3386383E+00   7.0783043E-01
+v_btrop  =       1600  42542.500  0  0.000  -1.4307826E+00   6.3169217E-01
+kebtrop  =       1600  42542.500  0  0.000   7.6079729E-09   1.1617215E+00
+u-vel.   =       1600  42542.500  1 17.000  -1.9293791E+00   1.7389363E+00
+v-vel.   =       1600  42542.500  1 17.000  -1.8172160E+00   1.6582984E+00
+k.e.     =       1600  42542.500  1 17.000   2.5412575E-07   2.1639538E+00
+thknss   =       1600  42542.500  1 17.000   9.8060000E+03   9.8060000E+03
+temp     =       1600  42542.500  1 17.000  -1.8558809E+00   2.4872467E+01
+salin    =       1600  42542.500  1 17.000   1.1634288E-04   3.6466270E+01
+density  =       1600  42542.500  1 17.000  -2.5459064E+01   3.0963504E+00
+
+
+Finalize: create nest archv file:
+interp_nemo/create_nest/remapUV_z2nest.m
+
+  3. Interpolate U/V into HYCOM vertcal layers using relax files created in step 2
+
+  4. Add ssh and montg to IAS realx files to make those similar to archive files
+
+Use archv2restart Wallcraft's code to:
+5. Convert created archive files to restart files
+
+
+

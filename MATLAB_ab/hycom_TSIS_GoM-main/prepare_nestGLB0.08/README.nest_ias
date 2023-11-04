@@ -1,0 +1,115 @@
+Create nest files from GLBb0.08 GOFS3.1 analysis expt 73.3
+Topo: depth_GLBb0.08_09m11.[ab]
+41 layers
+
+For 0.03 IAS HYCOM-TSIS
+41 layers
+IAS topo
+
+1) Create interpolation indices gmapi:
+/home/ddmitry/codes/anls_mtlb_utils/hycom_TSIS/prepare_nestGLB0.08_py/subregion
+gmapi.csh:
+
+produces:
+/Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03
+-rw-r--r-- 1 ddmitry coaps      124 Sep 27 11:36 regional.gmapi_GLB0.08.b
+-rw-r--r-- 1 ddmitry coaps  9994240 Sep 27 11:36 regional.gmapi_GLB0.08.a
+
+
+2) Create nest files from GLBb0.08 GOFS3.1 expt 73.7
+	Approach (a) 	Interp GLB topo 09m11 ---> IAS 0.03 grid: nest topo GLBb2ias
+ 									hycom_TSIS/prepare_nestGLB0.08/subregion/depth_GLB2ias0.03.csh
+								Interp archm ----> using topo GLBb2ias (isubaregion)
+		hycom_TSIS/prepare_nestGLB0.08/subregion/nest_glbtopo_iasgrid.csh
+
+		This will produce nest files:
+-rw-r--r-- 1 ddmitry coaps 1514127360 Sep 28 00:22 archm.topo09m11ias003_2019_001.a
+-rw-r--r-- 1 ddmitry coaps      23158 Sep 28 00:22 archm.topo09m11ias003_2019_001.b
+
+
+						(b) Interpolate GLBb0.08 arhcm directly onto IAS grid using
+								IAS 0.03 topogrpahy (a nest topography is created from IAS topo by opening N/E walls):
+/Net/kronos/ddmitry/hycom/TSIS/topo_IAS0.03/
+-rw-r--r-- 1 ddmitry coaps  4997120 Sep 23 00:11 regional.depth-nest.a
+-rwxr-xr-x 1 ddmitry coaps      464 Sep 22 23:19 regional.depth-nest.b
+
+
+		hycom_TSIS/prepare_nestGLB0.08/subregion/nest_iastopo.csh	
+		This will produce nest files:
+-rw-r--r-- 1 ddmitry coaps 1514127360 Sep 28 10:03 archm.ias003topo_2019_001.a
+-rw-r--r-- 1 ddmitry coaps      23158 Sep 28 10:03 archm.ias003topo_2019_001.b
+
+
+	Checked tranports along the OB show good resemblance of both approaches
+
+
+Note: production of nest files is implemented on Navy HPC, to avoid transfer GLBb archive files
+see koehr:
+/p/home/ddukhovs/hycom/IASx0.03/prep_nest
+nest_iastopo.csh
+
+
+3) Create restart files
+	(a) Need restart template: 
+	
+	create_relax/
+	2 possible ways: relax from Levitus PHC3.0 and
+	from glorys reanalysis - need to create monthly fields
+	I did for day 15 each month of 2011
+	see interp_glorys2tsis_zlevels:
+	Create relax climatology fields using new IAS HYCOM configuration
+	Create monthly clim fields from GLORYS interpolated onto 75 NEMO z-levels
+	for 2011 daily fields (15th of each month)
+	
+	or PHC: create_relax
+
+	Use z-level fields for creating relax files
+  create_relax/relax_hycom_tsis.csh
+
+	Use climatology files to run a cold start simulation to dump a restart file
+	that will be used as a template
+	Use GLORYS fields on Z-level written in HYCOM format *.a, *.b 
+	see codes in /home/ddmitry/codes/anls_mtlb_utils/hycom_TSIS/interp_nemo/create_climat
+
+	Run cold-start HYCOM (limts with negative first date) for short time to dump a restart file that
+	will be used as a restart template
+
+	(b) Use created nest to generate restart file --> see FSU HPC:
+/gpfs/research/coaps/ddmitry/HYCOM2.3_TSIS/IASx0.03/scripts/archm2restart.csh	
+	use restart template from a cold start simulation
+-rw-r--r-- 1 ddmitry ddmitry 2118778880 Oct  9 01:21 restart_template_ias0.03_gofs3.5.a
+-rw-r--r-- 1 ddmitry ddmitry      30679 Oct  9 01:21 restart_template_ias0.03_gofs3.5.b
+
+
+
+
+	
+
+
+
+
+
+Directions from Alex:
+
+
+Hi Dmitry, 
+
+not yet, I’ve been working on making it work on HPC and I think it is good now: 
+/gpfs/research/coaps/abozec/HYCOM2.3-TSIS/GOMb0.04/ROIF/tsis_cleanup/src/ 
+This is for running the model, 
+To create the tsis_obs: I would recommend at COAPS: 
+/nexsan/people/abozec/TSIS/IASx0.03/GLEAM/tsis_sources/tsis_cleanup/src_navo/ 
+but it needs to be modified to handle the “new obs” files from AVISO and GHRSST … 
+
+
+I did a test in:
+/gpfs/research/coaps/abozec/HYCOM2.3-TSIS/GOMb0.04/expt_02.0/
+The results are in data/
+the TSIS python scripts are in rtf/ 
+This version of TSIS runs from 18Z to 18Z  and not 0Z to 0Z as before (I don’t know why … )
+I guess we could do some test to get it back to 0Z to 0Z 
+To run month to month, I use the LIST and msub method (010slurm.csh) that points to sub_hindcast.csh 
+However, if/when it crashes for a reason or another, I run  sub_hindcast_man.csh to see how it crashed .. 
+To create an incup file, I use the sub_tsis.csh script. 
+
+

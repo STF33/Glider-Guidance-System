@@ -1,0 +1,12 @@
+
+Glider Guidance System (GGS) Configuration:
+
+Glider_name: TEST
+
+Max depth: 100.0
+Avg velocity: 0.25
+Battery capacity: 150.0
+Battery drain: 5.0
+Satisfying radius: 1000.0
+Waypoint 1: (39.457283, -74.193117)
+Waypoint 2: (38.767433, -73.078417)
