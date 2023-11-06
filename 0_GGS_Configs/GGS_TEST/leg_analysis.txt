@@ -1,0 +1,12 @@
+Leg 1: Waypoint 1 (39.457283, -74.193117) to Waypoint 2 (38.767433, -73.078417)
+Heading (degrees): 128.22319752446305
+Leg Distance (meters): 123016.03204756323
+Time Taken (seconds): 492064.12819025293
+Time Taken (hours): 136.68448005284804
+Expected Battery Drain (amp-hours): 28.475933344343343
+
+Round Trip Details:
+Total Distance (meters): 123016.03204756323
+Total Time (seconds): 492064.12819025293
+Total Time (hours): 136.68448005284804
+Total Expected Battery Drain (amp-hours): 28.475933344343343

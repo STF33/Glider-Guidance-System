@@ -1,0 +1,54 @@
+Leg 1: Waypoint 1 (39.457283, -74.193117) to Waypoint 2 (39.29305, -73.94345)
+Heading (degrees): 130.31758372517152
+Leg Distance (meters): 28178.502968815075
+Time Taken (seconds): 125237.79097251144
+Time Taken (hours): 34.788275270142066
+Expected Battery Drain (amp-hours): 7.247557347946264
+
+Leg 2: Waypoint 2 (39.29305, -73.94345) to Waypoint 3 (39.129067, -73.665433)
+Heading (degrees): 127.19213230159363
+Leg Distance (meters): 30103.530486597163
+Time Taken (seconds): 133793.46882932071
+Time Taken (hours): 37.16485245258909
+Expected Battery Drain (amp-hours): 7.742677594289393
+
+Leg 3: Waypoint 3 (39.129067, -73.665433) to Waypoint 4 (38.93165, -73.343783)
+Heading (degrees): 128.21107763798778
+Leg Distance (meters): 35408.92354883592
+Time Taken (seconds): 157372.99355038186
+Time Taken (hours): 43.71472043066163
+Expected Battery Drain (amp-hours): 9.107233423054506
+
+Leg 4: Waypoint 4 (38.93165, -73.343783) to Waypoint 5 (38.767433, -73.078417)
+Heading (degrees): 128.38740589593772
+Leg Distance (meters): 29351.652800910488
+Time Taken (seconds): 130451.79022626883
+Time Taken (hours): 36.23660839618579
+Expected Battery Drain (amp-hours): 7.5492934158720395
+
+Leg 5: Waypoint 5 (38.767433, -73.078417) to Waypoint 6 (38.93165, -73.343783)
+Heading (degrees): 308.55386435279763
+Leg Distance (meters): 29351.652800910488
+Time Taken (seconds): 130451.79022626883
+Time Taken (hours): 36.23660839618579
+Expected Battery Drain (amp-hours): 7.5492934158720395
+
+Leg 6: Waypoint 6 (38.93165, -73.343783) to Waypoint 7 (39.129067, -73.665433)
+Heading (degrees): 308.41363158246185
+Leg Distance (meters): 35408.92354883592
+Time Taken (seconds): 157372.99355038186
+Time Taken (hours): 43.71472043066163
+Expected Battery Drain (amp-hours): 9.107233423054506
+
+Leg 7: Waypoint 7 (39.129067, -73.665433) to Waypoint 8 (39.29305, -73.94345)
+Heading (degrees): 307.3678891589214
+Leg Distance (meters): 30103.530486597163
+Time Taken (seconds): 133793.46882932071
+Time Taken (hours): 37.16485245258909
+Expected Battery Drain (amp-hours): 7.742677594289393
+
+Round Trip Details:
+Total Distance (meters): 217906.71664150222
+Total Time (seconds): 968474.2961844542
+Total Time (hours): 269.0206378290151
+Total Expected Battery Drain (amp-hours): 56.04596621437814

@@ -1,0 +1,61 @@
+Leg 1: Waypoint 1 (41.195067, -69.875917) to Waypoint 2 (38.326445, -66.263145)
+Heading (degrees): 134.75912872503096
+Leg Distance (meters): 443888.14575448923
+Time Taken (seconds): 887776.2915089785
+Time Taken (hours): 246.6045254191607
+Expected Battery Drain (amp-hours): 51.375942795658474
+
+Leg 2: Waypoint 2 (38.326445, -66.263145) to Waypoint 3 (37.479716, -64.1629)
+Heading (degrees): 116.41628525287496
+Leg Distance (meters): 206924.36791931806
+Time Taken (seconds): 413848.7358386361
+Time Taken (hours): 114.95798217739892
+Expected Battery Drain (amp-hours): 23.94957962029144
+
+Leg 3: Waypoint 3 (37.479716, -64.1629) to Waypoint 4 (39.88209, -62.099912)
+Heading (degrees): 33.19615771338147
+Leg Distance (meters): 321576.8944682265
+Time Taken (seconds): 643153.788936453
+Time Taken (hours): 178.65383026012586
+Expected Battery Drain (amp-hours): 37.21954797085955
+
+Leg 4: Waypoint 4 (39.88209, -62.099912) to Waypoint 5 (38.54317, -37.690764)
+Heading (degrees): 86.20141599382441
+Leg Distance (meters): 2101671.560931658
+Time Taken (seconds): 4203343.121863316
+Time Taken (hours): 1167.595311628699
+Expected Battery Drain (amp-hours): 243.24902325597893
+
+Leg 5: Waypoint 5 (38.54317, -37.690764) to Waypoint 6 (6.171059, -27.770375)
+Heading (degrees): 161.9681089526266
+Leg Distance (meters): 3735681.0678153746
+Time Taken (seconds): 7471362.135630749
+Time Taken (hours): 2075.3783710085413
+Expected Battery Drain (amp-hours): 432.3704939601128
+
+Leg 6: Waypoint 6 (6.171059, -27.770375) to Waypoint 7 (-3.105742, -2.650465)
+Heading (degrees): 109.61338380019555
+Leg Distance (meters): 2973761.900171117
+Time Taken (seconds): 5947523.800342234
+Time Taken (hours): 1652.0899445395094
+Expected Battery Drain (amp-hours): 344.18540511239775
+
+Leg 7: Waypoint 7 (-3.105742, -2.650465) to Waypoint 8 (-36.713403, 14.011755)
+Heading (degrees): 157.51511705773464
+Leg Distance (meters): 4107836.196779747
+Time Taken (seconds): 8215672.393559494
+Time Taken (hours): 2282.131220433193
+Expected Battery Drain (amp-hours): 475.44400425691515
+
+Leg 8: Waypoint 8 (-36.713403, 14.011755) to Waypoint 9 (-33.926105, 18.259307)
+Heading (degrees): 52.43641036298885
+Leg Distance (meters): 494443.8389912926
+Time Taken (seconds): 988887.6779825852
+Time Taken (hours): 274.6910216618292
+Expected Battery Drain (amp-hours): 57.22729617954776
+
+Round Trip Details:
+Total Distance (meters): 14385783.972831221
+Total Time (seconds): 28771567.945662443
+Total Time (hours): 7992.102207128457
+Total Expected Battery Drain (amp-hours): 1665.021293151762
