@@ -1,1 +1,0 @@
-../scripts/hycom/trim_jpeg.com

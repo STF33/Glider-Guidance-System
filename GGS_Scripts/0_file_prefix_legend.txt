@@ -1,0 +1,9 @@
+FILE PREFIX LEGEND:
+
+'0' = Metadata/Testing
+'ALT' = Script for alternetive GGS feature(s)
+'GGS' = Executable GGS script
+'MOD' = Script for reading model data
+'SUB' = Script for GGS subtasks
+'SUP' = Script for GGS core tasks
+'XXX' = Deprecated script
