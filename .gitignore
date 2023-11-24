@@ -1,5 +1,10 @@
-C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/0-Archive/
-C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/0-Extra/
-C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/NOAA_RTOFS_binary/
-C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/NOAA_RTOFS_repository/
-C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/rtofs.*/
+.vscode/
+
+0-Archive/
+0-Extra/
+0-GGS_Configs/
+NOAA_RTOFS_binary/
+NOAA_RTOFS_repository/
+rtofs.*/
+
+!-GGS.code-workspace
