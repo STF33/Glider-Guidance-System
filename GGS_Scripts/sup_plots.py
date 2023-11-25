@@ -52,7 +52,6 @@ def GGS_plot_currents(config, waypoints, directory, RTOFS_class, u_avg, v_avg, m
     - None
     '''
 
-    # Gulf of Mexico: map_lons=[-95,0], map_lats=[0,50]
     map_lons = map_lons
     map_lats = map_lats
 

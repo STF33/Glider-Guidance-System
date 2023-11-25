@@ -25,7 +25,7 @@ class RTOFS():
         Returns:
         - None
         '''
-        
+
         self._data_orig = self.rtofs_load()
         self._data_orig = self._data_orig.set_coords(['lat', 'lon'])
         self.data = self._data_orig.copy()
@@ -33,35 +33,35 @@ class RTOFS():
         self.y = self.data.y.values
         self.grid_lons = self.data.lon.values[0,:]
         self.grid_lats = self.data.lat.values[:,0]
-    
+
     ### FUNCTION:
     def rtofs_load(self):
         
         '''
         Fetch the RTOFS data from the given URL and set its coordinates.
-        
+
         Args:
         - None
 
         Returns:
-        - rtofs_dataset (xarray.Dataset): RTOFS data
+        - rtofs_raw (xarray.Dataset): RTOFS data
         '''
-        
+
         rtofs_access = "https://tds.marine.rutgers.edu/thredds/dodsC/cool/rtofs/rtofs_us_east_scraped"
         # rtofs_access = "rtofs_us_east_scraped.nc"
-        
+
         try:
-            rtofs_dataset = xr.open_dataset(rtofs_access).set_coords(['lon', 'lat'])
-            rtofs_dataset.attrs['model'] = 'RTOFS'
-            rtofs_dataset= rtofs_dataset.isel(time=-1)
-            return rtofs_dataset
+            rtofs_raw = xr.open_dataset(rtofs_access).set_coords(['lon', 'lat'])
+            rtofs_raw.attrs['model'] = 'RTOFS'
+            rtofs_raw= rtofs_raw.isel(time=-1)
+            return rtofs_raw
         except Exception as e:
             print(f"Error fetching RTOFS data: {e}")
             return None
     
     ### FUNCTION:
     def rtofs_subset(self, config, waypoints, buffer=0.5, subset=True):
-        
+
         '''
         Subset the RTOFS data based on the bounding box created by the given points.
 
@@ -99,11 +99,12 @@ class RTOFS():
                 x=slice(extent[0], extent[1]),
                 y=slice(extent[2], extent[3])
             )
-        
+
             self.data_lons = self.data.lon.values[0,:]
             self.data_lats = self.data.lat.values[:,0]
 
             self.data = self.data.where(self.data['depth'] <= config["max_depth"], drop=True)
+            self.rtofs_qc = self.data.copy()
 
         else:
             self.data = self._data_orig
@@ -112,6 +113,7 @@ class RTOFS():
             self.data_lats = self.data.lat.values[:, 0]
 
             self.data = self.data.where(self.data['depth'] <= config["max_depth"], drop=True)
+            self.rtofs_qc = self.data.copy()
 
 ### FUNCTION:
 def model_currents(model_data, mask=False, mask_value=0.5):
@@ -157,14 +159,14 @@ def model_currents(model_data, mask=False, mask_value=0.5):
     if mask:
         u_avg = np.where(magnitude > mask_value, u_avg, np.nan)
         v_avg = np.where(magnitude > mask_value, v_avg, np.nan)
-
+    
     return u_avg, v_avg, magnitude
 
 # =========================
 # X - MAIN
 # =========================
-# RTOFS_class = RTOFS()
-# RTOFS_class.rtofs_subset(config, waypoints, subset=True)
-# u_avg, v_avg, magnitude = model_currents(RTOFS_class, mask=False)
+# rtofs_data = RTOFS()
+# rtofs_data.rtofs_subset(config, waypoints, subset=True)
+# u_avg, v_avg, magnitude = model_currents(rtofs_data, mask=False)
 # =========================
 

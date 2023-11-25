@@ -5,6 +5,8 @@
 0-GGS_Configs/
 NOAA_RTOFS_binary/
 NOAA_RTOFS_repository/
+GGS_Scripts/__pycache__/
+GGS_Scripts/XXX_*
 rtofs.*/
 
 !-GGS.code-workspace
