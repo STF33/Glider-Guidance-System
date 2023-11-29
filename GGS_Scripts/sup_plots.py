@@ -20,7 +20,7 @@ from SUP_route_analysis import route_analysis_output
 # =========================
 
 ### FUNCTION:
-def GGS_plot_currents(config, waypoints, directory, RTOFS_class, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False):
+def GGS_plot_currents(config, waypoints, directory, model_data, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False):
 
     '''
     Plot the glider's mission route along with the depth-averaged current fields.
@@ -55,8 +55,8 @@ def GGS_plot_currents(config, waypoints, directory, RTOFS_class, u_avg, v_avg, m
     map_lons = map_lons
     map_lats = map_lats
 
-    data_lons = RTOFS_class.data.lon.values
-    data_lats = RTOFS_class.data.lat.values
+    data_lons = model_data.lon.values
+    data_lats = model_data.lat.values
 
     fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
 
@@ -95,7 +95,7 @@ def GGS_plot_currents(config, waypoints, directory, RTOFS_class, u_avg, v_avg, m
     cbar_ax = fig.add_axes([box.x0 + box.width + 0.01, box.y0, 0.03, box.height])
     fig.colorbar(contour, cax=cbar_ax, orientation='vertical', label='Depth Averaged Current Magnitude (m/s)')
     
-    title = f"{config['glider_name']} Mission Route Over {config['max_depth']}m Depth-Averaged Currents"
+    title = f"{config['glider_name']} Mission - {config['max_depth']}m Depth-Averaged Currents"
     ax.set_title(title, pad=20)
     subtitle = f"Generated the Glider Guidance System (GGS) on {datetime.utcnow().strftime('%m-%d-%Y')} at {datetime.utcnow().strftime('%H:%M')} UTC"
     fig.suptitle(subtitle, fontsize='smaller', x=0.5, y=0.01, ha='center', va='bottom', color='gray')
@@ -146,6 +146,6 @@ def GGS_plot_gauge(config, directory, analysis_results):
 # =========================
 # X - MAIN
 # =========================
-# GGS_plot_currents(config, waypoints, directory, RTOFS_class, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False)
+# GGS_plot_currents(config, waypoints, directory, rtofs_data, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False)
 # GGS_plot_gauge(config, directory, analysis_results)
 # =========================

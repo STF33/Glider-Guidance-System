@@ -109,6 +109,41 @@ def calculate_distance(coord1, coord2):
     return R * c
 
 # =========================
+# CALCULATE NEARPOINT
+# =========================
+
+### FUNCTION:
+def calculate_nearpoint(dataset, target_lat, target_lon):
+    
+    '''
+    Find the nearest point in the dataset to the input latitude and longitude.
+
+    Args:
+    - dataset (xarray.Dataset): The dataset to search in.
+    - target_lat (float): The target latitude.
+    - target_lon (float): The target longitude.
+
+    Returns:
+    - (y_index, x_index) (tuple): The indices of the nearest point in the dataset.
+    - (lat_index, lon_index) (tuple): The coordinates of the nearest point in the dataset.
+    '''
+
+    lat_diff = dataset['lat'] - target_lat
+    lon_diff = dataset['lon'] - target_lon
+    distance_square = lat_diff**2 + lon_diff**2
+
+    y_index, x_index = np.unravel_index(distance_square.argmin(), distance_square.shape)
+
+    lat_index = dataset['lat'].isel(y=y_index, x=x_index).values
+    lon_index = dataset['lon'].isel(y=y_index, x=x_index).values
+
+    print(f"Input Coordinates: ({target_lat}, {target_lon})")
+    print(f"Dataset Indices: ({y_index}, {x_index})")
+    print(f"Dataset Coordinates: ({lat_index:.3f}, {lon_index:.3f})")
+
+    return (y_index, x_index), (lat_index, lon_index)
+
+# =========================
 # CALCULATE HEADING
 # =========================
 
@@ -287,7 +322,6 @@ def set_ticks(ax, extent_lon, extent_lat):
 
     ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'longitude')))
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'latitude')))
-
 
 # =========================
 # X - MAIN

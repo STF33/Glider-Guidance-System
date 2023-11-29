@@ -28,7 +28,7 @@ def GGS_config_static():
     '''
     
     config = {
-        "glider_name": "Test", #
+        "glider_name": "Yucatan", #
         "max_depth": 1000.0, #
         "avg_velocity": 0.5, #
         "battery_capacity": 1000,
@@ -59,8 +59,6 @@ def GGS_config_static():
     }
 
     waypoints = config["waypoints"]
-
-    GGS_config_output(config)
 
     return config, waypoints
 
@@ -191,7 +189,7 @@ def GGS_config_output(config):
     - directory (str): path to the directory containing the config files
     '''
 
-    output_str = "\nGlider Guidance System (GGS) Configuration:\n\n"
+    output_str = "\nGlider Guidance System (GGS) Configuration:\n"
 
     for key, value in config.items():
         if key == "waypoints":
@@ -223,4 +221,6 @@ def GGS_config_output(config):
 # EXIT_KEYWORD = "EXIT"
 # config, waypoints = GGS_config_static() # Manual
 # config, waypoints = GGS_config() # Automatic
+#
+# directory = GGS_config_output(config)
 # =========================

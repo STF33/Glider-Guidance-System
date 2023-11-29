@@ -12,12 +12,30 @@ import xarray as xr
 
 ### CLASS:
 class RTOFS():
+    
+    '''
+    Class for handling RTOFS data.
+
+    Attributes:
+    - data_orig (xarray.Dataset): original RTOFS data
+    - data (xarray.Dataset): RTOFS data
+    - x (np.array): x-coordinates of the RTOFS grid
+    - y (np.array): y-coordinates of the RTOFS grid
+    - grid_lons (np.array): longitudes of the RTOFS grid
+    - grid_lats (np.array): latitudes of the RTOFS grid
+    - rtofs_qc (xarray.Dataset): RTOFS data for quality control
+
+    Methods:
+    - __init__ (initialize the RTOFS instance)
+    - rtofs_load (fetch the RTOFS data from the given URL and set its coordinates)
+    - rtofs_subset (subset the RTOFS data based on the bounding box created by the given points)
+    '''
 
     ### FUNCTION:
     def __init__(self) -> None:
         
         '''
-        Initialize the RTOFS instance and fetch initial RTOFS data.
+        Initialize the RTOFS instance.
 
         Args:
         - None
@@ -29,10 +47,13 @@ class RTOFS():
         self._data_orig = self.rtofs_load()
         self._data_orig = self._data_orig.set_coords(['lat', 'lon'])
         self.data = self._data_orig.copy()
+
         self.x = self.data.x.values
         self.y = self.data.y.values
         self.grid_lons = self.data.lon.values[0,:]
         self.grid_lats = self.data.lat.values[:,0]
+
+        self.rtofs_qc = self._data_orig.copy()
 
     ### FUNCTION:
     def rtofs_load(self):
@@ -48,12 +69,11 @@ class RTOFS():
         '''
 
         rtofs_access = "https://tds.marine.rutgers.edu/thredds/dodsC/cool/rtofs/rtofs_us_east_scraped"
-        # rtofs_access = "rtofs_us_east_scraped.nc"
 
         try:
             rtofs_raw = xr.open_dataset(rtofs_access).set_coords(['lon', 'lat'])
             rtofs_raw.attrs['model'] = 'RTOFS'
-            rtofs_raw= rtofs_raw.isel(time=-1)
+            rtofs_raw = rtofs_raw.isel(time=-1)
             return rtofs_raw
         except Exception as e:
             print(f"Error fetching RTOFS data: {e}")
@@ -104,7 +124,7 @@ class RTOFS():
             self.data_lats = self.data.lat.values[:,0]
 
             self.data = self.data.where(self.data['depth'] <= config["max_depth"], drop=True)
-            self.rtofs_qc = self.data.copy()
+            self.rtofs_qc = self.rtofs_qc.where(self.rtofs_qc['depth'] <= config["max_depth"], drop=True)
 
         else:
             self.data = self._data_orig
@@ -113,60 +133,64 @@ class RTOFS():
             self.data_lats = self.data.lat.values[:, 0]
 
             self.data = self.data.where(self.data['depth'] <= config["max_depth"], drop=True)
-            self.rtofs_qc = self.data.copy()
+            self.rtofs_qc = self.rtofs_qc.where(self.rtofs_qc['depth'] <= config["max_depth"], drop=True)
 
 ### FUNCTION:
-def model_currents(model_data, mask=False, mask_value=0.5):
+def compute_currents(model_data):
     
     '''
-    Calculate the depth-averaged currents for the given depth configuration.
+    Calculate the thickness-weighted depth-averaged currents for the model data.
+    Create an xarray dataset with the computed variables and layer information.
 
     Args:
-    - model_data (xarray.Dataset): ocean model data
-    - mask (bool): whether or not to mask the data
-        - default: False
-        - if True, the data is masked based on the given mask_value
-        - if False, the data is not masked
-    - mask_value (float): the value to mask the data with
-        - default: 0.5 (m/s)
+    - model_data (xarray.Dataset): Ocean model data
 
     Returns:
-    - u_avg (xarray.DataArray): depth-averaged u currents
-    - v_avg (xarray.DataArray): depth-averaged v currents
+    - u_avg (xarray.DataArray): depth-averaged zonal currents
+    - v_avg (xarray.DataArray): depth-averaged meridional currents
+    - magnitude (xarray.DataArray): depth-averaged current magnitude
+    - currents_data (xarray.Dataset): dataset with the computed variables and layer information
     '''
+
+    depths = model_data['depth']
+    u_currents = model_data['u']
+    v_currents = model_data['v']
     
-    u_currents = model_data.data['u']
-    v_currents = model_data.data['v']
-    depths = model_data.data['depth']
-    
-    layer_thick = depths.diff(dim='depth', label='upper')
+    layer_bins = depths.diff(dim='depth', label='upper')
+    layer_n1 = layer_bins.isel(depth=0)
+    layer_bins = xr.concat([layer_n1, layer_bins], dim='depth')
+    layer_bins['depth'].values[0] = 0
 
-    n1_layer_thick = layer_thick.isel(depth=0)
-    layer_thick = xr.concat([n1_layer_thick, layer_thick], dim='depth')
-    layer_thick['depth'].values[0] = 0
+    z_weighted_u = u_currents * layer_bins
+    z_weighted_v = v_currents * layer_bins
 
-    depth_weighted_u = u_currents * layer_thick
-    depth_weighted_v = v_currents * layer_thick
+    sum_weighted_u = z_weighted_u.sum(dim='depth')
+    sum_weighted_v = z_weighted_v.sum(dim='depth')
+    sum_layer_bins = layer_bins.sum(dim='depth')
 
-    total_weighted_u = depth_weighted_u.sum(dim='depth')
-    total_weighted_v = depth_weighted_v.sum(dim='depth')
-
-    u_avg = total_weighted_u / layer_thick.sum(dim='depth')
-    v_avg = total_weighted_v / layer_thick.sum(dim='depth')
-
+    u_avg = sum_weighted_u / sum_layer_bins
+    v_avg = sum_weighted_v / sum_layer_bins
     magnitude = np.sqrt(u_avg ** 2 + v_avg ** 2)
 
-    if mask:
-        u_avg = np.where(magnitude > mask_value, u_avg, np.nan)
-        v_avg = np.where(magnitude > mask_value, v_avg, np.nan)
-    
-    return u_avg, v_avg, magnitude
+    currents_data = xr.Dataset({
+        'u_avg': u_avg,
+        'v_avg': v_avg,
+        'magnitude': magnitude,
+        'layer_thickness': layer_bins,
+        'z_weighted_u': z_weighted_u.sum(dim='depth'),
+        'z_weighted_v': z_weighted_v.sum(dim='depth')
+        }, coords=model_data.coords)
+
+    return u_avg, v_avg, magnitude, currents_data
 
 # =========================
 # X - MAIN
 # =========================
-# rtofs_data = RTOFS()
-# rtofs_data.rtofs_subset(config, waypoints, subset=True)
-# u_avg, v_avg, magnitude = model_currents(rtofs_data, mask=False)
+# rtofs = RTOFS()
+# rtofs.rtofs_subset(config, waypoints, subset=True)
+#
+# rtofs_data = rtofs.data
+# rtofs_qc = rtofs.rtofs_qc
+#
+# u_avg, v_avg, magnitude, currents_data = compute_currents(rtofs_data)
 # =========================
-

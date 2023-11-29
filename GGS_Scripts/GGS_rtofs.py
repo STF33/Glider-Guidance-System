@@ -2,6 +2,11 @@
 # X - Imports
 # =========================
 
+### /// FUNCTIONS ///
+import cartopy.crs as ccrs
+import matplotlib.ticker as mticker
+import numpy as np
+
 ### /// CONFIGURATION ///
 import os
 import pandas as pd
@@ -22,6 +27,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import xarray as xr
+from MOD_rtofs import compute_currents
+from SUB_functions import calculate_nearpoint
 
 ### /// PLOTS ///
 import cartopy.crs as ccrs
@@ -41,7 +48,7 @@ from SUP_route_analysis import route_analysis_output
 # =========================
 
 ### IMPORT:
-from SUP_config import GGS_config_static, GGS_config_import, GGS_config_new, GGS_config, GGS_config_output
+from SUP_config import *
 
 ### NOTES:
 # N/A
@@ -51,7 +58,7 @@ from SUP_config import GGS_config_static, GGS_config_import, GGS_config_new, GGS
 # =========================
 
 ### IMPORT:
-from SUP_route_analysis import route_analysis, route_analysis_output
+from SUP_route_analysis import *
 
 ### NOTES:
 # N/A
@@ -61,17 +68,18 @@ from SUP_route_analysis import route_analysis, route_analysis_output
 # =========================
 
 ### IMPORT:
-from MOD_rtofs import RTOFS, model_currents
+from MOD_rtofs import *
 
 ### NOTES:
-# N/A
+# Find layer depth derivation code from Dimitry hycom python files
+# Function for calculating the center thickness u and v value by taking u1 and u2 at z1 and z2 and calculating the average between them
 
 # =========================
 # QUALITY CONTROL CHECKS
 # =========================
 
 ### IMPORT:
-from SUP_qc_checks import qc_selection, qc_plots
+from SUP_qualitycontrol import *
 
 ### NOTES:
 # N/A
@@ -81,10 +89,10 @@ from SUP_qc_checks import qc_selection, qc_plots
 # =========================
 
 ### IMPORT:
-from SUP_plots import GGS_plot_currents
+from SUP_plots import *
 
 ### NOTES:
-# Gulf of Mexico: map_lons=[-95,0], map_lats=[0,50]
+# N/A
 
 # =========================
 # X - MAIN
@@ -105,16 +113,19 @@ def main():
 
     analysis_results = route_analysis(config, waypoints)
     route_analysis_output(config, directory, analysis_results)
+
+    rtofs = RTOFS()
+    rtofs.rtofs_subset(config, waypoints, subset=True)
     
-    rtofs_data = RTOFS()
-    rtofs_data.rtofs_subset(config, waypoints, subset=True)
-    rtofs_qc = rtofs_data.rtofs_qc
-    u_avg, v_avg, magnitude = model_currents(rtofs_data, mask=False)
+    rtofs_data = rtofs.data
+    rtofs_qc = rtofs.rtofs_qc
+    
+    u_avg, v_avg, magnitude, currents_data = compute_currents(rtofs_data)
+    
+    qc_currents_comparison(directory, rtofs_data, rtofs_qc, latitude=20.5, longitude=-86.0)
+    qc_currents_profile(directory, rtofs_data, latitude=20.5, longitude=-86.0)
 
-    qc_coordinates = qc_selection(rtofs_qc)
-    qc_plots(directory, rtofs_qc, qc_coordinates, u_avg, v_avg)
-
-    GGS_plot_currents(config, waypoints, directory, rtofs_data, u_avg, v_avg, magnitude, extent='data', map_lons=[-95, 0], map_lats=[0, 50], show_route=False)
+    GGS_plot_currents(config, waypoints, directory, rtofs_data, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False)
 
 if __name__ == "__main__":
     main()
