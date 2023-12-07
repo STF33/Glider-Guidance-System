@@ -4,6 +4,8 @@
 
 ### /// RTOFS ///
 import numpy as np
+import os
+from scipy.interpolate import interp1d
 import xarray as xr
 
 # =========================
@@ -122,7 +124,7 @@ class RTOFS():
 
             self.data_lons = self.data.lon.values[0,:]
             self.data_lats = self.data.lat.values[:,0]
-
+            
             self.data = self.data.where(self.data['depth'] <= config["max_depth"], drop=True)
             self.rtofs_qc = self.rtofs_qc.where(self.rtofs_qc['depth'] <= config["max_depth"], drop=True)
 
@@ -135,62 +137,149 @@ class RTOFS():
             self.data = self.data.where(self.data['depth'] <= config["max_depth"], drop=True)
             self.rtofs_qc = self.rtofs_qc.where(self.rtofs_qc['depth'] <= config["max_depth"], drop=True)
 
+    ### FUNCTION:
+    def rtofs_save(self, config, directory):
+        
+        '''
+        Save the subset RTOFS data as a NetCDF file.
+
+        Args:
+        - config (dict): Glider Guidance System configuration
+        - directory (str): directory to save the file
+
+        Returns:
+        - None
+        '''
+
+        rtofs_data_file = f"{config['glider_name']}_rtofs_{config['max_depth']}m_.nc"
+        rtofs_data_path = os.path.join(directory, rtofs_data_file)
+        self.data.to_netcdf(rtofs_data_path)
+
 ### FUNCTION:
-def compute_currents(model_data):
+def interp_average(config, directory, model_data):
     
     '''
-    Calculate the thickness-weighted depth-averaged currents for the model data.
-    Create an xarray dataset with the computed variables and layer information.
+    Compute depth-averaged ocean currents, temperature, and salinity, 
+    and store 1-meter bin averages for the input model data.
 
     Args:
+    - config (dict): Glider Guidance System configuration
+    - directory (str): directory to save the file
     - model_data (xarray.Dataset): Ocean model data
 
     Returns:
-    - u_avg (xarray.DataArray): depth-averaged zonal currents
-    - v_avg (xarray.DataArray): depth-averaged meridional currents
-    - magnitude (xarray.DataArray): depth-averaged current magnitude
-    - currents_data (xarray.Dataset): dataset with the computed variables and layer information
+    - calculated_data (xarray.Dataset): dataset with the computed variables and layer information
+    - bin_data (xarray.Dataset): dataset with the bin averages
     '''
 
-    depths = model_data['depth']
+    # Extracting data from the model dataset
     u_currents = model_data['u']
     v_currents = model_data['v']
-    
-    layer_bins = depths.diff(dim='depth', label='upper')
-    layer_n1 = layer_bins.isel(depth=0)
-    layer_bins = xr.concat([layer_n1, layer_bins], dim='depth')
-    layer_bins['depth'].values[0] = 0
+    temperature = model_data['temperature']
+    salinity = model_data['salinity']
+    depths = model_data['depth'].values
 
-    z_weighted_u = u_currents * layer_bins
-    z_weighted_v = v_currents * layer_bins
+    # Initialize arrays for depth-averaged and bin-averaged variables
+    averaged_u = np.full((len(model_data.y), len(model_data.x)), np.nan)
+    averaged_v = np.full_like(averaged_u, np.nan)
+    averaged_temp = np.full_like(averaged_u, np.nan)
+    averaged_sal = np.full_like(averaged_u, np.nan)
 
-    sum_weighted_u = z_weighted_u.sum(dim='depth')
-    sum_weighted_v = z_weighted_v.sum(dim='depth')
-    sum_layer_bins = layer_bins.sum(dim='depth')
+    # Determine the maximum number of bins across all grid points
+    max_num_bins = int(np.nanmax([valid_depths.max() for valid_depths in depths if valid_depths.size > 0])) + 1
 
-    u_avg = sum_weighted_u / sum_layer_bins
-    v_avg = sum_weighted_v / sum_layer_bins
-    magnitude = np.sqrt(u_avg ** 2 + v_avg ** 2)
+    # Initialize arrays to store bin averages for each variable at each depth and position
+    bin_avg_u = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
+    bin_avg_v = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
+    bin_avg_temp = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
+    bin_avg_sal = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
 
-    currents_data = xr.Dataset({
-        'u_avg': u_avg,
-        'v_avg': v_avg,
-        'magnitude': magnitude,
-        'layer_thickness': layer_bins,
-        'z_weighted_u': z_weighted_u.sum(dim='depth'),
-        'z_weighted_v': z_weighted_v.sum(dim='depth')
-        }, coords=model_data.coords)
+    # Looping over each spatial point to interpolate and average the current data
+    for y in range(len(model_data.y)):
+        for x in range(len(model_data.x)):
+            
+            # Extract data values at the current point
+            u_vals = u_currents.isel(y=y, x=x).values
+            v_vals = v_currents.isel(y=y, x=x).values
+            temp_vals = temperature.isel(y=y, x=x).values
+            sal_vals = salinity.isel(y=y, x=x).values
+            
+            # Identifying valid depth indices
+            valid_indices = ~np.isnan(u_vals) & ~np.isnan(v_vals)
+            valid_depths = depths[valid_indices]
 
-    return u_avg, v_avg, magnitude, currents_data
+            # If there are valid depths, interpolate and average the data
+            if valid_depths.size > 0:
+
+                # Creating bins for each depth
+                max_valid_depth = valid_depths.max()
+                bins = np.arange(0, max_valid_depth + 1, 1)
+                
+                # Interpolation and averaging for each variable
+                u_interp = interp1d(valid_depths, u_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
+                v_interp = interp1d(valid_depths, v_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
+                temp_interp = interp1d(valid_depths, temp_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
+                sal_interp = interp1d(valid_depths, sal_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
+                
+                # Computing bin averages for each variable
+                bin_averages_u = [u_interp(depth).mean() for depth in bins[:-1]]
+                bin_averages_v = [v_interp(depth).mean() for depth in bins[:-1]]
+                bin_averages_temp = [temp_interp(depth).mean() for depth in bins[:-1]]
+                bin_averages_sal = [sal_interp(depth).mean() for depth in bins[:-1]]
+                
+                # Computing depth-averaged values at the XY gridpoint
+                averaged_u[y, x] = np.mean(bin_averages_u)
+                averaged_v[y, x] = np.mean(bin_averages_v)
+                averaged_temp[y, x] = np.mean(bin_averages_temp)
+                averaged_sal[y, x] = np.mean(bin_averages_sal)
+
+                # Storing bin averages for each variable
+                for i in range(len(bins) - 1):
+                    bin_avg_u[y, x, i] = bin_averages_u[i]
+                    bin_avg_v[y, x, i] = bin_averages_v[i]
+                    bin_avg_temp[y, x, i] = bin_averages_temp[i]
+                    bin_avg_sal[y, x, i] = bin_averages_sal[i]
+
+    # Compute the depth-averaged current magnitude
+    magnitude = np.sqrt(averaged_u ** 2 + averaged_v ** 2)
+
+    # Creating 'calculated_data' dataset
+    calculated_data = xr.Dataset({
+        'u_avg': (('y', 'x'), averaged_u),
+        'v_avg': (('y', 'x'), averaged_v),
+        'temperature_avg': (('y', 'x'), averaged_temp),
+        'salinity_avg': (('y', 'x'), averaged_sal),
+        'magnitude': (('y', 'x'), magnitude)
+    }, coords={'lat': model_data.lat, 'lon': model_data.lon})
+
+    # Creating 'bin_data' dataset
+    bin_data = xr.Dataset({
+        'bin_avg_u': (('y', 'x', 'bin'), bin_avg_u),
+        'bin_avg_v': (('y', 'x', 'bin'), bin_avg_v),
+        'bin_avg_temp': (('y', 'x', 'bin'), bin_avg_temp),
+        'bin_avg_sal': (('y', 'x', 'bin'), bin_avg_sal),
+    }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_num_bins)})
+
+    # Save 'calculated_data' dataset as a NetCDF file
+    calculated_data_file = f"{config['glider_name']}_calculated_data.nc"
+    calculated_data_path = os.path.join(directory, calculated_data_file)
+    calculated_data.to_netcdf(calculated_data_path)
+
+    # Save 'bin_data' dataset as a NetCDF file
+    bin_data_file = f"{config['glider_name']}_bin_data.nc"
+    bin_data_path = os.path.join(directory, bin_data_file)
+    bin_data.to_netcdf(bin_data_path)
+
+    return calculated_data, bin_data
 
 # =========================
-# X - MAIN
-# =========================
+#
 # rtofs = RTOFS()
 # rtofs.rtofs_subset(config, waypoints, subset=True)
-#
 # rtofs_data = rtofs.data
 # rtofs_qc = rtofs.rtofs_qc
+# rtofs.rtofs_save(config, directory)
 #
-# u_avg, v_avg, magnitude, currents_data = compute_currents(rtofs_data)
+# calculated_data, bin_data = interp_average(config, directory, rtofs_data)
+#
 # =========================

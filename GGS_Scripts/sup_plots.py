@@ -5,7 +5,7 @@
 ### /// PLOTS ///
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import cmocean
+import cmocean.cm as cmo
 from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,41 +20,30 @@ from SUP_route_analysis import route_analysis_output
 # =========================
 
 ### FUNCTION:
-def GGS_plot_currents(config, waypoints, directory, model_data, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False):
-
+def GGS_plot_currents(config, waypoints, directory, model_data, currents_data, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False):
+    
     '''
-    Plot the glider's mission route along with the depth-averaged current fields.
+    Plot the glider's mission route along with the depth-averaged current fields using currents_data.
 
     Args:
-    - config (dict): Glider Guidance System configuration
+    - config (dict): dictionary of configuration parameters
     - waypoints (list): list of waypoints
-    - directory (str): path to the directory containing the config files
-    - RTOFS_class (RTOFS): RTOFS instance
-    - u_avg (xarray.DataArray): depth-averaged u currents
-    - v_avg (xarray.DataArray): depth-averaged v currents
-    - magnitude (xarray.DataArray): depth-averaged current magnitude
-    - buffer (float): buffer to add to the bounding box
-        - default: 0.5
-    - extent (str): extent of the plot
-        - default: 'data'
-        - if 'map', extent is defined by the 'map_lons' and 'map_lats' arguments
-        - if 'data': extent is defined by the input dataset
-    - map_lons (list): longitude bounds of the map
-        - default: [0, 0]
-    - map_lats (list): latitude bounds of the map
-        - default: [0, 0]
-    - show_route (bool): whether or not to show the route
-        - default: False
-        - if True, the route is plotted
-        - if False, the route is not plotted
+    - directory (str): directory to save the figure
+    - model_data (xarray.Dataset): ocean model data
+    - currents_data (xarray.Dataset): dataset with the computed variables and layer information
+    - extent (str): extent of the plot, either 'map' or 'data'
+    - map_lons (list): longitude bounds of the map, if extent='map'
+    - map_lats (list): latitude bounds of the map, if extent='map'
+    - show_route (bool): whether or not to show the route on the plot
 
     Returns:
     - None
     '''
 
-    map_lons = map_lons
-    map_lats = map_lats
-
+    u_avg = currents_data['u_avg'].values
+    v_avg = currents_data['v_avg'].values
+    magnitude = currents_data['magnitude'].values
+    
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
 
@@ -68,8 +57,8 @@ def GGS_plot_currents(config, waypoints, directory, model_data, u_avg, v_avg, ma
         set_ticks(ax, data_lons, data_lats)
     else:
         raise ValueError("Invalid extent option. Use 'map' or 'data'.")
-    
-    contour = ax.contourf(data_lons, data_lats, magnitude, cmap=cmocean.cm.speed, transform=ccrs.PlateCarree())
+
+    contour = ax.contourf(data_lons, data_lats, magnitude, cmap=cmo.speed, transform=ccrs.PlateCarree())
     ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=2)
 
     if show_route:
@@ -104,16 +93,21 @@ def GGS_plot_currents(config, waypoints, directory, model_data, u_avg, v_avg, ma
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
 
+    plt.close(fig)
+
 ### FUNCTION: (DEPRECATED)
 def GGS_plot_gauge(config, directory, analysis_results):
 
     '''
-    Plot a gauge showing the remaining battery capacity.
+    Plot a gauge showing the remaining battery capacity estimate for the configured mission.
 
     Args:
     - config (dict): The GGS configuration dictionary.
     - directory (str): The directory path where the configuration is saved.
     - analysis_results (list): List of dictionaries containing data for each leg of the route.
+
+    Returns:
+    - None
     '''
     
     total_distance, total_time_seconds, total_time_hours, total_battery_drain = route_analysis_output(config, directory, analysis_results)
@@ -144,8 +138,9 @@ def GGS_plot_gauge(config, directory, analysis_results):
     pio.write_image(fig_gauge, gauge_path, format='png')
 
 # =========================
-# X - MAIN
-# =========================
-# GGS_plot_currents(config, waypoints, directory, rtofs_data, u_avg, v_avg, magnitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False)
+#
+# GGS_plot_currents(config, waypoints, directory, rtofs_data, currents_data, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False)
+#
 # GGS_plot_gauge(config, directory, analysis_results)
+
 # =========================

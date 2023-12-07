@@ -3,8 +3,13 @@
 0-Archive/
 0-Documentation/
 0-Extra/
+0-Materials/
 1-Configs/
 1-Plots/
+
+GGS_Scripts/0_DEBUG_NOTEBOOK.ipynb
+GGS_Scripts/ALT_slocum.py
+GGS_Scripts/GGS_rtofs_demo.py
 
 GGS_Scripts/__pycache__/
 GGS_Scripts/0-Archive/

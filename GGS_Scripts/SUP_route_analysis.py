@@ -108,8 +108,9 @@ def route_analysis_output(config, directory, analysis_results):
     return total_distance, total_time_seconds, total_time_hours, total_battery_drain
 
 # =========================
-# X - MAIN
-# =========================
+#
 # analysis_results = route_analysis(config, waypoints)
-# route_analysis_output(config, directory, analysis_results) 
+#
+# route_analysis_output(config, directory, analysis_results)
+#  
 # =========================

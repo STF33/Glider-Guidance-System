@@ -12,6 +12,38 @@ from SUB_functions import check_abort, check_float, check_coordinate
 # =========================
 
 ### FUNCTION:
+def GGS_config_static_demo():
+    
+    '''
+    Return a hardcoded Glider Guidance System configuration.
+
+    INTENDED FOR DEBUGGING ONLY
+    
+    Args:
+    - None
+
+    Returns:
+    - config (dict): Glider Guidance System configuration
+    - waypoints (list): list of waypoints
+    '''
+    
+    config = {
+        "glider_name": "DEMO_GoM", #
+        "max_depth": 1000.0, #
+        "avg_velocity": 0.5, #
+        "battery_capacity": 1000,
+        "battery_drain": 5, #
+        "satisfying_radius": 1000, #
+        "waypoints": [(18.00510558149081, -97.75507520595109),
+                      (30.68658969837126, -80.17002034924428)
+                    ] # Gulf of Mexico
+    }
+
+    waypoints = config["waypoints"]
+
+    return config, waypoints
+
+### FUNCTION:
 def GGS_config_static():
     
     '''
@@ -28,34 +60,15 @@ def GGS_config_static():
     '''
     
     config = {
-        "glider_name": "Yucatan", #
+        "glider_name": "GoM", #
         "max_depth": 1000.0, #
         "avg_velocity": 0.5, #
         "battery_capacity": 1000,
         "battery_drain": 5, #
         "satisfying_radius": 1000, #
-        "waypoints": [(15.365189027409214, -90.57125927041142),
-                      (23.25501019140833, -80.12008055595216)
-                    ] # Focused Yucatan
-        # "waypoints": [(41.195067, -69.875917),
-        #               (38.326445, -66.263145),
-        #               (37.479716, -64.162900),
-        #               (39.882090, -62.099912),
-        #               (38.543170, -37.690764),
-        #               (6.171059, -27.770375),
-        #               (-3.105742, -2.650465),
-        #               (-36.713403, 14.011755),
-        #               (-33.926105, 18.259307)
-        #             ] # Sentinel Leg 1
-        # "waypoints": [(39.457283, -74.193117),
-        #               (39.29305, -73.94345),
-        #               (39.129067, -73.665433),
-        #               (38.93165, -73.343783),
-        #               (38.767433, -73.078417),
-        #               (38.93165, -73.343783),
-        #               (39.129067, -73.665433),
-        #               (39.29305, -73.94345)
-        #               ] # E-Line
+        "waypoints": [(18.00510558149081, -97.75507520595109),
+                      (30.68658969837126, -80.17002034924428)
+                    ] # Gulf of Mexico
     }
 
     waypoints = config["waypoints"]
@@ -216,11 +229,10 @@ def GGS_config_output(config):
     return directory
 
 # =========================
-# X - MAIN
-# =========================
-# EXIT_KEYWORD = "EXIT"
+#
 # config, waypoints = GGS_config_static() # Manual
 # config, waypoints = GGS_config() # Automatic
 #
 # directory = GGS_config_output(config)
+#
 # =========================

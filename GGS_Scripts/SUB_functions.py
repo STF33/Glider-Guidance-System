@@ -128,8 +128,8 @@ def calculate_nearpoint(dataset, target_lat, target_lon):
     - (lat_index, lon_index) (tuple): The coordinates of the nearest point in the dataset.
     '''
 
-    lat_diff = dataset['lat'] - target_lat
-    lon_diff = dataset['lon'] - target_lon
+    lat_diff = dataset['lat'] - float(target_lat)
+    lon_diff = dataset['lon'] - float(target_lon)
     distance_square = lat_diff**2 + lon_diff**2
 
     y_index, x_index = np.unravel_index(distance_square.argmin(), distance_square.shape)
@@ -322,9 +322,3 @@ def set_ticks(ax, extent_lon, extent_lat):
 
     ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'longitude')))
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'latitude')))
-
-# =========================
-# X - MAIN
-# =========================
-# N/A
-# =========================
