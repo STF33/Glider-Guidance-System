@@ -77,10 +77,10 @@ def main():
     analysis_results = route_analysis(config, waypoints)
     route_analysis_output(config, directory, analysis_results)
 
-    rtofs_data = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Configs/GGS_GoM/GoM_rtofs_1000.0m.nc')
-    rtofs_qc = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Configs/GGS_GoM/GoM_rtofs_1000.0m.nc')
-    calculated_data = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Configs/GGS_GoM/GoM_calculated_data.nc')
-    bin_data = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Configs/GGS_GoM/GoM_bin_data.nc')
+    rtofs_data = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Demo/GGS_GoM/GoM_rtofs_1000.0m.nc')
+    rtofs_qc = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Demo/GGS_GoM/GoM_rtofs_1000.0m.nc')
+    calculated_data = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Demo/GGS_GoM/GoM_calculated_data.nc')
+    bin_data = xr.open_dataset('C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/1-Demo/GGS_GoM/GoM_bin_data.nc')
 
     latitude = '21.5'
     longitude = '-85.5'

@@ -39,7 +39,7 @@ def qc_currents_comparison(config, directory, subset_data, original_data, latitu
     magnitude_subset = np.sqrt(u_data**2 + v_data**2)
     magnitude_original = np.sqrt(u_data_qc**2 + v_data_qc**2)
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(6, 10))
 
     axes[0].plot(u_data, subset_data['depth'], label='u', color='blue')
     axes[0].plot(v_data, subset_data['depth'], label='v', color='orange')
@@ -59,6 +59,7 @@ def qc_currents_comparison(config, directory, subset_data, original_data, latitu
     axes[1].legend()
 
     plt.suptitle(f'Quality Control Comparison - Lat: {lat_index:.3f}, Lon: {lon_index:.3f}', fontsize=14)
+    plt.subplots_adjust(top=0.90)
     plt.tight_layout()
 
     fig_filename = f"{config['glider_name']}_QualityControl_Comparison.png"
@@ -98,11 +99,11 @@ def qc_currents_profile(config, directory, model_data, currents_data, bin_data, 
     bin_u_data = bin_data['bin_avg_u'].isel(y=y_index, x=x_index).values
     bin_v_data = bin_data['bin_avg_v'].isel(y=y_index, x=x_index).values
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(6, 10))
 
     axes[0].plot(u_data, model_data['depth'], label='u', color='black')
     axes[0].scatter(bin_u_data, np.arange(len(bin_u_data)), color='blue', label='Bin Average u', alpha=0.2)
-    axes[0].scatter(u_data, model_data['depth'], color='black', label='u Datapoint', alpha=1.0)
+    axes[0].scatter(u_data, model_data['depth'], marker='x', color='black', s=100, label='u Datapoint', alpha=1.0)
     axes[0].axvline(x=avg_u, color='green', linestyle='--', label='Depth Average u')
     axes[0].set_title('U Magnitude Over Depth')
     axes[0].set_xlabel('U Velocity (m/s)')
@@ -112,14 +113,15 @@ def qc_currents_profile(config, directory, model_data, currents_data, bin_data, 
 
     axes[1].plot(v_data, model_data['depth'], label='v', color='black')
     axes[1].scatter(bin_v_data, np.arange(len(bin_v_data)), color='orange', label='Bin Average v', alpha=0.2)
-    axes[1].scatter(v_data, model_data['depth'], color='black', label='v Datapoint', alpha=1.0)
+    axes[1].scatter(v_data, model_data['depth'], marker='x', color='black', s=100, label='v Datapoint', alpha=1.0)
     axes[1].axvline(x=avg_v, color='green', linestyle='--', label='Depth Average v')
     axes[1].set_title('V Magnitude Over Depth')
     axes[1].set_xlabel('V Velocity (m/s)')
     axes[1].invert_yaxis()
     axes[1].legend()
-
+    
     plt.suptitle(f'Quality Control Profiles - Lat: {lat_index:.3f}, Lon: {lon_index:.3f}', fontsize=14)
+    plt.subplots_adjust(top=0.90)
     plt.tight_layout()
 
     fig_filename = f"{config['glider_name']}_QualityControl_Profile.png"
