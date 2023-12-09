@@ -2,7 +2,6 @@
 # X - IMPORTS
 # =========================
 
-### /// RTOFS ///
 import numpy as np
 import os
 from scipy.interpolate import interp1d
@@ -19,18 +18,19 @@ class RTOFS():
     Class for handling RTOFS data.
 
     Attributes:
-    - data_orig (xarray.Dataset): original RTOFS data
-    - data (xarray.Dataset): RTOFS data
-    - x (np.array): x-coordinates of the RTOFS grid
-    - y (np.array): y-coordinates of the RTOFS grid
-    - grid_lons (np.array): longitudes of the RTOFS grid
-    - grid_lats (np.array): latitudes of the RTOFS grid
-    - rtofs_qc (xarray.Dataset): RTOFS data for quality control
+    - data_orig (xarray.Dataset): Original RTOFS data.
+    - data (xarray.Dataset): Main RTOFS data.
+    - x (np.array): X-coordinates of the RTOFS grid.
+    - y (np.array): Y-coordinates of the RTOFS grid.
+    - grid_lons (np.array): Longitudes of the RTOFS grid.
+    - grid_lats (np.array): Latitudes of the RTOFS grid.
+    - rtofs_qc (xarray.Dataset): RTOFS data for quality control.
 
     Methods:
-    - __init__ (initialize the RTOFS instance)
-    - rtofs_load (fetch the RTOFS data from the given URL and set its coordinates)
-    - rtofs_subset (subset the RTOFS data based on the bounding box created by the given points)
+    - __init__: Initialize the RTOFS instance.
+    - rtofs_load: Fetch the RTOFS data from the given URL source and set its coordinates.
+    - rtofs_subset: Subset the RTOFS data based on the GGS mission extent.
+    - rtofs_save: Save the subset RTOFS data as a NetCDF file.
     '''
 
     ### FUNCTION:
@@ -61,7 +61,7 @@ class RTOFS():
     def rtofs_load(self):
         
         '''
-        Fetch the RTOFS data from the given URL and set its coordinates.
+        Fetch the RTOFS data from the given URL source and set its coordinates.
 
         Args:
         - None
@@ -85,17 +85,17 @@ class RTOFS():
     def rtofs_subset(self, config, waypoints, buffer=0.5, subset=True):
 
         '''
-        Subset the RTOFS data based on the bounding box created by the given points.
+        Subset the RTOFS data based on the GGS mission extent.
 
         Args:
-        - config (dict): Glider Guidance System configuration
-        - waypoints (list): list of waypoints
-        - buffer (float): buffer (in degrees) to add to the bounding box
+        - config (dict): Glider Guidance System mission configuration.
+        - waypoints (list): Glider Guidance System mission waypoints.
+        - buffer (float): Buffer (in degrees) to add to the bounding box.
             - default: 0.5
-        - subset (bool): whether or not to subset the data
-            - default: True
-            - if True, the data is subset based on the bounding box of the waypoints
-            - if False, the entire RTOFS grid is used (no subsetting)
+        - subset (bool): Subset the data.
+            - default: 'True'
+            - if True, the data is subset based on GGS mission extent.
+            - if False, the entire RTOFS grid is used (no subsetting).
 
         Returns:
         - None
@@ -144,8 +144,8 @@ class RTOFS():
         Save the subset RTOFS data as a NetCDF file.
 
         Args:
-        - config (dict): Glider Guidance System configuration
-        - directory (str): directory to save the file
+        - config (dict): Glider Guidance System mission configuration.
+        - directory (str): Glider Guidance System mission directory.
 
         Returns:
         - None
@@ -156,20 +156,20 @@ class RTOFS():
         self.data.to_netcdf(rtofs_data_path)
 
 ### FUNCTION:
-def interp_average(config, directory, model_data):
+def interp_depth_average(config, directory, model_data):
     
     '''
-    Compute depth-averaged ocean currents, temperature, and salinity, 
-    and store 1-meter bin averages for the input model data.
+    Compute depth-averaged values for the model data.
+    Save the computational output and 1-meter bin averages.
 
     Args:
-    - config (dict): Glider Guidance System configuration
-    - directory (str): directory to save the file
-    - model_data (xarray.Dataset): Ocean model data
+    - config (dict): Glider Guidance System mission configuration.
+    - directory (str): Glider Guidance System mission directory.
+    - model_data (xarray.Dataset): Ocean model dataset.
 
     Returns:
-    - calculated_data (xarray.Dataset): dataset with the computed variables and layer information
-    - bin_data (xarray.Dataset): dataset with the bin averages
+    - calculated_data (xarray.Dataset): Dataset with the computed variables and layer information.
+    - bin_data (xarray.Dataset): Dataset with the bin averages.
     '''
 
     # Extracting data from the model dataset
@@ -271,15 +271,3 @@ def interp_average(config, directory, model_data):
     bin_data.to_netcdf(bin_data_path)
 
     return calculated_data, bin_data
-
-# =========================
-#
-# rtofs = RTOFS()
-# rtofs.rtofs_subset(config, waypoints, subset=True)
-# rtofs_data = rtofs.data
-# rtofs_qc = rtofs.rtofs_qc
-# rtofs.rtofs_save(config, directory)
-#
-# calculated_data, bin_data = interp_average(config, directory, rtofs_data)
-#
-# =========================

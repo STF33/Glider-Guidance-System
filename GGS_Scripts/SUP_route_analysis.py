@@ -2,7 +2,6 @@
 # X - IMPORTS
 # =========================
 
-### /// ROUTE ANALYSIS ///
 import os
 from SUB_functions import calculate_distance, calculate_heading
 
@@ -14,14 +13,14 @@ from SUB_functions import calculate_distance, calculate_heading
 def route_analysis(config, waypoints):
     
     '''
-    Analyze each leg of the route to compute metrics such as distance, time, and battery drain.
+    Analyze each leg of the route to compute unmodeled analytics.
     
     Args:
-    - config (dict): Glider Guidance System configuration
-    - waypoints (list): list of waypoints
+    - config (dict): Glider Guidance System mission configuration.
+    - waypoints (list): Glider Guidance System mission waypoints.
 
     Returns:
-    - results (list): list of dictionaries containing the analysis results for each leg
+    - results (list): A list of dictionaries containing the analysis results for each leg.
     '''
     
     results = []
@@ -49,12 +48,12 @@ def route_analysis(config, waypoints):
 def route_analysis_output(config, directory, analysis_results):
     
     '''
-    Print a summary of the route analysis and save the details in a text file.
+    Output and save a summary of the route analysis.
     
     Args:
-    - config (dict): Glider Guidance System configuration
-    - directory (str): path to the directory containing the config files
-    - analysis_results (list): list of dictionaries containing the analysis results for each leg
+    - config (dict): Glider Guidance System mission configuration.
+    - directory (str): Glider Guidance System mission directory.
+    - analysis_results (list): A list of dictionaries containing the analysis results for each leg.
 
     Returns:
     - total_distance (float): total distance of the route
@@ -106,11 +105,3 @@ def route_analysis_output(config, directory, analysis_results):
         file.write(output_str)
 
     return total_distance, total_time_seconds, total_time_hours, total_battery_drain
-
-# =========================
-#
-# analysis_results = route_analysis(config, waypoints)
-#
-# route_analysis_output(config, directory, analysis_results)
-#  
-# =========================

@@ -2,121 +2,61 @@
 # X - IMPORTS
 # =========================
 
-### /// CONFIGURATION ///
 import os
 import pandas as pd
 from SUB_functions import check_abort, check_float, check_coordinate
 
 # =========================
-# GGS CONFIGURATION
+# STATIC CONFIGURATION
 # =========================
-
-### FUNCTION:
-def GGS_config_static_demo():
-    
-    '''
-    Return a hardcoded Glider Guidance System configuration.
-
-    INTENDED FOR DEBUGGING ONLY
-    
-    Args:
-    - None
-
-    Returns:
-    - config (dict): Glider Guidance System configuration
-    - waypoints (list): list of waypoints
-    '''
-    
-    config = {
-        "glider_name": "DEMO_GoM", #
-        "max_depth": 1000.0, #
-        "avg_velocity": 0.5, #
-        "battery_capacity": 1000,
-        "battery_drain": 5, #
-        "satisfying_radius": 1000, #
-        "waypoints": [(18.00510558149081, -97.75507520595109),
-                      (30.68658969837126, -80.17002034924428)
-                    ] # Gulf of Mexico
-    }
-
-    waypoints = config["waypoints"]
-
-    return config, waypoints
 
 ### FUNCTION:
 def GGS_config_static():
     
     '''
-    Return a hardcoded Glider Guidance System configuration.
-
-    INTENDED FOR DEBUGGING ONLY
+    Configure mission from a hardcoded configuration.
+    Intended for testing only.
     
     Args:
     - None
 
     Returns:
-    - config (dict): Glider Guidance System configuration
-    - waypoints (list): list of waypoints
+    - config (dict): Glider Guidance System mission configuration.
+    - waypoints (list): Glider Guidance System mission waypoints.
     '''
     
     config = {
-        "glider_name": "GoM", #
-        "max_depth": 1000.0, #
-        "avg_velocity": 0.5, #
+        "glider_name": "Gulf of Mexico",
+        "max_depth": 1000.0,
+        "avg_velocity": 0.5,
         "battery_capacity": 1000,
-        "battery_drain": 5, #
-        "satisfying_radius": 1000, #
+        "battery_drain": 5,
+        "satisfying_radius": 1000,
         "waypoints": [(18.00510558149081, -97.75507520595109),
                       (30.68658969837126, -80.17002034924428)
-                    ] # Gulf of Mexico
+                    ] # CURRENT: Gulf of Mexico
     }
 
     waypoints = config["waypoints"]
 
     return config, waypoints
 
-### FUNCTION:
-def GGS_config_import():
-    
-    '''
-    Import an existing Glider Guidance System configuration.
-    
-    Args:
-    - None
-
-    Returns:
-    - config (dict): Glider Guidance System configuration
-    - waypoints (list): list of waypoints
-    '''
-    
-    while True:
-        file_name = input("Please enter the path to your GGS config file: ")
-        check_abort(file_name)
-        try:
-            config = pd.read_pickle(file_name)
-            waypoints = config["waypoints"]
-            GGS_config_output(config)
-            return config, waypoints
-        except Exception as e:
-            print(f"Error reading the file: {e}")
-            retry = input("Invalid file. Would you like to try another file? (yes or no): ").lower()
-            check_abort(retry)
-            if retry != "yes":
-                print("Import aborted. Please restart the configuration process.")
-                return None
+# =========================
+# CONFIGURATION PATHS
+# =========================
 
 ### FUNCTION:
 def GGS_config_new():
     
     '''
-    Create a new Glider Guidance System configuration.
+    Configure a new mission.
 
     Args:
     - None
 
     Returns:
-    - config (dict): Glider Guidance System configuration
-    - waypoints (list): list of waypoints
+    - config (dict): Glider Guidance System mission configuration.
+    - waypoints (list): Glider Guidance System mission waypoints.
     '''
 
     config = {}
@@ -163,23 +103,56 @@ def GGS_config_new():
     return config, waypoints
 
 ### FUNCTION:
-EXIT_KEYWORD = "EXIT"
-def GGS_config():
+def GGS_config_import():
     
     '''
-    Import an existing Glider Guidance System configuration or guide the user to create a new one.
+    Configure mission from an imported file.
     
     Args:
     - None
 
     Returns:
-    - config (dict): Glider Guidance System configuration
-    - waypoints (list): list of waypoints
+    - config (dict): Glider Guidance System mission configuration.
+    - waypoints (list): Glider Guidance System mission waypoints.
+    '''
+    
+    while True:
+        file_name = input("Please enter the path to your GGS config file: ")
+        check_abort(file_name)
+        try:
+            config = pd.read_pickle(file_name)
+            waypoints = config["waypoints"]
+            GGS_config_output(config)
+            return config, waypoints
+        except Exception as e:
+            print(f"Error reading the file: {e}")
+            retry = input("Invalid file. Would you like to try another file? (yes or no): ").lower()
+            check_abort(retry)
+            if retry != "yes":
+                print("Import aborted. Please restart the configuration process.")
+                return None
+
+# =========================
+# CONFIGURATION PROCESSING
+# =========================
+
+### FUNCTION:
+EXIT_KEYWORD = "EXIT"
+def GGS_config():
+    
+    '''
+    Initialize the Glider Guidance System configuration protocol.
+    
+    Args:
+    - None
+
+    Returns:
+    - config (dict): Glider Guidance System mission configuration.
+    - waypoints (list): Glider Guidance System mission waypoints.
     '''
     
     print(f"Glider Guidance System (GGS) Configuration Setup\n(Note: Type '{EXIT_KEYWORD}' at any time to abort the configuration.)\n")
-    choice = input("Do you want to import an existing GGS config or create a new one? (Enter 'import' or 'new'): ").lower()
-    check_abort(choice)
+    choice = check_abort(input("Do you want to import an existing GGS config or create a new one? (Enter 'import' or 'new'): ").lower())
     
     if choice == "import":
         return GGS_config_import()
@@ -193,13 +166,13 @@ def GGS_config():
 def GGS_config_output(config):
     
     '''
-    Display the provided Glider Guidance System configuration in a formatted manner and save to a file.
+    Output and save the configured Glider Guidance System mission.
     
     Args:
-    - config (dict): Glider Guidance System configuration
+    - config (dict): Glider Guidance System mission configuration.
 
     Returns:
-    - directory (str): path to the directory containing the config files
+    - directory (str): Glider Guidance System mission directory.
     '''
 
     output_str = "\nGlider Guidance System (GGS) Configuration:\n"
@@ -227,12 +200,3 @@ def GGS_config_output(config):
     print(output_str)
 
     return directory
-
-# =========================
-#
-# config, waypoints = GGS_config_static() # Manual
-# config, waypoints = GGS_config() # Automatic
-#
-# directory = GGS_config_output(config)
-#
-# =========================

@@ -2,13 +2,12 @@
 # X - IMPORTS
 # =========================
 
-### /// FUNCTIONS ///
 import cartopy.crs as ccrs
 import matplotlib.ticker as mticker
 import numpy as np
 
 # =========================
-# CHECK ABORT
+# CHECK INPUTS
 # =========================
 
 ### FUNCTION:
@@ -16,7 +15,8 @@ EXIT_KEYWORD = "EXIT"
 def check_abort(input_string):
     
     '''
-    Check if the input string matches the exit keyword. If it does, abort the program.
+    Check if the input string matches the exit keyword.
+    If the input is the exit keyword, abort the program.
     
     Args:
     - input_string (str): The input string to be checked.
@@ -26,18 +26,15 @@ def check_abort(input_string):
     '''
     
     if input_string.upper() == EXIT_KEYWORD:
-        print("Configuration aborted by user.")
+        print("!!! [CONFIGURATION ABORTED] !!!")
         exit()
-
-# =========================
-# CHECK FLOAT
-# =========================
 
 ### FUNCTION:
 def check_float(prompt_msg):
     
     '''
-    Repeatedly prompt the user until they provide a valid float input.
+    Check for a valid float input.
+    If invalid, prompt again with an error message.
     
     Args:
     - prompt_msg (str): The message to prompt the user with.
@@ -54,18 +51,14 @@ def check_float(prompt_msg):
         except ValueError:
             prompt_msg = "[INPUT ERROR] " + prompt_msg
 
-# =========================
-# CHECK COORDINATE
-# =========================
-
 ### FUNCTION:
 def check_coordinate(coord_str):
     
     '''
-    Validate if the provided string can be parsed into valid latitude and longitude coordinates.
+    Check if the input decimal degree coordinates can be parsed into a valid latitude and longitude coordinate.
     
     Args:
-    - coord_str (str): The input string containing coordinates.
+    - coord_str (str): The input string containing coordinate values.
 
     Returns:
     - tuple: A tuple containing the latitude and longitude if valid. None otherwise.
@@ -79,26 +72,27 @@ def check_coordinate(coord_str):
         return None
 
 # =========================
-# CALCULATE DISTANCE
+# CALCULATE VARIABLES
 # =========================
 
 ### FUNCTION:
-def calculate_distance(coord1, coord2):
+def calculate_distance(coordinate_1, coordinate_2):
     
     '''
-    Calculate the Haversine distance between two sets of GPS coordinates.
+    Calculate the Haversine distance between two sets of decimal degree coordinates.
     
     Args:
-    - coord1 (tuple): Starting coordinate as (latitude, longitude).
-    - coord2 (tuple): Ending coordinate as (latitude, longitude).
+    - coordinate_1 (tuple): Starting coordinate as (latitude, longitude).
+    - coordinate_2 (tuple): Ending coordinate as (latitude, longitude).
 
     Returns:
     - float: The distance between the two coordinates in meters.
     '''
     
     R = 6371000
-    lat1, lon1 = np.radians(coord1)
-    lat2, lon2 = np.radians(coord2)
+
+    lat1, lon1 = np.radians(coordinate_1)
+    lat2, lon2 = np.radians(coordinate_2)
     
     dlat = lat2 - lat1
     dlon = lon2 - lon1
@@ -108,18 +102,39 @@ def calculate_distance(coord1, coord2):
     
     return R * c
 
-# =========================
-# CALCULATE NEARPOINT
-# =========================
-
 ### FUNCTION:
-def calculate_nearpoint(dataset, target_lat, target_lon):
+def calculate_heading(coordinate_1, coordinate_2):
     
     '''
-    Find the nearest point in the dataset to the input latitude and longitude.
+    Calculate the compass bearing between two sets of decimal degree coordinates.
+    
+    Args:
+    - coordinate_1 (tuple): Starting coordinate as (latitude, longitude).
+    - coordinate_2 (tuple): Ending coordinate as (latitude, longitude).
+
+    Returns:
+    - float: The bearing from coordinate_1 to coordinate_2 in degrees.
+    '''
+
+    lat1, lon1 = np.radians(coordinate_1)
+    lat2, lon2 = np.radians(coordinate_2)
+    
+    dlon = lon2 - lon1
+    x = np.sin(dlon) * np.cos(lat2)
+    y = np.cos(lat1) * np.sin(lat2) - (np.sin(lat1) * np.cos(lat2) * np.cos(dlon))
+    
+    initial_bearing = np.degrees(np.arctan2(x, y))
+
+    return (initial_bearing + 360) % 360
+
+### FUNCTION:
+def calculate_gridpoint(model_data, target_lat, target_lon):
+    
+    '''
+    Calculate the nearest XY gridpoint in a model dataset to the input latitude and longitude.
 
     Args:
-    - dataset (xarray.Dataset): The dataset to search in.
+    - model_data (xarray.Dataset): The model dataset.
     - target_lat (float): The target latitude.
     - target_lon (float): The target longitude.
 
@@ -128,14 +143,14 @@ def calculate_nearpoint(dataset, target_lat, target_lon):
     - (lat_index, lon_index) (tuple): The coordinates of the nearest point in the dataset.
     '''
 
-    lat_diff = dataset['lat'] - float(target_lat)
-    lon_diff = dataset['lon'] - float(target_lon)
+    lat_diff = model_data['lat'] - float(target_lat)
+    lon_diff = model_data['lon'] - float(target_lon)
     distance_square = lat_diff**2 + lon_diff**2
 
     y_index, x_index = np.unravel_index(distance_square.argmin(), distance_square.shape)
 
-    lat_index = dataset['lat'].isel(y=y_index, x=x_index).values
-    lon_index = dataset['lon'].isel(y=y_index, x=x_index).values
+    lat_index = model_data['lat'].isel(y=y_index, x=x_index).values
+    lon_index = model_data['lon'].isel(y=y_index, x=x_index).values
 
     print(f"Input Coordinates: ({target_lat}, {target_lon})")
     print(f"Dataset Indices: ({y_index}, {x_index})")
@@ -144,49 +159,52 @@ def calculate_nearpoint(dataset, target_lat, target_lon):
     return (y_index, x_index), (lat_index, lon_index)
 
 # =========================
-# CALCULATE HEADING
+# CONVERT VARIABLES
 # =========================
 
 ### FUNCTION:
-def calculate_heading(coord1, coord2):
+def DD_to_DM(DD, coord_type='longitude'):
     
     '''
-    Calculate the initial compass bearing/heading from one point to another on Earth.
-    
+    Convert a decimal degree (DD) coordinate to a degree minute (DM) coordinate.
+
     Args:
-    - coord1 (tuple): Starting coordinate as (latitude, longitude).
-    - coord2 (tuple): Ending coordinate as (latitude, longitude).
+    - DD (float): A decimal degree coordinate.
+    - coord_type (str): A string indicating whether the position is a longitude or latitude.
 
     Returns:
-    - float: The initial heading/bearing in degrees.
+    - str: A degree minute coordinate.
     '''
 
-    lat1, lon1 = np.radians(coord1)
-    lat2, lon2 = np.radians(coord2)
-    
-    dlon = lon2 - lon1
-    x = np.sin(dlon) * np.cos(lat2)
-    y = np.cos(lat1) * np.sin(lat2) - (np.sin(lat1) * np.cos(lat2) * np.cos(dlon))
-    
-    initial_bearing = np.degrees(np.arctan2(x, y))
-    return (initial_bearing + 360) % 360
+    degrees = int(DD)
+    minutes = abs(int((DD - degrees) * 60))
 
-# =========================
-# DD TO DMS
-# =========================
+    direction = ''
+    if degrees > 0:
+        if coord_type == 'longitude':
+            direction = 'E'
+        elif coord_type == 'latitude':
+            direction = 'N'
+    elif degrees < 0:
+        if coord_type == 'longitude':
+            direction = 'W'
+        elif coord_type == 'latitude':
+            direction = 'S'
+
+    return f"{abs(degrees)}°{minutes}'{direction}"
 
 ### FUNCTION:
 def DD_to_DMS(DD, coord_type='longitude'):
 
     '''
-    Convert a decimal degree position to a degree-minute-second string.
+    Convert a decimal degree (DD) coordinate to a degree minute second (DMS) coordinate.
 
     Args:
-    - DD (float): A decimal degree position.
+    - DD (float): A decimal degree coordinate.
     - coord_type (str): A string indicating whether the position is a longitude or latitude.
 
     Returns:
-    - str: A degree-minute-second string.
+    - str: A degree minute second coordinate.
     '''
 
     degrees = int(DD)
@@ -207,56 +225,17 @@ def DD_to_DMS(DD, coord_type='longitude'):
     
     return f"{abs(degrees)}°{abs(minutes)}'{abs(seconds):.2f}\"{direction}"
 
-# =========================
-# DD TO DM
-# =========================
-
-### FUNCTION:
-def DD_to_DM(DD, coord_type='longitude'):
-    
-    '''
-    Convert a decimal degree position to a degree-minute string.
-
-    Args:
-    - DD (float): A decimal degree position.
-    - coord_type (str): A string indicating whether the position is a longitude or latitude.
-
-    Returns:
-    - str: A degree-minute string.
-    '''
-
-    degrees = int(DD)
-    minutes = abs(int((DD - degrees) * 60))
-
-    direction = ''
-    if degrees > 0:
-        if coord_type == 'longitude':
-            direction = 'E'
-        elif coord_type == 'latitude':
-            direction = 'N'
-    elif degrees < 0:
-        if coord_type == 'longitude':
-            direction = 'W'
-        elif coord_type == 'latitude':
-            direction = 'S'
-
-    return f"{abs(degrees)}°{minutes}'{direction}"
-
-# =========================
-# DD TO DDM
-# =========================
-
 ### FUNCTION:
 def DD_to_DDM(DD):
     
     '''
-    Convert a decimal degree (DD) coordinate to a degree-minute (DDMM) coordinate.
+    Convert a decimal degree (DD) coordinate to a degree decimal minute (DDM) coordinate.
 
     Args:
     - DD (float): A decimal degree coordinate.
 
     Returns:
-    - str: A degree-minute coordinate.    
+    - str: A degree decimal minute coordinate.    
     '''
     
     degrees = int(DD)
@@ -265,14 +244,14 @@ def DD_to_DDM(DD):
     return f"{degrees:02d}{minutes:05.2f}"
 
 # =========================
-# SET TICKMARKS
+# PLOT HELPERS
 # =========================
 
 ### FUNCTION:
-def set_ticks(ax, extent_lon, extent_lat):
+def set_map_ticks(ax, extent_lon, extent_lat):
     
     '''
-    Set the ticks for a map based on the extent without changing the map's bounds, ensuring at least three ticks.
+    Set simple tick marks for a matplotlib map based on the extent.
 
     Args:
     - ax (matplotlib.axes): The axes to set the ticks for.
@@ -287,7 +266,7 @@ def set_ticks(ax, extent_lon, extent_lat):
     def get_tick_interval(extent):
 
         '''
-        Calculate the tick interval for a given extent.
+        Get the tick interval for a given extent.
 
         Args:
         - extent (array-like): The extent of the map.
@@ -322,3 +301,24 @@ def set_ticks(ax, extent_lon, extent_lat):
 
     ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'longitude')))
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'latitude')))
+
+### FUNCTION:
+def set_cbar_ticks(cbar, cbar_min, cbar_max, interval):
+    
+    '''
+    Set standardized tick marks on a matplotlib colorbar.
+
+    Args:
+    - cbar (matplotlib.colorbar.Colorbar): The colorbar object to set ticks on.
+    - cbar_min (float): The minimum value of the data.
+    - cbar_max (float): The maximum value of the data.
+    - interval (float): The interval between tick marks.
+
+    Returns:
+    - None
+    '''
+
+    ticks = np.arange(np.floor(cbar_min / interval) * interval, np.ceil(cbar_max / interval) * interval + interval, interval)
+    
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels(["{:.1f}".format(tick) for tick in ticks])
