@@ -61,11 +61,11 @@ def main():
 
     calculated_data, bin_data = interp_depth_average(config, directory, rtofs_data)
 
-    qc_latitude = '21.5'
-    qc_longitude = '-85.5'
+    qc_latitude = '24.725'
+    qc_longitude = '-80.250'
     qc_uv_profile(config, directory, rtofs_qc, calculated_data, bin_data, qc_latitude, qc_longitude)
 
-    GGS_plot_currents(config, directory, waypoints, rtofs_data, calculated_data, qc_latitude, qc_longitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False)
+    GGS_plot_currents(config, directory, waypoints, rtofs_data, calculated_data, qc_latitude, qc_longitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=True)
 
 if __name__ == "__main__":
     main()

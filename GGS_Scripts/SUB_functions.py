@@ -3,8 +3,10 @@
 # =========================
 
 import cartopy.crs as ccrs
+from erddapy import ERDDAP
 import matplotlib.ticker as mticker
 import numpy as np
+import xarray as xr
 
 # =========================
 # CHECK INPUTS
@@ -303,22 +305,64 @@ def set_map_ticks(ax, extent_lon, extent_lat):
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'latitude')))
 
 ### FUNCTION:
-def set_cbar_ticks(cbar, cbar_min, cbar_max, interval):
-    
+def set_cbar_ticks(cbar, magnitude):
+
     '''
-    Set standardized tick marks on a matplotlib colorbar.
+    Set simple tick marks for a matplotlib colorbar based on the magnitude.
 
     Args:
-    - cbar (matplotlib.colorbar.Colorbar): The colorbar object to set ticks on.
-    - cbar_min (float): The minimum value of the data.
-    - cbar_max (float): The maximum value of the data.
-    - interval (float): The interval between tick marks.
+    - cbar (matplotlib.colorbar): The colorbar to set the ticks for.
+    - magnitude (array-like): The magnitude data.
 
     Returns:
-    - None
+    - None   
     '''
 
-    ticks = np.arange(np.floor(cbar_min / interval) * interval, np.ceil(cbar_max / interval) * interval + interval, interval)
-    
+    valid_magnitude = magnitude[~np.isnan(magnitude)]
+    if valid_magnitude.size == 0:
+        return
+
+    min_val = np.min(valid_magnitude)
+    max_val = np.max(valid_magnitude)
+
+    interval_options = [0.1, 0.2]
+    optimal_interval = min(interval_options, key=lambda x: len(np.arange(round(min_val / x) * x, round(max_val / x) * x + x, x)))
+
+    ticks = np.arange(round(min_val / optimal_interval) * optimal_interval, round(max_val / optimal_interval) * optimal_interval + optimal_interval, optimal_interval)
     cbar.set_ticks(ticks)
-    cbar.set_ticklabels(["{:.1f}".format(tick) for tick in ticks])
+    cbar.set_ticklabels([f"{tick:.1f}" for tick in ticks])
+
+## FUNCTION:
+def add_bathymetry(ax, bbox, isobath_levels=(-100, -1000), zorder=10, transform=ccrs.PlateCarree()):
+    
+    '''
+    Add bathymetry data from an OPeNDAP dataset to a cartopy map.
+
+    Args:
+    - ax (matplotlib.axes): A matplotlib axes.
+    - bbox (list): Cartopy bounding box.
+    - opendap_url (str): URL to the OPeNDAP dataset.
+    - isobath_levels (tuple, optional): Determines the number and positions of the contour lines. Defaults to (-1000).
+    - zorder (int, optional): Drawing order for this function on the axes. Defaults to 5.
+    - transform (_type_, optional): Coordinate system data is defined in. Defaults to crs.PlateCarree.
+
+    Returns:
+    - contour (matplotlib.contour.QuadContourSet): Contour lines of the bathymetry data.
+    '''
+
+    dataset = xr.open_dataset('https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO2022/15s/15s_bed_elev_netcdf/ETOPO_2022_v1_15s_N60W030_bed.nc')
+
+    subset = dataset.sel(
+        lon=slice(bbox[0], bbox[1]),
+        lat=slice(bbox[2], bbox[3])
+    )
+
+    elevation = subset.z.values
+    lon = subset.lon.values
+    lat = subset.lat.values
+
+    lons, lats = np.meshgrid(lon, lat)
+    contour = ax.contour(lons, lats, elevation, isobath_levels, linewidths=.75, alpha=.5, colors='grey', transform=transform, zorder=zorder)
+    ax.clabel(contour, isobath_levels, inline=True, fontsize=6, fmt='%d m')
+    
+    return contour

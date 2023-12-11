@@ -32,16 +32,18 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
     - None
     '''
     
-    (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
-
-    u_data = model_data['u'].isel(y=y_index, x=x_index).values
-    v_data = model_data['v'].isel(y=y_index, x=x_index).values
+    (y_model_index, x_model_index), (lat_model_index, lon_model_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
+    (y_calc_index, x_calc_index), (lat_calc_index, lon_calc_index) = calculate_gridpoint(calculated_data, qc_latitude, qc_longitude)
+    (y_bin_index, x_bin_index), (lat_bin_index, lon_bin_index) = calculate_gridpoint(bin_data, qc_latitude, qc_longitude)
     
-    avg_u = calculated_data['u_avg'].isel(y=y_index, x=x_index).values
-    avg_v = calculated_data['v_avg'].isel(y=y_index, x=x_index).values
+    u_data = model_data['u'].isel(y=y_model_index, x=x_model_index).values
+    v_data = model_data['v'].isel(y=y_model_index, x=x_model_index).values
+    
+    avg_u = calculated_data['u_avg'].isel(y=y_calc_index, x=x_calc_index).values
+    avg_v = calculated_data['v_avg'].isel(y=y_calc_index, x=x_calc_index).values
 
-    bin_u_data = bin_data['bin_avg_u'].isel(y=y_index, x=x_index).values
-    bin_v_data = bin_data['bin_avg_v'].isel(y=y_index, x=x_index).values
+    bin_u_data = bin_data['bin_avg_u'].isel(y=y_bin_index, x=x_bin_index).values
+    bin_v_data = bin_data['bin_avg_v'].isel(y=y_bin_index, x=x_bin_index).values
     
     fig, axes = plt.subplots(1, 2, figsize=(6, 10))
 
@@ -60,7 +62,7 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
     axes[1].invert_yaxis()
     axes[1].legend(loc='lower center', facecolor='lightgrey')
     
-    plt.suptitle(f'Quality Control Profiles - Lat: {lat_index:.3f}, Lon: {lon_index:.3f}', fontsize=14)
+    plt.suptitle(f'Quality Control Profiles - Lat: {lat_model_index:.3f}, Lon: {lon_model_index:.3f}', fontsize=14)
     plt.subplots_adjust(top=0.90)
     plt.tight_layout()
 

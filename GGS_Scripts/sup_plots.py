@@ -6,10 +6,11 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cmocean.cm as cmo
 from datetime import datetime
+from erddapy import ERDDAP
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from SUB_functions import set_map_ticks, calculate_gridpoint
+from SUB_functions import calculate_gridpoint, set_map_ticks, set_cbar_ticks
 
 # =========================
 # PLOTTING
@@ -93,17 +94,26 @@ def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, q
     ax.add_feature(cfeature.BORDERS, linestyle=':')
     ax.add_feature(cfeature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m', edgecolor='k', linestyle=':'))
 
+    # if extent == 'map':
+    #     bbox = [min(map_lons), max(map_lons), min(map_lats), max(map_lats)]
+    # elif extent == 'data':
+    #     bbox = [np.min(data_lons), np.max(data_lons), np.min(data_lats), np.max(data_lats)]
+    # add_bathymetry(ax, bbox, isobath_levels=(-100, -1000), zorder=5, transform=ccrs.PlateCarree())
+
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * 1, box.height])
     cbar_ax = fig.add_axes([box.x0 + box.width + 0.005, box.y0, 0.03, box.height])
-    cbar = fig.colorbar(contour, cax=cbar_ax, orientation='vertical', label='Depth Averaged Current Magnitude (m/s)')
+    cbar = fig.colorbar(contour, cax=cbar_ax, orientation='vertical')
     cbar.set_label('Depth Averaged Current Magnitude (m/s)', labelpad=10)
-    
-    title = f"{config['glider_name']} Mission - {config['max_depth']}m Depth-Averaged Currents"
-    ax.set_title(title, pad=20)
-    subtitle = f"Generated the Glider Guidance System (GGS) on {datetime.utcnow().strftime('%m-%d-%Y')} at {datetime.utcnow().strftime('%H:%M')} UTC"
-    fig.suptitle(subtitle, fontsize='smaller', x=0.5, y=0.01, ha='center', va='bottom', color='gray')
+    set_cbar_ticks(cbar, magnitude)
 
+    title_text = f"{config['glider_name']} Mission - Depth-Averaged Currents"
+    ax.set_title(title_text, pad=20)
+    subtitle_text = f"Depth Range: {config['max_depth']}m"
+    fig.text(0.5, 0.9, subtitle_text, ha='center', va='center', fontsize=10)
+    suptitle_text = f"Generated the Glider Guidance System (GGS) on {datetime.utcnow().strftime('%m-%d-%Y')} at {datetime.utcnow().strftime('%H:%M')} UTC"
+    fig.suptitle(suptitle_text, fontsize='smaller', x=0.5, y=0.01, ha='center', va='bottom', color='gray')
+    
     fig_filename = f"{config['glider_name']}_{config['max_depth']}m_currents.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
