@@ -2,37 +2,37 @@
 # FUNCTIONS
 # =========================
 
-from GGS_Scripts.X_functions import *
+from X_functions import *
 
 # =========================
 # GGS CONFIGURATION
 # =========================
 
-from GGS_Scripts.X_config import *
+from X_config import *
 
 # =========================
 # ROUTE ANALYSIS
 # =========================
 
-from GGS_Scripts.X_route_analysis import *
+from X_route_analysis import *
 
 # =========================
 # [RTOFS] MODEL DATA PROCESSING
 # =========================
 
-from GGS_Scripts.X_rtofs import *
+from X_rtofs import *
 
 # =========================
 # QUALITY CONTROL CHECKS
 # =========================
 
-from GGS_Scripts.X_quality_control import *
+from X_quality_control import *
 
 # =========================
 # PLOTS
 # =========================
 
-from GGS_Scripts.X_plots import *
+from X_plots import *
 
 # =========================
 # X - MAIN

@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from GGS_Scripts.X_functions import calculate_gridpoint
+from X_functions import calculate_gridpoint
 
 # =========================
 # QUALITY CONTROL PLOTS

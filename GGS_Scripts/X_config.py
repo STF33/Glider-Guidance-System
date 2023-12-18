@@ -4,7 +4,7 @@
 
 import os
 import pandas as pd
-from GGS_Scripts.X_functions import check_abort, check_float, check_coordinate
+from X_functions import check_abort, check_float, check_coordinate
 
 # =========================
 # STATIC CONFIGURATION

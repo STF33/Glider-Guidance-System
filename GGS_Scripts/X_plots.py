@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 import os
-from GGS_Scripts.X_functions import calculate_gridpoint, set_map_ticks, calculate_cbar_ticks, add_bathymetry
+from X_functions import calculate_gridpoint, set_map_ticks, calculate_cbar_ticks, add_bathymetry
 
 # =========================
 # PLOTTING

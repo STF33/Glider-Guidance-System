@@ -7,9 +7,9 @@
 2-Outputs/
 3-Extra/
 
+GGS_Files/
 GGS_Scripts/__pycache__/
 GGS_Scripts/0-Archive/
-
 GGS_Scripts/0_DEBUG_NOTEBOOK.ipynb
 GGS_Scripts/0_TEST.ipynb
 GGS_Scripts/ALT_slocum.py

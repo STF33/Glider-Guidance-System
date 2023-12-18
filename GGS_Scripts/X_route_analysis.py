@@ -3,7 +3,7 @@
 # =========================
 
 import os
-from GGS_Scripts.X_functions import calculate_distance, calculate_heading
+from X_functions import calculate_distance, calculate_heading
 
 # =========================
 # ROUTE ANALYSIS
