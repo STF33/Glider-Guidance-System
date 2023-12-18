@@ -2,37 +2,37 @@
 # FUNCTIONS
 # =========================
 
-from SUB_functions import *
+from GGS_Scripts.X_functions import *
 
 # =========================
 # GGS CONFIGURATION
 # =========================
 
-from SUP_config import *
+from GGS_Scripts.X_config import *
 
 # =========================
 # ROUTE ANALYSIS
 # =========================
 
-from SUP_route_analysis import *
+from GGS_Scripts.X_route_analysis import *
 
 # =========================
 # [RTOFS] MODEL DATA PROCESSING
 # =========================
 
-from MOD_rtofs import *
+from GGS_Scripts.X_rtofs import *
 
 # =========================
 # QUALITY CONTROL CHECKS
 # =========================
 
-from SUP_qualitycontrol import *
+from GGS_Scripts.X_quality_control import *
 
 # =========================
 # PLOTS
 # =========================
 
-from SUP_plots import *
+from GGS_Scripts.X_plots import *
 
 # =========================
 # X - MAIN
@@ -58,14 +58,14 @@ def main():
     rtofs_data = rtofs.data
     rtofs_qc = rtofs.rtofs_qc
     rtofs.rtofs_save(config, directory)
-
     calculated_data, bin_data = interp_depth_average(config, directory, rtofs_data)
 
-    qc_latitude = '24.725'
-    qc_longitude = '-80.250'
+    qc_latitude = '21.100'
+    qc_longitude = '-86.425'
     qc_uv_profile(config, directory, rtofs_qc, calculated_data, bin_data, qc_latitude, qc_longitude)
 
-    GGS_plot_currents(config, directory, waypoints, rtofs_data, calculated_data, qc_latitude, qc_longitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=True)
+    GGS_plot_currents(config, directory, waypoints, rtofs_data, calculated_data, qc_latitude, qc_longitude, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False)
+    GGS_plot_threshold(config, directory, waypoints, rtofs_data, calculated_data, qc_latitude, qc_longitude, mag1=0.25, mag2=0.5, mag3=0.75, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False)
 
 if __name__ == "__main__":
     main()
