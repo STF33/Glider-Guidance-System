@@ -159,7 +159,7 @@ class RTOFS():
 def interp_depth_average(config, directory, model_data):
     
     '''
-    Compute depth-averaged values for the model data.
+    Compute depth-averaged values, direction, and magnitude for the model data.
     Save the computational output and 1-meter bin averages.
 
     Args:
@@ -184,15 +184,19 @@ def interp_depth_average(config, directory, model_data):
     averaged_v = np.full_like(averaged_u, np.nan)
     averaged_temp = np.full_like(averaged_u, np.nan)
     averaged_sal = np.full_like(averaged_u, np.nan)
+    averaged_direction = np.full_like(averaged_u, np.nan)
+    averaged_magnitude = np.full_like(averaged_u, np.nan)
 
     # Determine the maximum number of bins across all grid points
     max_num_bins = int(np.nanmax([valid_depths.max() for valid_depths in depths if valid_depths.size > 0])) + 1
 
     # Initialize arrays to store bin averages for each variable at each depth and position
     bin_avg_u = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
-    bin_avg_v = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
-    bin_avg_temp = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
-    bin_avg_sal = np.full((len(model_data.y), len(model_data.x), max_num_bins), np.nan)
+    bin_avg_v = np.full_like(bin_avg_u, np.nan)
+    bin_avg_temp = np.full_like(bin_avg_u, np.nan)
+    bin_avg_sal = np.full_like(bin_avg_u, np.nan)
+    bin_avg_direction = np.full_like(bin_avg_u, np.nan)
+    bin_avg_magnitude = np.full_like(bin_avg_u, np.nan)
 
     # Looping over each spatial point to interpolate and average the current data
     for y in range(len(model_data.y)):
@@ -220,28 +224,31 @@ def interp_depth_average(config, directory, model_data):
                 v_interp = interp1d(valid_depths, v_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
                 temp_interp = interp1d(valid_depths, temp_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
                 sal_interp = interp1d(valid_depths, sal_vals[valid_indices], bounds_error=False, fill_value="extrapolate")
-                
-                # Computing bin averages for each variable
-                bin_averages_u = [u_interp(depth).mean() for depth in bins[:-1]]
-                bin_averages_v = [v_interp(depth).mean() for depth in bins[:-1]]
-                bin_averages_temp = [temp_interp(depth).mean() for depth in bins[:-1]]
-                bin_averages_sal = [sal_interp(depth).mean() for depth in bins[:-1]]
-                
-                # Computing depth-averaged values at the XY gridpoint
-                averaged_u[y, x] = np.mean(bin_averages_u)
-                averaged_v[y, x] = np.mean(bin_averages_v)
-                averaged_temp[y, x] = np.mean(bin_averages_temp)
-                averaged_sal[y, x] = np.mean(bin_averages_sal)
+
+                # Compute direction and magnitude at each depth bin
+                for bin_idx, depth in enumerate(bins[:-1]):
+                    u_at_depth = u_interp(depth)
+                    v_at_depth = v_interp(depth)
+                    direction_at_depth = (270 - np.rad2deg(np.arctan2(v_at_depth, u_at_depth)) + 180) % 360
+                    bin_avg_direction[y, x, bin_idx] = direction_at_depth
+                    magnitude_at_depth = np.sqrt(u_at_depth**2 + v_at_depth**2)
+                    bin_avg_magnitude[y, x, bin_idx] = magnitude_at_depth
 
                 # Storing bin averages for each variable
-                for i in range(len(bins) - 1):
-                    bin_avg_u[y, x, i] = bin_averages_u[i]
-                    bin_avg_v[y, x, i] = bin_averages_v[i]
-                    bin_avg_temp[y, x, i] = bin_averages_temp[i]
-                    bin_avg_sal[y, x, i] = bin_averages_sal[i]
+                for bin_idx, depth in enumerate(bins[:-1]):
+                    bin_avg_u[y, x, bin_idx] = u_interp(depth).mean()
+                    bin_avg_v[y, x, bin_idx] = v_interp(depth).mean()
+                    bin_avg_temp[y, x, bin_idx] = temp_interp(depth).mean()
+                    bin_avg_sal[y, x, bin_idx] = sal_interp(depth).mean()
 
-    # Compute the depth-averaged current magnitude
-    magnitude = np.sqrt(averaged_u ** 2 + averaged_v ** 2)
+                # Computing depth-averaged values for each variable
+                total_depth = valid_depths.max()
+                averaged_u[y, x] = np.nansum(bin_avg_u[y, x, :len(bins)-1]) / total_depth
+                averaged_v[y, x] = np.nansum(bin_avg_v[y, x, :len(bins)-1]) / total_depth
+                averaged_temp[y, x] = np.nansum(bin_avg_temp[y, x, :len(bins)-1]) / total_depth
+                averaged_sal[y, x] = np.nansum(bin_avg_sal[y, x, :len(bins)-1]) / total_depth
+                averaged_direction[y, x] = np.nansum(bin_avg_direction[y, x, :len(bins)-1]) / total_depth
+                averaged_magnitude[y, x] = np.nansum(bin_avg_magnitude[y, x, :len(bins)-1]) / total_depth
 
     # Creating 'calculated_data' dataset
     calculated_data = xr.Dataset({
@@ -249,7 +256,8 @@ def interp_depth_average(config, directory, model_data):
         'v_avg': (('y', 'x'), averaged_v),
         'temperature_avg': (('y', 'x'), averaged_temp),
         'salinity_avg': (('y', 'x'), averaged_sal),
-        'magnitude': (('y', 'x'), magnitude)
+        'magnitude_avg': (('y', 'x'), averaged_magnitude),
+        'direction_avg': (('y', 'x'), averaged_direction)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon})
 
     # Creating 'bin_data' dataset
@@ -258,6 +266,8 @@ def interp_depth_average(config, directory, model_data):
         'bin_avg_v': (('y', 'x', 'bin'), bin_avg_v),
         'bin_avg_temp': (('y', 'x', 'bin'), bin_avg_temp),
         'bin_avg_sal': (('y', 'x', 'bin'), bin_avg_sal),
+        'bin_avg_magnitude': (('y', 'x', 'bin'), bin_avg_magnitude),
+        'bin_avg_direction': (('y', 'x', 'bin'), bin_avg_direction)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_num_bins)})
 
     # Save 'calculated_data' dataset as a NetCDF file

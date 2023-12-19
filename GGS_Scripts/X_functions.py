@@ -252,6 +252,7 @@ def DD_to_DDM(DD):
 # =========================
 
 ### FUNCTION:
+
 def set_map_ticks(ax, extent_lon, extent_lat):
     
     '''
@@ -266,9 +267,8 @@ def set_map_ticks(ax, extent_lon, extent_lat):
     - None
     '''
 
-    ### FUNCTION:
     def get_tick_interval(extent):
-
+        
         '''
         Get the tick interval for a given extent.
 
@@ -278,11 +278,11 @@ def set_map_ticks(ax, extent_lon, extent_lat):
         Returns:
         - float: The tick interval.
         '''
-
+        
         min_extent, max_extent = np.min(extent), np.max(extent)
         range_extent = max_extent - min_extent
 
-        intervals = [0.25, 0.5, 1, 2, 5, 10, 15, 30]
+        intervals = [1, 2, 5, 10, 15, 30]
         for interval in intervals:
             num_ticks = int(range_extent / interval) + 1
             if 3 <= num_ticks <= 6:
@@ -303,8 +303,37 @@ def set_map_ticks(ax, extent_lon, extent_lat):
     ax.set_xticks(lon_ticks, crs=ccrs.PlateCarree())
     ax.set_yticks(lat_ticks, crs=ccrs.PlateCarree())
 
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'longitude')))
-    ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda val, pos: DD_to_DM(val, 'latitude')))
+    def degree_formatter(val, pos):
+        
+        '''
+        Format the tick labels to be in degree minute format.
+
+        Args:
+        - val (float): The tick value.
+        - pos (int): The tick position.
+
+        Returns:
+        - str: The formatted tick label.
+        '''
+        
+        return f"{int(val)}°"
+
+    ax.xaxis.set_major_formatter(mticker.FuncFormatter(degree_formatter))
+    ax.yaxis.set_major_formatter(mticker.FuncFormatter(degree_formatter))
+
+    # Minor ticks within the extent
+    minor_lon_ticks = np.arange(np.floor(np.min(extent_lon)), np.ceil(np.max(extent_lon)) + 1, 1)
+    minor_lat_ticks = np.arange(np.floor(np.min(extent_lat)), np.ceil(np.max(extent_lat)) + 1, 1)
+
+    # Filter minor ticks to keep only those that are within the plot extent
+    minor_lon_ticks = minor_lon_ticks[(minor_lon_ticks >= np.min(extent_lon)) & (minor_lon_ticks <= np.max(extent_lon))]
+    minor_lat_ticks = minor_lat_ticks[(minor_lat_ticks >= np.min(extent_lat)) & (minor_lat_ticks <= np.max(extent_lat))]
+
+    ax.set_xticks(minor_lon_ticks, minor=True, crs=ccrs.PlateCarree())
+    ax.set_yticks(minor_lat_ticks, minor=True, crs=ccrs.PlateCarree())
+
+    ax.tick_params(axis='both', which='both', direction='out', length=6, labelbottom=True, labelleft=True, labelright=False, labeltop=False, bottom=True, top=True, left=True, right=True)
+    ax.tick_params(axis='both', which='minor', length=3)
 
 ### FUNCTION:
 def calculate_cbar_ticks(magnitude):
@@ -342,7 +371,7 @@ def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000]):
     Args:
     - ax: The axis object of the matplotlib plot.
     - model_data (xarray.Dataset): Dataset used to define the extent of the bathymetry data.
-    - isobath_levels (list): Depths at which to plot the isobaths.
+    - isobath_levels (list): Depths at which to plot the isobaths. Must be a negative value.
 
     Returns:
     - None
@@ -372,6 +401,6 @@ def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000]):
     cs = ax.contourf(bathy_subset.lon, bathy_subset.lat, -bathy_subset.elevation, levels=isobath_levels, cmap=cmap, extend='both', transform=ccrs.PlateCarree())
 
     for level in isobath_levels:
-        ax.contour(bathy_subset.lon, bathy_subset.lat, -bathy_subset.elevation, levels=[level], colors='darkgrey', linestyles='dashed', linewidths=0.75, zorder=50, transform=ccrs.PlateCarree())
+        ax.contour(bathy_subset.lon, bathy_subset.lat, -bathy_subset.elevation, levels=[level], colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
 
     bathymetry.close()

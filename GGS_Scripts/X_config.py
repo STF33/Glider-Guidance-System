@@ -26,14 +26,14 @@ def GGS_config_static():
     '''
     
     config = {
-        "glider_name": "Gulf of Mexico",
-        "max_depth": 100.0,
+        "glider_name": "Yucatan",
+        "max_depth": 1000,
         "avg_velocity": 0.5,
         "battery_capacity": 1000,
         "battery_drain": 5,
         "satisfying_radius": 1000,
-        "waypoints": [(18.00510558149081, -97.75507520595109),
-                      (30.68658969837126, -80.17002034924428)
+        "waypoints": [(15.365189027409214, -90.57125927041142),
+                      (25.34749902549429, -80.19165763322677)
                     ] # CURRENT: Gulf of Mexico
     }
 
