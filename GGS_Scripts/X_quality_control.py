@@ -2,6 +2,7 @@
 # X - IMPORTS
 # =========================
 
+from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -44,6 +45,7 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
     v_data = model_data['v'].isel(y=y_model_index, x=x_model_index).values
     avg_u = calculated_data['u_avg'].isel(y=y_calc_index, x=x_calc_index).values
     avg_v = calculated_data['v_avg'].isel(y=y_calc_index, x=x_calc_index).values
+    avg_magnitude = calculated_data['magnitude_avg'].isel(y=y_calc_index, x=x_calc_index).values
     bin_u_data = bin_data['bin_avg_u'].isel(y=y_bin_index, x=x_bin_index).values
     bin_v_data = bin_data['bin_avg_v'].isel(y=y_bin_index, x=x_bin_index).values
     bin_magnitude_data = bin_data['bin_avg_magnitude'].isel(y=y_bin_index, x=x_bin_index).values
@@ -55,7 +57,7 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
 
     axes[0].scatter(u_data, model_data['depth'], marker='x', color='black', s=100, label='Model Datapoint', alpha=1.0, zorder=3)
     axes[0].scatter(bin_u_data, np.arange(len(bin_u_data)), color='cyan', label='1m Interpolation', alpha=1.0, zorder=2)
-    axes[0].axvline(x=avg_u, color='darkcyan', linestyle='--', linewidth=2, label='Depth Average u', zorder=1)
+    axes[0].axvline(x=avg_u, color='darkcyan', linestyle='--', linewidth=2, label=f'Depth Avgerage = [{avg_u:.2f}]', zorder=1)
     axes[0].set_xlabel('u Velocity (m/s)', fontsize=12, fontweight='bold')
     axes[0].set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
     axes[0].invert_yaxis()
@@ -64,7 +66,7 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
 
     axes[1].scatter(v_data, model_data['depth'], marker='x', color='black', s=100, label='Model Datapoint', alpha=1.0, zorder=3)
     axes[1].scatter(bin_v_data, np.arange(len(bin_v_data)), color='orange', label='1m Interpolation', alpha=1.0, zorder=2)
-    axes[1].axvline(x=avg_v, color='darkorange', linestyle='--', linewidth=2, label='Depth Average v', zorder=1)
+    axes[1].axvline(x=avg_v, color='darkorange', linestyle='--', linewidth=2, label=f'Depth Avgerage = [{avg_v:.2f}]', zorder=1)
     axes[1].set_xlabel('v Velocity (m/s)', fontsize=12, fontweight='bold')
     axes[1].invert_yaxis()
     axes[1].grid(color='lightgrey', linestyle='-', linewidth=0.5)
@@ -72,6 +74,7 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
 
     axes[2].scatter(bin_magnitude_data, np.arange(len(bin_magnitude_data)), color='green', label='1m Interpolation', alpha=1.0, zorder=2)
     axes[2].set_xlabel('Current Magnitude (m/s)', fontsize=12, fontweight='bold')
+    axes[2].axvline(x=avg_magnitude, color='green', linestyle='--', linewidth=2, label=f'Depth Avgerage = [{avg_magnitude:.2f}]', zorder=1)
     axes[2].invert_yaxis()
     axes[2].grid(color='lightgrey', linestyle='-', linewidth=0.5)
     axes[2].legend(loc='lower center', facecolor='lightgrey')
@@ -82,11 +85,12 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
     axes[3].grid(color='lightgrey', linestyle='-', linewidth=0.5)
     axes[3].legend(loc='lower center', facecolor='lightgrey')
 
-    plt.suptitle(f'Quality Control Profiles - Lat: {qc_latitude:.3f}, Lon: {qc_longitude:.3f}', fontsize=14)
-    plt.subplots_adjust(top=0.90)
+    title_text = f"{config['glider_name']} Mission - Quality Control Profiles - Lat: {qc_latitude:.3f}, Lon: {qc_longitude:.3f}"
+    fig.suptitle(title_text, fontsize=14, fontweight='bold')
+    
     plt.tight_layout()
 
-    fig_filename = f"{config['glider_name']}_QualityControl_uvProfile.png"
+    fig_filename = f"GGS_{config['glider_name']}_QualityControl.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
 

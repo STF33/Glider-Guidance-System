@@ -3,10 +3,10 @@
 # =========================
 
 import cartopy.crs as ccrs
-import cartopy.feature as cfeature
+from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-import matplotlib.colors as mcolors
+import matplotlib.patches as mpatches
 import numpy as np
 import xarray as xr
 
@@ -247,6 +247,24 @@ def DD_to_DDM(DD):
 
     return f"{degrees:02d}{minutes:05.2f}"
 
+def get_6h_interval():
+    
+    '''
+    Get the previous 6 hour interval in UTC time.
+
+    Args:
+    - None
+    
+    Returns:
+    - str: The start time of the previous 6 hour interval in UTC time.
+    '''
+
+    current_time = datetime.utcnow()
+    rounded_hour = current_time.hour - (current_time.hour % 6)
+    previous_interval_time = current_time.replace(hour=rounded_hour, minute=0, second=0, microsecond=0)
+    
+    return previous_interval_time.strftime("%H:%M")
+
 # =========================
 # PLOT HELPERS
 # =========================
@@ -363,7 +381,7 @@ def calculate_cbar_ticks(magnitude):
     return ticks
 
 ### FUNCTION
-def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000]):
+def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000], show_legend=True):
     
     '''
     Add isobath lines to a plot and fill ocean color between isobaths with varying shades of blue.
@@ -372,6 +390,8 @@ def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000]):
     - ax: The axis object of the matplotlib plot.
     - model_data (xarray.Dataset): Dataset used to define the extent of the bathymetry data.
     - isobath_levels (list): Depths at which to plot the isobaths. Must be a negative value.
+    - show_legend (bool): Whether to show the isobath legend.
+        - default: True
 
     Returns:
     - None
@@ -384,11 +404,11 @@ def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000]):
     data_lats = model_data.lat.values
     extent = [np.min(data_lons), np.max(data_lons), np.min(data_lats), np.max(data_lats)]
 
-    bathy_subset = bathymetry.sel(lon=slice(extent[0], extent[1]), lat=slice(extent[2], extent[3]))
+    bathymetry_subset = bathymetry.sel(lon=slice(extent[0], extent[1]), lat=slice(extent[2], extent[3]))
 
     isobath_levels = sorted([-level for level in isobath_levels])
-    min_elevation = -bathy_subset.elevation.max()
-    max_elevation = -bathy_subset.elevation.min()
+    min_elevation = -bathymetry_subset.elevation.max()
+    max_elevation = -bathymetry_subset.elevation.min()
 
     isobath_levels = [lvl for lvl in isobath_levels if min_elevation <= lvl <= max_elevation]
     if not isobath_levels or isobath_levels[0] > min_elevation:
@@ -397,10 +417,22 @@ def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000]):
         isobath_levels.append(max_elevation)
 
     cmap = plt.get_cmap('Blues')
-
-    cs = ax.contourf(bathy_subset.lon, bathy_subset.lat, -bathy_subset.elevation, levels=isobath_levels, cmap=cmap, extend='both', transform=ccrs.PlateCarree())
+    cs = ax.contourf(bathymetry_subset.lon, bathymetry_subset.lat, -bathymetry_subset.elevation, levels=isobath_levels, cmap=cmap, extend='both', transform=ccrs.PlateCarree())
 
     for level in isobath_levels:
-        ax.contour(bathy_subset.lon, bathy_subset.lat, -bathy_subset.elevation, levels=[level], colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
+        ax.contour(bathymetry_subset.lon, bathymetry_subset.lat, -bathymetry_subset.elevation, levels=[level], colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
+
+    if show_legend:
+        isobath_patches = []
+        for i, level in enumerate(isobath_levels):
+            color = cmap(float(i) / (len(isobath_levels) - 1))
+            patch = mpatches.Patch(color=color, label=f'{-level} m')
+            isobath_patches.append(patch)
+
+        isobath_legend = ax.legend(handles=isobath_patches, loc='lower left', title='Isobath Levels', facecolor='grey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
+        isobath_legend.set_zorder(100)
+        isobath_legend.get_title().set_color('white')
+        for text in isobath_legend.get_texts():
+            text.set_color('white')
 
     bathymetry.close()
