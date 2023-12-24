@@ -3,10 +3,11 @@
 # =========================
 
 import cartopy.crs as ccrs
-from datetime import datetime, timedelta
+import cartopy.feature as cfeature
+from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-import matplotlib.patches as mpatches
+import matplotlib.colors as mcolors
 import numpy as np
 import xarray as xr
 
@@ -198,36 +199,33 @@ def DD_to_DM(DD, coord_type='longitude'):
     return f"{abs(degrees)}°{minutes}'{direction}"
 
 ### FUNCTION:
-def DD_to_DMS(DD, coord_type='longitude'):
-
+def DD_to_DMS(DD):
+    
     '''
-    Convert a decimal degree (DD) coordinate to a degree minute second (DMS) coordinate.
+    Convert decimal degrees to degrees, minutes, and seconds.
 
     Args:
-    - DD (float): A decimal degree coordinate.
-    - coord_type (str): A string indicating whether the position is a longitude or latitude.
+        decimal_degrees (np.ndarray): Numpy array of decimal degrees.
 
     Returns:
-    - str: A degree minute second coordinate.
+        degrees (np.ndarray): Degrees part of the DMS.
+        minutes (np.ndarray): Minutes part of the DMS.
+        seconds (np.ndarray): Seconds part of the DMS.
     '''
 
-    degrees = int(DD)
-    minutes = int((DD - degrees) * 60)
-    seconds = (DD - degrees - minutes/60) * 3600.00
-    
-    direction = ''
-    if degrees > 0:
-        if coord_type == 'longitude':
-            direction = 'E'
-        elif coord_type == 'latitude':
-            direction = 'N'
-    elif degrees < 0:
-        if coord_type == 'longitude':
-            direction = 'W'
-        elif coord_type == 'latitude':
-            direction = 'S'
-    
-    return f"{abs(degrees)}°{abs(minutes)}'{abs(seconds):.2f}\"{direction}"
+    negative_DD = DD < 0
+
+    absolute_decimal_degrees = np.abs(DD)
+
+    degree = np.floor(absolute_decimal_degrees)
+
+    remainder = (absolute_decimal_degrees - degree) * 60
+    minute = np.floor(remainder)
+    second = np.round((remainder - minute) * 60)
+
+    degree[negative_DD] *= -1
+
+    return degree, minute, second
 
 ### FUNCTION:
 def DD_to_DDM(DD):
@@ -247,6 +245,7 @@ def DD_to_DDM(DD):
 
     return f"{degrees:02d}{minutes:05.2f}"
 
+### FUNCTION:
 def get_6h_interval():
     
     '''
@@ -270,88 +269,155 @@ def get_6h_interval():
 # =========================
 
 ### FUNCTION:
-
-def set_map_ticks(ax, extent_lon, extent_lat):
+def calculate_ticks(extent, direction):
     
     '''
-    Set simple tick marks for a matplotlib map based on the extent.
+    Define major and minor tick locations and major tick labels
 
     Args:
-    - ax (matplotlib.axes): The axes to set the ticks for.
-    - extent_lon (array-like): The longitude extent of the map.
-    - extent_lat (array-like): The latitude extent of the map.
+    - extent (tuple or list): extent (x0, x1, y0, y1) of the map in the given coordinate system.
+    - direction (str): 'longitude' or 'latitude'
 
+    Returns:
+    - minor_ticks (numpy.ndarray): minor tick locations
+    - major_ticks (numpy.ndarray): major tick locations
+    - major_tick_labels (list): major tick labels
+    '''
+
+    direction = direction.lower()
+
+    extent = [float(x) for x in extent]
+
+    if direction == 'longitude':
+        l0 = extent[0]
+        l1 = extent[1]
+        o0 = extent[2]
+        o1 = extent[3]
+    elif direction == 'latitude':
+        l0 = extent[2]
+        l1 = extent[3]
+        o0 = extent[0]
+        o1 = extent[1]
+
+    r = np.max([l1 - l0, o1 - o0])
+
+    if r <= 1.5:
+        minor_int = 1.0 / 12.0
+        major_int = 1.0 / 4.0
+    elif r <= 3.0:
+        minor_int = 1.0 / 6.0
+        major_int = 0.5
+    elif r <= 7.0:
+        minor_int = 0.25
+        major_int = float(1)
+    elif r <= 15:
+        minor_int = 0.5
+        major_int = float(2)
+    elif r <= 30:
+        minor_int = float(1)
+        major_int = float(3)
+    elif r <=50:
+        minor_int = float(1)
+        major_int = float(5)
+    elif r <=80:
+        minor_int = float(5)
+        major_int = float(10)
+    elif r <=120:
+        minor_int = float(5)
+        major_int = float(15)
+    elif r <=160:
+        minor_int = float(5)
+        major_int = float(20)
+    elif r <=250:
+        minor_int = float(10)
+        major_int = float(30)
+    else:
+        minor_int = float(15)
+        major_int = float(45)
+
+    minor_ticks = np.arange(
+        np.ceil(l0 / minor_int) * minor_int, 
+        np.ceil(l1 / minor_int) * minor_int + minor_int,
+        minor_int)
+    minor_ticks = minor_ticks[minor_ticks <= l1]
+    
+    major_ticks = np.arange(
+        np.ceil(l0 / major_int) * major_int, 
+        np.ceil(l1 / major_int) * major_int + major_int,
+        major_int)
+    major_ticks = major_ticks[major_ticks <= l1]
+
+    if major_int < 1:
+        degree, minute, second = DD_to_DMS(np.array(major_ticks))
+        if direction == 'longitude':
+            n = 'W' * sum(degree < 0)
+            p = 'E' * sum(degree >= 0)
+            dir = n + p
+            major_tick_labels = [str(np.abs(int(degree[i]))) + u"\N{DEGREE SIGN}" + str(int(minute[i])) + "'" + dir[i] for i in range(len(degree))]
+        elif direction == 'latitude':
+            n = 'S' * sum(degree < 0)
+            p = 'N' * sum(degree >= 0)
+            dir = n + p
+            major_tick_labels = [str(np.abs(int(degree[i]))) + u"\N{DEGREE SIGN}" + str(int(minute[i])) + "'" + dir[i] for i in range(len(degree))]
+        else:
+            major_tick_labels = [str(int(degree[i])) + u"\N{DEGREE SIGN}" + str(int(minute[i])) + "'" for i in range(len(degree))]
+    else:
+        degree = major_ticks
+        if direction == 'longitude':
+            n = 'W' * sum(degree < 0)
+            p = 'E' * sum(degree >= 0)
+            dir = n + p
+            major_tick_labels = [str(np.abs(int(degree[i]))) + u"\N{DEGREE SIGN}" + dir[i] for i in range(len(degree))]
+        elif direction == 'latitude':
+            n = 'S' * sum(degree < 0)
+            p = 'N' * sum(degree >= 0)
+            dir = n + p
+            major_tick_labels = [str(np.abs(int(degree[i]))) + u"\N{DEGREE SIGN}" + dir[i] for i in range(len(degree))]
+        else:
+            major_tick_labels = [str(int(degree[i])) + u"\N{DEGREE SIGN}" for i in range(len(degree))]
+
+    return minor_ticks, major_ticks, major_tick_labels
+
+### FUNCTION:
+def add_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fontsize=13, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
+    
+    '''
+    Calculate and add formatted tick marks to the map based on longitude and latitude extents.
+
+    Args:
+    - ax (matplotlib.axes._subplots.AxesSubplot): The axes to set the ticks for.
+    - extent_lon (list): Longitude bounds of the map, [min_longitude, max_longitude].
+    - extent_lat (list): Latitude bounds of the map, [min_latitude, max_latitude].
+    - proj (cartopy.crs class, optional): Define a projected coordinate system for ticks. Defaults to ccrs.PlateCarree().
+    - fontsize (int, optional): Font size of tick labels. Defaults to 13.
+    - gridlines (bool, optional): Add gridlines to map. Defaults to False.
+    
     Returns:
     - None
     '''
+    
+    if not (len(extent_lon) == 2 and len(extent_lat) == 2):
+        raise ValueError("extent_lon and extent_lat must each contain exactly two elements: [min_val, max_val].")
+    overall_extent = [extent_lon[0], extent_lon[1], extent_lat[0], extent_lat[1]]
+    
+    minor_lon_ticks, major_lon_ticks, major_lon_labels = calculate_ticks(overall_extent, 'longitude')
+    ax.set_xticks(minor_lon_ticks, minor=True, crs=proj)
+    ax.set_xticks(major_lon_ticks, crs=proj)
+    ax.set_xticklabels(major_lon_labels, fontsize=fontsize)
 
-    def get_tick_interval(extent):
-        
-        '''
-        Get the tick interval for a given extent.
+    minor_lat_ticks, major_lat_ticks, major_lat_labels = calculate_ticks(overall_extent, 'latitude')
+    ax.set_yticks(minor_lat_ticks, minor=True, crs=proj)
+    ax.set_yticks(major_lat_ticks, crs=proj)
+    ax.set_yticklabels(major_lat_labels, fontsize=fontsize)
 
-        Args:
-        - extent (array-like): The extent of the map.
+    ax.tick_params(which='major', direction='out', bottom=True, top=True, labelbottom=label_bottom, labeltop=label_top, left=True, right=True, labelleft=label_left, labelright=label_right, length=5, width=2)
 
-        Returns:
-        - float: The tick interval.
-        '''
-        
-        min_extent, max_extent = np.min(extent), np.max(extent)
-        range_extent = max_extent - min_extent
+    ax.tick_params(which='minor', direction='out', bottom=True, top=True, left=True, right=True, width=1)
 
-        intervals = [1, 2, 5, 10, 15, 30]
-        for interval in intervals:
-            num_ticks = int(range_extent / interval) + 1
-            if 3 <= num_ticks <= 6:
-                return interval
-        return intervals[-1]
-
-    lon_interval = get_tick_interval(extent_lon)
-    lat_interval = get_tick_interval(extent_lat)
-
-    lon_start = np.ceil(np.min(extent_lon) / lon_interval) * lon_interval
-    lon_end = np.floor(np.max(extent_lon) / lon_interval) * lon_interval
-    lat_start = np.ceil(np.min(extent_lat) / lat_interval) * lat_interval
-    lat_end = np.floor(np.max(extent_lat) / lat_interval) * lat_interval
-
-    lon_ticks = np.arange(lon_start, lon_end + lon_interval/2, lon_interval)
-    lat_ticks = np.arange(lat_start, lat_end + lat_interval/2, lat_interval)
-
-    ax.set_xticks(lon_ticks, crs=ccrs.PlateCarree())
-    ax.set_yticks(lat_ticks, crs=ccrs.PlateCarree())
-
-    def degree_formatter(val, pos):
-        
-        '''
-        Format the tick labels to be in degree minute format.
-
-        Args:
-        - val (float): The tick value.
-        - pos (int): The tick position.
-
-        Returns:
-        - str: The formatted tick label.
-        '''
-        
-        return f"{int(val)}°"
-
-    ax.xaxis.set_major_formatter(mticker.FuncFormatter(degree_formatter))
-    ax.yaxis.set_major_formatter(mticker.FuncFormatter(degree_formatter))
-
-    # Minor ticks within the extent
-    minor_lon_ticks = np.arange(np.floor(np.min(extent_lon)), np.ceil(np.max(extent_lon)) + 1, 1)
-    minor_lat_ticks = np.arange(np.floor(np.min(extent_lat)), np.ceil(np.max(extent_lat)) + 1, 1)
-
-    # Filter minor ticks to keep only those that are within the plot extent
-    minor_lon_ticks = minor_lon_ticks[(minor_lon_ticks >= np.min(extent_lon)) & (minor_lon_ticks <= np.max(extent_lon))]
-    minor_lat_ticks = minor_lat_ticks[(minor_lat_ticks >= np.min(extent_lat)) & (minor_lat_ticks <= np.max(extent_lat))]
-
-    ax.set_xticks(minor_lon_ticks, minor=True, crs=ccrs.PlateCarree())
-    ax.set_yticks(minor_lat_ticks, minor=True, crs=ccrs.PlateCarree())
-
-    ax.tick_params(axis='both', which='both', direction='out', length=6, labelbottom=True, labelleft=True, labelright=False, labeltop=False, bottom=True, top=True, left=True, right=True)
-    ax.tick_params(axis='both', which='minor', length=3)
+    if gridlines:
+        gl = ax.gridlines(draw_labels=False, linewidth=.25, color='black', alpha=0.1, linestyle='--', crs=proj, zorder=1000) # zorder = [1000]
+        gl.xlocator = mticker.FixedLocator(minor_lon_ticks)
+        gl.ylocator = mticker.FixedLocator(minor_lat_ticks)
 
 ### FUNCTION:
 def calculate_cbar_ticks(magnitude):
@@ -381,58 +447,72 @@ def calculate_cbar_ticks(magnitude):
     return ticks
 
 ### FUNCTION
-def add_bathymetry(ax, model_data, isobath_levels=[-100, -1000], show_legend=True):
+def add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
     
     '''
-    Add isobath lines to a plot and fill ocean color between isobaths with varying shades of blue.
+    Add bathymetry to a plot.
 
     Args:
-    - ax: The axis object of the matplotlib plot.
-    - model_data (xarray.Dataset): Dataset used to define the extent of the bathymetry data.
-    - isobath_levels (list): Depths at which to plot the isobaths. Must be a negative value.
-    - show_legend (bool): Whether to show the isobath legend.
-        - default: True
+    - ax (matplotlib.axes._subplots.AxesSubplot): Matplotlib subplot.
+    - model_data (xarray.core.dataset.Dataset): Model data.
+    - isobath1 (int): First isobath level.
+        - default: -100
+    - isobath2 (int): Second isobath level.
+        - default: -1000
+    - show_legend (bool): Show legend.
+        - default: False
 
     Returns:
-    - None
+    - none
     '''
 
     bathymetry_file = 'C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/GGS_Files/GEBCO_2023_sub_ice_topo.nc'
-    bathymetry = xr.open_dataset(bathymetry_file)
+    bathy_data = xr.open_dataset(bathymetry_file)
 
-    data_lons = model_data.lon.values
-    data_lats = model_data.lat.values
-    extent = [np.min(data_lons), np.max(data_lons), np.min(data_lats), np.max(data_lats)]
+    subset_bathy = bathy_data.sel(lat=slice(model_data.lat.min(), model_data.lat.max()), lon=slice(model_data.lon.min(), model_data.lon.max()))
 
-    bathymetry_subset = bathymetry.sel(lon=slice(extent[0], extent[1]), lat=slice(extent[2], extent[3]))
+    isobath_levels = sorted([isobath1, isobath2])
+    depth_intervals = [-np.inf] + isobath_levels + [0]
 
-    isobath_levels = sorted([-level for level in isobath_levels])
-    min_elevation = -bathymetry_subset.elevation.max()
-    max_elevation = -bathymetry_subset.elevation.min()
+    subset_bathy['elevation'] = subset_bathy['elevation'].fillna(0).where(~np.isinf(subset_bathy['elevation']), 0)
 
-    isobath_levels = [lvl for lvl in isobath_levels if min_elevation <= lvl <= max_elevation]
-    if not isobath_levels or isobath_levels[0] > min_elevation:
-        isobath_levels.insert(0, min_elevation)
-    if isobath_levels[-1] < max_elevation:
-        isobath_levels.append(max_elevation)
+    cornflowerblue = mcolors.to_rgba('cornflowerblue')
+    water = cfeature.COLORS['water']
+    lightsteelblue = mcolors.to_rgba('lightsteelblue')
 
-    cmap = plt.get_cmap('Blues')
-    cs = ax.contourf(bathymetry_subset.lon, bathymetry_subset.lat, -bathymetry_subset.elevation, levels=isobath_levels, cmap=cmap, extend='both', transform=ccrs.PlateCarree())
+    colors = [cornflowerblue, water, lightsteelblue]
+    
+    ax.contour(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation, levels=isobath_levels, colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50)
 
-    for level in isobath_levels:
-        ax.contour(bathymetry_subset.lon, bathymetry_subset.lat, -bathymetry_subset.elevation, levels=[level], colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
+    for i in range(len(depth_intervals) - 1):
+        ax.contourf(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation,
+                    levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]])
 
     if show_legend:
-        isobath_patches = []
-        for i, level in enumerate(isobath_levels):
-            color = cmap(float(i) / (len(isobath_levels) - 1))
-            patch = mpatches.Patch(color=color, label=f'{-level} m')
-            isobath_patches.append(patch)
+        legend_labels = [f'0 to {isobath1}m', f'{isobath1}m to {isobath2}m', f'>{isobath2}m']
+        patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(colors, legend_labels)]
+        legend = ax.legend(handles=patches, loc='lower left', title='Isobath Levels', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
+        legend.set_zorder(1000)
+        legend.get_title().set_color('black')
+        for text in legend.get_texts():
+            text.set_color('black')
 
-        isobath_legend = ax.legend(handles=isobath_patches, loc='lower left', title='Isobath Levels', facecolor='grey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
-        isobath_legend.set_zorder(100)
-        isobath_legend.get_title().set_color('white')
-        for text in isobath_legend.get_texts():
-            text.set_color('white')
+def get_rounded_range(data, interval):
+    
+    '''
+    Find the rounded-up range for the given data based on a specified interval.
 
-    bathymetry.close()
+    Args:
+    - data (array-like): Array of values.
+    - interval (int): Interval to round to (e.g., 30 for rounding to nearest 30 degrees).
+
+    Returns:
+    - tuple: (min_range, max_range) rounded to the nearest interval.
+    '''
+
+    min_val = np.min(data)
+    max_val = np.max(data)
+    min_range = interval * np.floor(min_val / interval)
+    max_range = interval * np.ceil(max_val / interval)
+    
+    return min_range, max_range

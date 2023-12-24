@@ -10,14 +10,14 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 import os
-from X_functions import calculate_gridpoint, get_6h_interval, set_map_ticks, calculate_cbar_ticks, add_bathymetry
+from X_functions import calculate_gridpoint, get_6h_interval, add_formatted_ticks, calculate_cbar_ticks, add_bathymetry
 
 # =========================
 # PLOTTING
 # =========================
 
 ### FUNCTION:
-def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, qc_latitude, qc_longitude, density=2, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False):
+def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, qc_latitude, qc_longitude, density=2, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False):
     
     '''
     Plot the depth-averaged current fields.
@@ -26,7 +26,7 @@ def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, q
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - directory (str): Glider Guidance System mission directory.
-    - waypoints (list): Glider Guidance System mission waypoints.
+    - GPS_coords (list): Glider Guidance System mission GPS_coords.
     - model_data (xarray.Dataset): Ocean model dataset.
     - currents_data (xarray.Dataset): Dataset with the computed variables and layer information.
     - qc_latitude (float): Latitude of the QC sample point.
@@ -55,17 +55,21 @@ def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, q
     v_avg = currents_data['v_avg'].values
     magnitude = currents_data['magnitude_avg'].values
     
+    map_lons = map_lons
+    map_lats = map_lats
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
 
     fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
 
     if extent == 'map':
-        ax.set_extent([min(map_lons), max(map_lons), min(map_lats), max(map_lats)], crs=ccrs.PlateCarree())
-        set_map_ticks(ax, map_lons, map_lats)
+        map_extent_lon = [np.min(map_lons), np.max(map_lons)]
+        map_extent_lat = [np.min(map_lats), np.max(map_lats)]
+        add_formatted_ticks(ax, map_extent_lon, map_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     elif extent == 'data':
-        ax.set_extent([np.min(data_lons), np.max(data_lons), np.min(data_lats), np.max(data_lats)], crs=ccrs.PlateCarree())
-        set_map_ticks(ax, data_lons, data_lats)
+        data_extent_lon = [np.min(data_lons), np.max(data_lons)]
+        data_extent_lat = [np.min(data_lats), np.max(data_lats)]
+        add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     else:
         raise ValueError("Invalid extent option. Use 'map' or 'data'.")
 
@@ -74,15 +78,15 @@ def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, q
     ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
 
     if show_route: # zorder = [2]
-        lats, lons = zip(*waypoints)
+        lats, lons = zip(*GPS_coords)
         ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=21)
         ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=22)
         
-        start_coords = config["waypoints"][0]
-        end_coords = config["waypoints"][-1]
+        start_coords = config["GPS_coords"][0]
+        end_coords = config["GPS_coords"][-1]
         ax.scatter(*start_coords[::-1], color='green', s=100, transform=ccrs.PlateCarree(), zorder=23)
-        for waypoint in config["waypoints"][1:-1]:
-            ax.scatter(*waypoint[::-1], color='blue', s=100, transform=ccrs.PlateCarree(), zorder=23)
+        for GPS_coord in config["GPS_coords"][1:-1]:
+            ax.scatter(*GPS_coord[::-1], color='blue', s=100, transform=ccrs.PlateCarree(), zorder=23)
         ax.scatter(*end_coords[::-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=23)
 
     if show_qc: # zorder = [3]
@@ -91,13 +95,13 @@ def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, q
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
         ax.scatter(qc_lon, qc_lat, color='red', s=100, transform=ccrs.PlateCarree(), zorder=35)
 
-    ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="tan", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.BORDERS, edgecolor="black", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="steelblue", zorder=90) # zorder = [9]
-
-    add_bathymetry(ax, model_data, isobath_levels=[-100, -1000], show_legend=False)
+    ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90) # zorder = [9]
+    
+    add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False)
 
     box = ax.get_position()
     left_margin = box.x0
@@ -126,7 +130,7 @@ def GGS_plot_currents(config, directory, waypoints, model_data, currents_data, q
     plt.close(fig)
 
 ### FUNCTION:
-def GGS_plot_threshold(config, directory, waypoints, model_data, currents_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False):
+def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False):
     
     '''
     Plots the depth-averaged current magnitude threshold zones for the currents data.
@@ -135,7 +139,7 @@ def GGS_plot_threshold(config, directory, waypoints, model_data, currents_data, 
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - directory (str): Glider Guidance System mission directory.
-    - waypoints (list): Glider Guidance System mission waypoints.
+    - GPS_coords (list): Glider Guidance System mission GPS_coords.
     - model_data (xarray.Dataset): Ocean model dataset.
     - currents_data (xarray.Dataset): Dataset with the computed variables and layer information.
     - mag1 (float): First threshold magnitude.
@@ -173,20 +177,24 @@ def GGS_plot_threshold(config, directory, waypoints, model_data, currents_data, 
     magnitude = currents_data['magnitude_avg'].values
     magnitude = np.nan_to_num(magnitude, nan=0.0, posinf=0.0, neginf=0.0)
 
+    map_lons = map_lons
+    map_lats = map_lats
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
 
     fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
 
     if extent == 'map':
-        ax.set_extent([min(map_lons), max(map_lons), min(map_lats), max(map_lats)], crs=ccrs.PlateCarree())
-        set_map_ticks(ax, map_lons, map_lats)
+        map_extent_lon = [np.min(map_lons), np.max(map_lons)]
+        map_extent_lat = [np.min(map_lats), np.max(map_lats)]
+        add_formatted_ticks(ax, map_extent_lon, map_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     elif extent == 'data':
-        ax.set_extent([np.min(data_lons), np.max(data_lons), np.min(data_lats), np.max(data_lats)], crs=ccrs.PlateCarree())
-        set_map_ticks(ax, data_lons, data_lats)
+        data_extent_lon = [np.min(data_lons), np.max(data_lons)]
+        data_extent_lat = [np.min(data_lats), np.max(data_lats)]
+        add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     else:
         raise ValueError("Invalid extent option. Use 'map' or 'data'.")
-
+    
     levels = [mag1, mag2, mag3, mag4, mag5, np.max(magnitude)]
     colors = ['none', 'yellow', 'orange', 'orangered', 'firebrick']
     
@@ -195,15 +203,15 @@ def GGS_plot_threshold(config, directory, waypoints, model_data, currents_data, 
     streamplot.lines.set_alpha(0.5)
 
     if show_route: # zorder = [2]
-        lats, lons = zip(*waypoints)
+        lats, lons = zip(*GPS_coords)
         ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=21)
         ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=22)
         
-        start_coords = config["waypoints"][0]
-        end_coords = config["waypoints"][-1]
+        start_coords = config["GPS_coords"][0]
+        end_coords = config["GPS_coords"][-1]
         ax.scatter(*start_coords[::-1], color='green', s=100, transform=ccrs.PlateCarree(), zorder=23)
-        for waypoint in config["waypoints"][1:-1]:
-            ax.scatter(*waypoint[::-1], color='blue', s=100, transform=ccrs.PlateCarree(), zorder=23)
+        for GPS_coord in config["GPS_coords"][1:-1]:
+            ax.scatter(*GPS_coord[::-1], color='blue', s=100, transform=ccrs.PlateCarree(), zorder=23)
         ax.scatter(*end_coords[::-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=23)
 
     if show_qc: # zorder = [3]
@@ -212,25 +220,28 @@ def GGS_plot_threshold(config, directory, waypoints, model_data, currents_data, 
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
         ax.scatter(qc_lon, qc_lat, color='red', s=100, transform=ccrs.PlateCarree(), zorder=35)
 
-    ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="tan", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="steelblue", zorder=90) # zorder = [9]
-    ax.add_feature(cfeature.BORDERS, edgecolor="black", zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90) # zorder = [9]
+    ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90) # zorder = [9]
     
-    add_bathymetry(ax, model_data, isobath_levels=[-100, -1000], show_legend=False)
+    add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=True)
+    bathymetry_legend = ax.get_legend()
 
     patches = [
         mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
         mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
         mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
         mpatches.Patch(facecolor='firebrick', label=f'>= {mag5} m/s')]
-    legend = ax.legend(handles=patches, loc='lower right', title='Current Magnitude', facecolor='grey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
-    legend.set_zorder(100) # zorder = [10]
-    legend.get_title().set_color('white')
+    legend = ax.legend(handles=patches, loc='lower right', title='Current Magnitude', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
+    legend.set_zorder(1000) # zorder = [100]
+    legend.get_title().set_color('black')
     for text in legend.get_texts():
-        text.set_color('white')
-    
+        text.set_color('black')
+    if bathymetry_legend:
+        ax.add_artist(bathymetry_legend) # zorder = [100]
+
     title_text = f"Depth Averaged Threshold Zones - Depth Range: {config['max_depth']}m"
     ax.set_title(title_text, fontsize=14, fontweight='bold', pad=25)
     subtitle_text = f"[RTOFS] {datetime.utcnow().strftime('%Y-%m-%d')} {get_6h_interval()} UTC"
@@ -243,4 +254,3 @@ def GGS_plot_threshold(config, directory, waypoints, model_data, currents_data, 
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
 
     plt.close(fig)
-    

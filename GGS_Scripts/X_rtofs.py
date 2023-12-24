@@ -82,16 +82,16 @@ class RTOFS():
             return None
     
     ### FUNCTION:
-    def rtofs_subset(self, config, waypoints, buffer=0.5, subset=True):
+    def rtofs_subset(self, config, GPS_coords, buffer=0, subset=True):
 
         '''
         Subset the RTOFS data based on the GGS mission extent.
 
         Args:
         - config (dict): Glider Guidance System mission configuration.
-        - waypoints (list): Glider Guidance System mission waypoints.
+        - GPS_coords (list): Glider Guidance System mission GPS_coords.
         - buffer (float): Buffer (in degrees) to add to the bounding box.
-            - default: 0.5
+            - default: 0
         - subset (bool): Subset the data.
             - default: 'True'
             - if True, the data is subset based on GGS mission extent.
@@ -102,7 +102,7 @@ class RTOFS():
         '''
 
         if subset:
-            lats, lons = zip(*waypoints)
+            lats, lons = zip(*GPS_coords)
 
             min_lon, max_lon = min(lons) - buffer, max(lons) + buffer
             min_lat, max_lat = min(lats) - buffer, max(lats) + buffer
