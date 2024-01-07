@@ -8,6 +8,7 @@ import cmocean.cm as cmo
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from matplotlib.patches import Circle
 import numpy as np
 import os
 from X_functions import calculate_gridpoint, get_6h_interval, add_formatted_ticks, calculate_cbar_ticks, add_bathymetry
@@ -65,14 +66,16 @@ def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, 
     if extent == 'map':
         map_extent_lon = [np.min(map_lons), np.max(map_lons)]
         map_extent_lat = [np.min(map_lats), np.max(map_lats)]
+        ax.set_extent(map_extent_lon + map_extent_lat, crs=ccrs.PlateCarree())
         add_formatted_ticks(ax, map_extent_lon, map_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     elif extent == 'data':
         data_extent_lon = [np.min(data_lons), np.max(data_lons)]
         data_extent_lat = [np.min(data_lats), np.max(data_lats)]
+        ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
         add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     else:
         raise ValueError("Invalid extent option. Use 'map' or 'data'.")
-
+    
     ticks = calculate_cbar_ticks(magnitude)
     contour = ax.contourf(data_lons, data_lats, magnitude, levels=ticks, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
     ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
@@ -93,8 +96,9 @@ def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, 
         (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
         qc_lon = model_data['lon'].isel(x=x_index, y=y_index).values
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
-        ax.scatter(qc_lon, qc_lat, color='red', s=100, transform=ccrs.PlateCarree(), zorder=35)
-
+        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=35)
+        ax.add_patch(circle)
+    
     ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", linewidth=0.25, zorder=90) # zorder = [9]
@@ -187,10 +191,12 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
     if extent == 'map':
         map_extent_lon = [np.min(map_lons), np.max(map_lons)]
         map_extent_lat = [np.min(map_lats), np.max(map_lats)]
+        ax.set_extent(map_extent_lon + map_extent_lat, crs=ccrs.PlateCarree())
         add_formatted_ticks(ax, map_extent_lon, map_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     elif extent == 'data':
         data_extent_lon = [np.min(data_lons), np.max(data_lons)]
         data_extent_lat = [np.min(data_lats), np.max(data_lats)]
+        ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
         add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     else:
         raise ValueError("Invalid extent option. Use 'map' or 'data'.")
@@ -200,7 +206,7 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
     
     contourf = ax.contourf(data_lons, data_lats, magnitude, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
     streamplot = ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='dimgrey', transform=ccrs.PlateCarree(), density=2, linewidth=0.5, zorder=11) # zorder = [1]
-    streamplot.lines.set_alpha(0.5)
+    streamplot.lines.set_alpha(1.0)
 
     if show_route: # zorder = [2]
         lats, lons = zip(*GPS_coords)
@@ -218,8 +224,9 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
         (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
         qc_lon = model_data['lon'].isel(x=x_index, y=y_index).values
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
-        ax.scatter(qc_lon, qc_lat, color='red', s=100, transform=ccrs.PlateCarree(), zorder=35)
-
+        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=35)
+        ax.add_patch(circle)
+    
     ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.LAND, edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", linewidth=0.25, zorder=90) # zorder = [9]
@@ -230,11 +237,11 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
     bathymetry_legend = ax.get_legend()
 
     patches = [
-        mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
-        mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
-        mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
+        mpatches.Patch(facecolor='yellow', label=f'{mag2} to {mag3} m/s'),
+        mpatches.Patch(facecolor='orange', label=f'{mag3} to {mag4} m/s'),
+        mpatches.Patch(facecolor='orangered', label=f'{mag4} to {mag5} m/s'),
         mpatches.Patch(facecolor='firebrick', label=f'>= {mag5} m/s')]
-    legend = ax.legend(handles=patches, loc='lower right', title='Current Magnitude', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
+    legend = ax.legend(handles=patches, loc='lower right', title='Current Magnitude', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small', title_fontsize='small')
     legend.set_zorder(1000) # zorder = [100]
     legend.get_title().set_color('black')
     for text in legend.get_texts():

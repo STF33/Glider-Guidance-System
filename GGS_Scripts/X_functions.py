@@ -466,7 +466,7 @@ def add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=Fa
     - none
     '''
 
-    bathymetry_file = 'C:/Users/salfr/OneDrive/Desktop/STF-0/!-GGS/GGS_Files/GEBCO_2023_sub_ice_topo.nc'
+    bathymetry_file = 'C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/GGS_Files/GEBCO_2023_sub_ice_topo.nc'
     bathy_data = xr.open_dataset(bathymetry_file)
 
     subset_bathy = bathy_data.sel(lat=slice(model_data.lat.min(), model_data.lat.max()), lon=slice(model_data.lon.min(), model_data.lon.max()))
@@ -489,9 +489,10 @@ def add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=Fa
                     levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]])
 
     if show_legend:
-        legend_labels = [f'0 to {isobath1}m', f'{isobath1}m to {isobath2}m', f'>{isobath2}m']
-        patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(colors, legend_labels)]
-        legend = ax.legend(handles=patches, loc='lower left', title='Isobath Levels', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='small', title_fontsize='medium')
+        legend_colors = [lightsteelblue, water, cornflowerblue]
+        legend_labels = [f'0 to {isobath1}m', f'{isobath1}m to {isobath2}m', f'> {isobath2}m']
+        patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(legend_colors, legend_labels)]
+        legend = ax.legend(handles=patches, loc='lower left', title='Bathymetry', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small', title_fontsize='small', markerscale=0.75)
         legend.set_zorder(1000)
         legend.get_title().set_color('black')
         for text in legend.get_texts():
