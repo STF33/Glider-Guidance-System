@@ -205,12 +205,12 @@ def DD_to_DMS(DD):
     Convert decimal degrees to degrees, minutes, and seconds.
 
     Args:
-        decimal_degrees (np.ndarray): Numpy array of decimal degrees.
+    - decimal_degrees (np.ndarray): Numpy array of decimal degrees.
 
     Returns:
-        degrees (np.ndarray): Degrees part of the DMS.
-        minutes (np.ndarray): Minutes part of the DMS.
-        seconds (np.ndarray): Seconds part of the DMS.
+    - degrees (np.ndarray): Degrees part of the DMS.
+    - minutes (np.ndarray): Minutes part of the DMS.
+    - seconds (np.ndarray): Seconds part of the DMS.
     '''
 
     negative_DD = DD < 0

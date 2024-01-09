@@ -18,7 +18,7 @@ from X_functions import calculate_gridpoint, get_6h_interval, add_formatted_tick
 # =========================
 
 ### FUNCTION:
-def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, qc_latitude, qc_longitude, density=2, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False):
+def GGS_plot_currents(config, directory, model_data, currents_data, qc_latitude, qc_longitude, density=2, show_route=False, show_qc=False):
     
     '''
     Plot the depth-averaged current fields.
@@ -27,18 +27,12 @@ def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, 
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - directory (str): Glider Guidance System mission directory.
-    - GPS_coords (list): Glider Guidance System mission GPS_coords.
     - model_data (xarray.Dataset): Ocean model dataset.
     - currents_data (xarray.Dataset): Dataset with the computed variables and layer information.
     - qc_latitude (float): Latitude of the QC sample point.
     - qc_longitude (float): Longitude of the QC sample point.
     - density (int): Density of the streamplot.
         - default: '2'
-    - extent (str): Extent of the plot.
-        - if 'map', use the map_lons and map_lats.
-        - if 'data', use the model_data extent.
-    - map_lons (list): Longitude bounds of the map, if extent='map'.
-    - map_lats (list): Latitude bounds of the map, if extent='map'.
     - show_route (bool): Show the route on the plot.
         - default: 'False'
         - if True, show the route.
@@ -56,32 +50,22 @@ def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, 
     v_avg = currents_data['v_avg'].values
     magnitude = currents_data['magnitude_avg'].values
     
-    map_lons = map_lons
-    map_lats = map_lats
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
 
     fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
 
-    if extent == 'map':
-        map_extent_lon = [np.min(map_lons), np.max(map_lons)]
-        map_extent_lat = [np.min(map_lats), np.max(map_lats)]
-        ax.set_extent(map_extent_lon + map_extent_lat, crs=ccrs.PlateCarree())
-        add_formatted_ticks(ax, map_extent_lon, map_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
-    elif extent == 'data':
-        data_extent_lon = [np.min(data_lons), np.max(data_lons)]
-        data_extent_lat = [np.min(data_lats), np.max(data_lats)]
-        ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
-        add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
-    else:
-        raise ValueError("Invalid extent option. Use 'map' or 'data'.")
+    data_extent_lon = [np.min(data_lons), np.max(data_lons)]
+    data_extent_lat = [np.min(data_lats), np.max(data_lats)]
+    ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
+    add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     
     ticks = calculate_cbar_ticks(magnitude)
     contour = ax.contourf(data_lons, data_lats, magnitude, levels=ticks, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
     ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
 
     if show_route: # zorder = [2]
-        lats, lons = zip(*GPS_coords)
+        lats, lons = zip(*config["GPS_coords"])
         ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=21)
         ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=22)
         
@@ -134,7 +118,7 @@ def GGS_plot_currents(config, directory, GPS_coords, model_data, currents_data, 
     plt.close(fig)
 
 ### FUNCTION:
-def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, extent='data', map_lons=[0, 0], map_lats=[0, 0], show_route=False, show_qc=False):
+def GGS_plot_threshold(config, directory, model_data, currents_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False):
     
     '''
     Plots the depth-averaged current magnitude threshold zones for the currents data.
@@ -143,7 +127,6 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - directory (str): Glider Guidance System mission directory.
-    - GPS_coords (list): Glider Guidance System mission GPS_coords.
     - model_data (xarray.Dataset): Ocean model dataset.
     - currents_data (xarray.Dataset): Dataset with the computed variables and layer information.
     - mag1 (float): First threshold magnitude.
@@ -158,11 +141,6 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
         - default: 0.5
     - qc_latitude (float): Latitude of the QC sample point.
     - qc_longitude (float): Longitude of the QC sample point.
-    - extent (str): Extent of the plot.
-        - if 'map', use the map_lons and map_lats.
-        - if 'data', use the model_data extent.
-    - map_lons (list): Longitude bounds of the map, if extent='map'.
-    - map_lats (list): Latitude bounds of the map, if extent='map'.
     - show_route (bool): Show the route on the plot.
         - default: 'False'
         - if True, show the route.
@@ -181,25 +159,15 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
     magnitude = currents_data['magnitude_avg'].values
     magnitude = np.nan_to_num(magnitude, nan=0.0, posinf=0.0, neginf=0.0)
 
-    map_lons = map_lons
-    map_lats = map_lats
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
 
     fig, ax = plt.subplots(subplot_kw={'projection': ccrs.PlateCarree()})
 
-    if extent == 'map':
-        map_extent_lon = [np.min(map_lons), np.max(map_lons)]
-        map_extent_lat = [np.min(map_lats), np.max(map_lats)]
-        ax.set_extent(map_extent_lon + map_extent_lat, crs=ccrs.PlateCarree())
-        add_formatted_ticks(ax, map_extent_lon, map_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
-    elif extent == 'data':
-        data_extent_lon = [np.min(data_lons), np.max(data_lons)]
-        data_extent_lat = [np.min(data_lats), np.max(data_lats)]
-        ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
-        add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
-    else:
-        raise ValueError("Invalid extent option. Use 'map' or 'data'.")
+    data_extent_lon = [np.min(data_lons), np.max(data_lons)]
+    data_extent_lat = [np.min(data_lats), np.max(data_lats)]
+    ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
+    add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     
     levels = [mag1, mag2, mag3, mag4, mag5, np.max(magnitude)]
     colors = ['none', 'yellow', 'orange', 'orangered', 'firebrick']
@@ -209,7 +177,7 @@ def GGS_plot_threshold(config, directory, GPS_coords, model_data, currents_data,
     streamplot.lines.set_alpha(1.0)
 
     if show_route: # zorder = [2]
-        lats, lons = zip(*GPS_coords)
+        lats, lons = zip(*config["GPS_coords"])
         ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=21)
         ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=22)
         

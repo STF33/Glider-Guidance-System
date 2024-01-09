@@ -2,7 +2,6 @@
 # X - IMPORTS
 # =========================
 
-from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -16,10 +15,7 @@ from X_functions import calculate_gridpoint
 def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_latitude, qc_longitude):
     
     '''
-    Intake a latitude and longitude to provide Quality Control data profiles at.
-    Scatter the ocean model 'u' and 'v' magnitudes over depth, Scatter the 1-meter bin averages,
-    and display the depth-averaged 'u' and 'v' component velocities as vertical lines.
-    Also, plot the bin averages and original data points along with the magnitude and direction of each bin.
+    Produce quality control profiles for 'u', 'v', 'magnitude', and 'direction' data at the specified point of interest.
 
     Args:
     - config (dict): Glider Guidance System mission configuration.
