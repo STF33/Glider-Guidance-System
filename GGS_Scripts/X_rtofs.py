@@ -4,8 +4,10 @@
 
 import numpy as np
 import os
+import pandas as pd
 from scipy.interpolate import interp1d
 import xarray as xr
+from X_functions import format_datetime, get_filename_datetime
 
 # =========================
 # [RTOFS] DATA PROCESSING
@@ -18,7 +20,7 @@ class RTOFS():
     Class for handling RTOFS data.
 
     Attributes:
-    - data_orig (xarray.Dataset): Original RTOFS data.
+    - data_origin (xarray.Dataset): Original RTOFS data.
     - data (xarray.Dataset): Main RTOFS data.
     - x (np.array): X-coordinates of the RTOFS grid.
     - y (np.array): Y-coordinates of the RTOFS grid.
@@ -34,37 +36,38 @@ class RTOFS():
     '''
 
     ### FUNCTION:
-    def __init__(self) -> None:
+    def __init__(self, datetime_index=None) -> None:
         
         '''
         Initialize the RTOFS instance.
 
         Args:
-        - None
-
-        Returns:
-        - None
+        - datetime_index (datetime.datetime): The datetime index for data loading.
         '''
 
-        self._data_orig = self.rtofs_load()
-        self._data_orig = self._data_orig.set_coords(['lat', 'lon'])
-        self.data = self._data_orig.copy()
+        if datetime_index is not None:
+            self.data_origin = self.rtofs_load(datetime_index)
+        else:
+            self.data_origin = xr.Dataset()
+
+        self.data_origin = self.data_origin.set_coords(['lat', 'lon'])
+        self.data = self.data_origin.copy()
 
         self.x = self.data.x.values
         self.y = self.data.y.values
         self.grid_lons = self.data.lon.values[0,:]
         self.grid_lats = self.data.lat.values[:,0]
 
-        self.rtofs_qc = self._data_orig.copy()
+        self.rtofs_qc = self.data_origin.copy()
 
     ### FUNCTION:
-    def rtofs_load(self):
+    def rtofs_load(self, datetime_index):
         
         '''
         Fetch the RTOFS data from the given URL source and set its coordinates.
 
         Args:
-        - None
+        - datetime_index (str): Index of the datetime to fetch.
 
         Returns:
         - rtofs_raw (xarray.Dataset): RTOFS data
@@ -73,10 +76,22 @@ class RTOFS():
         rtofs_access = "https://tds.marine.rutgers.edu/thredds/dodsC/cool/rtofs/rtofs_us_east_scraped"
 
         try:
-            rtofs_raw = xr.open_dataset(rtofs_access).set_coords(['lon', 'lat'])
-            rtofs_raw.attrs['model'] = 'RTOFS'
-            rtofs_raw = rtofs_raw.isel(time=-1)
+            rtofs_raw = xr.open_dataset(rtofs_access)
+            
+            datetime = pd.Timestamp(datetime_index).tz_localize(None)
+            time_values = rtofs_raw.time.values
+            time_index = np.argmin(np.abs(time_values - np.datetime64(datetime)))
+            rtofs_raw = rtofs_raw.isel(time=time_index)
+            rtofs_raw.attrs['requested_datetime'] = datetime_index
+            rtofs_raw.attrs['acquired_datetime'] = str(rtofs_raw.time.values)
+
+            print("\n### RTOFS data acquired ###\n")
+            print("Requested datetime:", datetime_index)
+            print("Nearest datetime index in the dataset:", time_index)
+            print("Acquired datetime:", rtofs_raw.attrs['acquired_datetime'])
+
             return rtofs_raw
+
         except Exception as e:
             print(f"Error fetching RTOFS data: {e}")
             return None
@@ -116,7 +131,7 @@ class RTOFS():
                 np.ceil(lats_ind[1]).astype(int)
             ]
 
-            self.data = self._data_orig.isel(
+            self.data = self.data_origin.isel(
                 x=slice(extent[0], extent[1]),
                 y=slice(extent[2], extent[3])
             )
@@ -128,7 +143,7 @@ class RTOFS():
             self.rtofs_qc = self.rtofs_qc.where(self.rtofs_qc['depth'] <= config["max_depth"], drop=True)
 
         else:
-            self.data = self._data_orig
+            self.data = self.data_origin
 
             self.data_lons = self.data.lon.values[0, :]
             self.data_lats = self.data.lat.values[:, 0]
@@ -150,7 +165,10 @@ class RTOFS():
         - None
         '''
 
-        rtofs_data_file = f"{config['glider_name']}_rtofs_{config['max_depth']}m.nc"
+        requested_datetime = self.data.attrs.get('requested_datetime', 'unknown_datetime')
+        formatted_datetime = format_datetime(requested_datetime)
+
+        rtofs_data_file = f"{config['glider_name']}_RTOFS_{formatted_datetime}_{config['max_depth']}m.nc"
         rtofs_data_path = os.path.join(directory, rtofs_data_file)
         self.data.to_netcdf(rtofs_data_path)
 
@@ -170,6 +188,9 @@ def interp_depth_average(config, directory, model_data):
     - calculated_data (xarray.Dataset): Dataset with the computed variables and layer information.
     - bin_data (xarray.Dataset): Dataset with the bin averages.
     '''
+
+    # Extract the RTOFS dataset date
+    model_datetime = model_data.attrs.get('requested_datetime', 'unknown_datetime')
 
     # Extracting data from the model dataset
     u_currents = model_data['u']
@@ -250,7 +271,7 @@ def interp_depth_average(config, directory, model_data):
                 averaged_magnitude[y, x] = np.nansum(bin_avg_magnitude[y, x, :len(bins)-1]) / total_depth
 
     # Creating 'calculated_data' dataset
-    calculated_data = xr.Dataset({
+    depth_average_data = xr.Dataset({
         'u_avg': (('y', 'x'), averaged_u),
         'v_avg': (('y', 'x'), averaged_v),
         'temperature_avg': (('y', 'x'), averaged_temp),
@@ -260,7 +281,7 @@ def interp_depth_average(config, directory, model_data):
     }, coords={'lat': model_data.lat, 'lon': model_data.lon})
 
     # Creating 'bin_data' dataset
-    bin_data = xr.Dataset({
+    bin_average_data = xr.Dataset({
         'bin_avg_u': (('y', 'x', 'bin'), bin_avg_u),
         'bin_avg_v': (('y', 'x', 'bin'), bin_avg_v),
         'bin_avg_temp': (('y', 'x', 'bin'), bin_avg_temp),
@@ -269,14 +290,17 @@ def interp_depth_average(config, directory, model_data):
         'bin_avg_direction': (('y', 'x', 'bin'), bin_avg_direction)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_num_bins)})
 
-    # Save 'calculated_data' dataset as a NetCDF file
-    calculated_data_file = f"{config['glider_name']}_calculated_data.nc"
-    calculated_data_path = os.path.join(directory, calculated_data_file)
-    calculated_data.to_netcdf(calculated_data_path)
+    # Get the filename datetime
+    filename_datetime = get_filename_datetime(model_data)
 
-    # Save 'bin_data' dataset as a NetCDF file
-    bin_data_file = f"{config['glider_name']}_bin_data.nc"
-    bin_data_path = os.path.join(directory, bin_data_file)
-    bin_data.to_netcdf(bin_data_path)
+    # Save 'depth_average_data' dataset as a NetCDF file
+    depth_average_data_file = f"{config['glider_name']}_DepthAverageData_{filename_datetime}.nc"
+    depth_average_data_path = os.path.join(directory, depth_average_data_file)
+    depth_average_data.to_netcdf(depth_average_data_path)
 
-    return calculated_data, bin_data
+    # Save 'bin_average_data' dataset as a NetCDF file
+    bin_average_data_file = f"{config['glider_name']}_BinAverageData_{filename_datetime}.nc"
+    bin_average_data_path = os.path.join(directory, bin_average_data_file)
+    bin_average_data.to_netcdf(bin_average_data_path)
+
+    return depth_average_data, bin_average_data

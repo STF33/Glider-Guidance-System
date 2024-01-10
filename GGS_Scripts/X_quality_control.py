@@ -5,14 +5,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from X_functions import calculate_gridpoint
+from X_functions import calculate_gridpoint, get_filename_datetime
 
 # =========================
 # QUALITY CONTROL PLOTS
 # =========================
 
 ### FUNCTION:
-def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_latitude, qc_longitude):
+def qc_uv_profile(config, directory, model_data, depth_average_data, bin_average_data, qc_latitude, qc_longitude):
     
     '''
     Produce quality control profiles for 'u', 'v', 'magnitude', and 'direction' data at the specified point of interest.
@@ -21,31 +21,33 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
     - config (dict): Glider Guidance System mission configuration.
     - directory (str): Glider Guidance System mission directory.
     - model_data (xarray.Dataset): Model dataset containing 'u' and 'v' data.
-    - calculated_data (xarray.Dataset): Dataset containing depth-averaged 'u' and 'v' data.
-    - bin_data (xarray.Dataset): Dataset containing bin-averaged 'u', 'v', 'magnitude', and 'direction' data.
+    - depth_average_data (xarray.Dataset): Dataset containing depth-averaged 'u' and 'v' data.
+    - bin_average_data (xarray.Dataset): Dataset containing bin-averaged 'u', 'v', 'magnitude', and 'direction' data.
     - qc_latitude (float): Latitude of the point of interest.
     - qc_longitude (float): Longitude of the point of interest.
 
     Returns:
     - None
     '''
-    
+
+    model_datetime = model_data.attrs.get('requested_datetime', 'unknown_datetime')
+
     qc_latitude = float(qc_latitude)
     qc_longitude = float(qc_longitude)
 
     (y_model_index, x_model_index), _ = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
-    (y_calc_index, x_calc_index), _ = calculate_gridpoint(calculated_data, qc_latitude, qc_longitude)
-    (y_bin_index, x_bin_index), _ = calculate_gridpoint(bin_data, qc_latitude, qc_longitude)
+    (y_calc_index, x_calc_index), _ = calculate_gridpoint(depth_average_data, qc_latitude, qc_longitude)
+    (y_bin_index, x_bin_index), _ = calculate_gridpoint(bin_average_data, qc_latitude, qc_longitude)
 
     u_data = model_data['u'].isel(y=y_model_index, x=x_model_index).values
     v_data = model_data['v'].isel(y=y_model_index, x=x_model_index).values
-    avg_u = calculated_data['u_avg'].isel(y=y_calc_index, x=x_calc_index).values
-    avg_v = calculated_data['v_avg'].isel(y=y_calc_index, x=x_calc_index).values
-    avg_magnitude = calculated_data['magnitude_avg'].isel(y=y_calc_index, x=x_calc_index).values
-    bin_u_data = bin_data['bin_avg_u'].isel(y=y_bin_index, x=x_bin_index).values
-    bin_v_data = bin_data['bin_avg_v'].isel(y=y_bin_index, x=x_bin_index).values
-    bin_magnitude_data = bin_data['bin_avg_magnitude'].isel(y=y_bin_index, x=x_bin_index).values
-    bin_direction_data = bin_data['bin_avg_direction'].isel(y=y_bin_index, x=x_bin_index).values
+    avg_u = depth_average_data['u_avg'].isel(y=y_calc_index, x=x_calc_index).values
+    avg_v = depth_average_data['v_avg'].isel(y=y_calc_index, x=x_calc_index).values
+    avg_magnitude = depth_average_data['magnitude_avg'].isel(y=y_calc_index, x=x_calc_index).values
+    bin_u_data = bin_average_data['bin_avg_u'].isel(y=y_bin_index, x=x_bin_index).values
+    bin_v_data = bin_average_data['bin_avg_v'].isel(y=y_bin_index, x=x_bin_index).values
+    bin_magnitude_data = bin_average_data['bin_avg_magnitude'].isel(y=y_bin_index, x=x_bin_index).values
+    bin_direction_data = bin_average_data['bin_avg_direction'].isel(y=y_bin_index, x=x_bin_index).values
 
     adjusted_direction_data = np.mod(bin_direction_data + 180, 360) - 180
 
@@ -86,7 +88,8 @@ def qc_uv_profile(config, directory, model_data, calculated_data, bin_data, qc_l
     
     plt.tight_layout()
 
-    fig_filename = f"GGS_{config['glider_name']}_QualityControl.png"
+    filename_datetime = get_filename_datetime(model_data)
+    fig_filename = f"GGS_{config['glider_name']}_QualityControl_{filename_datetime}.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
 

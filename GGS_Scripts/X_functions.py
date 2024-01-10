@@ -4,11 +4,14 @@
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from datetime import datetime
+import datetime as dt
+from datetime import timezone
+from datetime import datetime as datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.colors as mcolors
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 # =========================
@@ -160,6 +163,7 @@ def calculate_gridpoint(model_data, target_lat, target_lon):
     print(f"Input Coordinates: ({target_lat}, {target_lon})")
     print(f"Dataset Indices: ({y_index}, {x_index})")
     print(f"Dataset Coordinates: ({lat_index:.3f}, {lon_index:.3f})")
+    print("\n")
 
     return (y_index, x_index), (lat_index, lon_index)
 
@@ -258,11 +262,33 @@ def get_6h_interval():
     - str: The start time of the previous 6 hour interval in UTC time.
     '''
 
-    current_time = datetime.utcnow()
+    current_time = dt.datetime.now(timezone.utc)
     rounded_hour = current_time.hour - (current_time.hour % 6)
     previous_interval_time = current_time.replace(hour=rounded_hour, minute=0, second=0, microsecond=0)
     
     return previous_interval_time.strftime("%H:%M")
+
+### FUNCTION:
+def get_date_list(target_datetime):
+    
+    '''
+    Get the list of dates for the next 24 hours in 6 hour intervals, formatted as 'YYYY-MM-DDT00:00:00Z'.
+
+    Args:
+    - target_datetime (dt.datetime): The target datetime.
+
+    Returns:
+    - date_list (list of str): The list of formatted dates for the next 24 hours in 6 hour intervals.
+    '''
+
+    date_start = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
+    date_end = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+    freq = '6H'
+
+    date_range = pd.date_range(date_start, date_end, freq=freq)
+    date_list = [date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in date_range]
+
+    return date_list
 
 # =========================
 # PLOT HELPERS
@@ -489,15 +515,17 @@ def add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=Fa
                     levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]])
 
     if show_legend:
+        isobath1 = -isobath1
+        isobath2 = -isobath2
         legend_colors = [lightsteelblue, water, cornflowerblue]
-        legend_labels = [f'0 to {isobath1}m', f'{isobath1}m to {isobath2}m', f'> {isobath2}m']
+        legend_labels = [f'0m - {isobath1}m', f'{isobath1}m - {isobath2}m', f'> {isobath2}m']
         patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(legend_colors, legend_labels)]
-        legend = ax.legend(handles=patches, loc='lower left', title='Bathymetry', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small', title_fontsize='small', markerscale=0.75)
+        legend = ax.legend(handles=patches, loc='upper left', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small', markerscale=0.75)
         legend.set_zorder(1000)
-        legend.get_title().set_color('black')
         for text in legend.get_texts():
             text.set_color('black')
 
+### FUNCTION:
 def get_rounded_range(data, interval):
     
     '''
@@ -517,3 +545,50 @@ def get_rounded_range(data, interval):
     max_range = interval * np.ceil(max_val / interval)
     
     return min_range, max_range
+
+### FUNCTION:
+def format_datetime(input_datetime):
+    
+    '''
+    Format a datetime string from 'YYYY-MM-DDTHH:MM:SSZ' to 'YYYYMMDDTHH'.
+
+    Args:
+    - input_datetime (str): The datetime string to format.
+
+    Returns:
+    - str: The formatted datetime string.
+    '''
+    
+    if input_datetime != 'unknown_datetime':
+        datetime_obj = datetime.strptime(input_datetime, "%Y-%m-%dT%H:%M:%SZ")
+        formatted_datetime = datetime_obj.strftime("%Y%m%dT%H")
+    else:
+        formatted_datetime = 'unknown_datetime'
+    
+    return formatted_datetime
+
+### FUNCTION:
+def get_filename_datetime(model_data):
+
+    '''
+    Get the datetime from the model data for use in the filename.
+
+    Args:
+    - model_data (xarray.core.dataset.Dataset): Model data.
+
+    Returns:
+    - str: The datetime formatted as 'YYYYMMDDTHH'.
+    '''
+
+    model_datetime = model_data.attrs.get('requested_datetime', 'unknown_datetime')
+
+    if model_datetime != 'unknown_datetime':
+        try:
+            datetime_obj = datetime.strptime(model_datetime, "%Y-%m-%dT%H:%M:%SZ")
+            filename_datetime = datetime_obj.strftime("%Y%m%dT%H")
+        except ValueError:
+            filename_datetime = 'invalid_datetime'
+    else:
+        filename_datetime = 'unknown_datetime'
+    
+    return filename_datetime

@@ -2,33 +2,42 @@
 # X - IMPORTS
 # =========================
 
+import datetime as dt
+from datetime import timezone
 import os
 import pandas as pd
-from X_functions import check_abort, check_float, check_coordinate
+from X_functions import check_abort, check_float, check_coordinate, get_date_list
 
 # =========================
 # STATIC CONFIGURATION
 # =========================
 
 ### FUNCTION:
-def GGS_config_static():
+def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     
     '''
     Configure mission from a hardcoded configuration.
     Intended for testing only.
     
     Args:
-    - None
+    - date (datetime): Date of mission start.
+        - default: dt.datetime.now(timezone.utc)
 
     Returns:
     - config (dict): Glider Guidance System mission configuration.
     '''
+    
+    target_date = date
+    date_list = get_date_list(date)
 
     config = {
-        "glider_name": "Yucatan",
+        "glider_name": "Test",
+        "target_date": target_date,
+        "date_list": date_list,
         "max_depth": 1000,
-        # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
-        "extent": [(15.25, -90.5), (25.25, -80.0)],  # Yucatan
+        "extent": [(20.604, -87.022), (21.321, -86.140)],  # Test
+        # "extent": [(17.0, -98.0), (30.5, -80.0)],  # Yucatan
+        # "extent": [(15.25, -90.5), (25.25, -80.0)],  # GoM
         "GPS_coords": [(20.375, -86.541), (21.025, -86.349), (21.506, -86.528)]
         }
 
@@ -163,30 +172,31 @@ def GGS_config_output(config):
     Returns:
     - directory (str): Glider Guidance System mission directory.
     '''
-
-    output_str = "\nGlider Guidance System (GGS) Configuration:\n"
+    
+    output_str = "\n\n### Glider Guidance System (GGS) Configuration ###\n\n"
 
     for key, value in config.items():
         if key == "GPS_coords":
+            output_str += "\nGPS_coords:\n"
             for i, coord in enumerate(value, 1):
-                output_str += "GPS_coord {}: {}\n".format(i, coord)
+                output_str += "  GPS_coord {}: {}\n".format(i, coord)
         elif key == "extent":
-            output_str += "Extent:\n"
+            output_str += "\nExtent:\n"
             for i, coord in enumerate(value, 1):
                 output_str += "  Boundary {}: {}\n".format(i, coord)
-        elif key == "glider_name":
-            output_str += "{}: {}\n\n".format(key.capitalize(), value)
-        elif key in ["max_depth"]:
-            formatted_key = key.capitalize().replace('_', ' ')
-            output_str += "{}: {}\n".format(formatted_key, value)
+        elif key in ["glider_name", "target_date", "date_list"]:
+            output_str += "{}: {}\n\n".format(key.capitalize().replace('_', ' '), value)
+        elif key == "max_depth":
+            output_str += "Max Depth: {}\n".format(value)
 
-    directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{config['glider_name']}")
+    formatted_date = config['target_date'].strftime("%Y%m%d")
+    directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{formatted_date}_{config['glider_name']}")
     os.makedirs(directory, exist_ok=True)
 
-    config_pickle = os.path.join(directory, f"GGS_{config['glider_name']}_config.pkl")
+    config_pickle = os.path.join(directory, f"GGS_{formatted_date}_{config['glider_name']}_config.pkl")
     pd.to_pickle(config, config_pickle)
 
-    config_text = os.path.join(directory, f"GGS_{config['glider_name']}_config.txt")
+    config_text = os.path.join(directory, f"GGS_{formatted_date}_{config['glider_name']}_config.txt")
     with open(config_text, 'w') as file:
         file.write(output_str)
 
