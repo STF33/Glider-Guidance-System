@@ -7,7 +7,7 @@ import os
 import pandas as pd
 from scipy.interpolate import interp1d
 import xarray as xr
-from X_functions import format_datetime, get_filename_datetime
+from X_functions import datetime_format, datetime_filename
 
 # =========================
 # [RTOFS] DATA PROCESSING
@@ -166,7 +166,7 @@ class RTOFS():
         '''
 
         requested_datetime = self.data.attrs.get('requested_datetime', 'unknown_datetime')
-        formatted_datetime = format_datetime(requested_datetime)
+        formatted_datetime = datetime_format(requested_datetime)
 
         rtofs_data_file = f"{config['glider_name']}_RTOFS_{config['max_depth']}m.nc"
         rtofs_data_path = os.path.join(directory, rtofs_data_file)
@@ -291,7 +291,7 @@ def interp_depth_average(config, directory, model_data):
     }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_num_bins)})
 
     # Get the filename datetime
-    filename_datetime = get_filename_datetime(model_data)
+    filename_datetime = datetime_filename(model_data)
 
     # Save 'depth_average_data' dataset as a NetCDF file
     depth_average_data_file = f"{config['glider_name']}_DepthAverageData.nc"

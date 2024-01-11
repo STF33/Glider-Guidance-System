@@ -5,7 +5,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from X_functions import calculate_gridpoint, get_filename_datetime
+from X_functions import calculate_gridpoint, datetime_filename
 
 # =========================
 # QUALITY CONTROL PLOTS
@@ -88,7 +88,7 @@ def qc_uv_profile(config, directory, model_data, depth_average_data, bin_average
     
     plt.tight_layout()
 
-    filename_datetime = get_filename_datetime(model_data)
+    filename_datetime = datetime_filename(model_data)
     fig_filename = f"GGS_{config['glider_name']}_QualityControl.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')

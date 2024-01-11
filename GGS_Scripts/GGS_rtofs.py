@@ -33,7 +33,7 @@ from X_plots import *
 # =========================
 
 ### RUN:
-EXIT_KEYWORD = "EXIT"
+# EXIT_KEYWORD = "EXIT"
 def main(date_indices=None):
     
     '''
@@ -53,7 +53,7 @@ def main(date_indices=None):
 
     for datetime_index in date_list:
 
-        formatted_datetime = format_datetime(datetime_index)
+        formatted_datetime = datetime_format(datetime_index)
         sub_directory = os.path.join(root_directory, formatted_datetime)
         os.makedirs(sub_directory, exist_ok=True)
 

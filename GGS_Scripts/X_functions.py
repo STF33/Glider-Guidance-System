@@ -160,10 +160,10 @@ def calculate_gridpoint(model_data, target_lat, target_lon):
     lat_index = model_data['lat'].isel(y=y_index, x=x_index).values
     lon_index = model_data['lon'].isel(y=y_index, x=x_index).values
 
+    print("\n")
     print(f"Input Coordinates: ({target_lat}, {target_lon})")
     print(f"Dataset Indices: ({y_index}, {x_index})")
     print(f"Dataset Coordinates: ({lat_index:.3f}, {lon_index:.3f})")
-    print("\n")
 
     return (y_index, x_index), (lat_index, lon_index)
 
@@ -446,18 +446,19 @@ def add_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fon
         gl.ylocator = mticker.FixedLocator(minor_lat_ticks)
 
 ### FUNCTION:
-def calculate_cbar_ticks(magnitude):
+def calculate_cbar_ticks(magnitude, num_ticks=10):
     
     '''
-    Calculate simple tick marks for a matplotlib colorbar based on the magnitude.
+    Calculate tick marks for a matplotlib colorbar based on the magnitude for 10 levels.
 
     Args:
     - magnitude (array-like): The magnitude data.
+    - num_ticks (int): Number of ticks/levels. Default is 10.
 
     Returns:
     - ticks (array-like): The tick values.
     '''
-    
+
     valid_magnitude = magnitude[~np.isnan(magnitude)]
     if valid_magnitude.size == 0:
         return []
@@ -465,11 +466,10 @@ def calculate_cbar_ticks(magnitude):
     min_val = np.min(valid_magnitude)
     max_val = np.max(valid_magnitude)
 
-    interval_options = [0.1, 0.2]
-    optimal_interval = min(interval_options, key=lambda x: len(np.arange(round(min_val / x) * x, round(max_val / x) * x + x, x)))
+    interval = (max_val - min_val) / (num_ticks - 1)
 
-    ticks = np.arange(round(min_val / optimal_interval) * optimal_interval, round(max_val / optimal_interval) * optimal_interval + optimal_interval, optimal_interval)
-    
+    ticks = np.linspace(min_val, max_val, num_ticks)
+
     return ticks
 
 ### FUNCTION
@@ -547,7 +547,7 @@ def get_rounded_range(data, interval):
     return min_range, max_range
 
 ### FUNCTION:
-def format_datetime(input_datetime):
+def datetime_format(input_datetime):
     
     '''
     Format a datetime string from 'YYYY-MM-DDTHH:MM:SSZ' to 'YYYYMMDDTHH'.
@@ -568,10 +568,10 @@ def format_datetime(input_datetime):
     return formatted_datetime
 
 ### FUNCTION:
-def get_filename_datetime(model_data):
+def datetime_filename(model_data):
 
     '''
-    Get the datetime from the model data for use in the filename.
+    Format a datetime string from 'YYYY-MM-DDTHH:MM:SSZ' to 'YYYYMMDDTHH'.
 
     Args:
     - model_data (xarray.core.dataset.Dataset): Model data.
@@ -592,3 +592,29 @@ def get_filename_datetime(model_data):
         filename_datetime = 'unknown_datetime'
     
     return filename_datetime
+
+### FUNCTION:
+def datetime_title(model_data):
+    
+    '''
+    Format a datetime string from 'YYYY-MM-DDTHH:MM:SSZ' to 'YYYY-MM-DD HH:MM'.
+
+    Args:
+    - model_data (xarray.core.dataset.Dataset): Model data.
+
+    Returns:
+    -
+    '''
+    
+    model_datetime = model_data.attrs.get('requested_datetime', 'unknown_datetime')
+
+    if model_datetime != 'unknown_datetime':
+        try:
+            datetime_obj = datetime.strptime(model_datetime, "%Y-%m-%dT%H:%M:%SZ")
+            formatted_datetime = datetime_obj.strftime("%Y-%m-%d %H:%M")
+        except ValueError:
+            formatted_datetime = 'invalid_datetime'
+    else:
+        formatted_datetime = 'unknown_datetime'
+
+    return formatted_datetime
