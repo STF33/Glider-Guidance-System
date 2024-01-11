@@ -112,7 +112,7 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     fig.suptitle(suptitle_text, fontsize='smaller', fontweight='bold', x=0.5, y=0.01, ha='center', va='bottom', color='gray')
     
     filename_datetime = get_filename_datetime(model_data)
-    fig_filename = f"GGS_{config['glider_name']}_Currents_{filename_datetime}_{config['max_depth']}m.png"
+    fig_filename = f"GGS_{config['glider_name']}_Currents_{config['max_depth']}m.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
 
@@ -171,7 +171,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     
     levels = [mag1, mag2, mag3, mag4, mag5, np.max(magnitude)]
-    colors = ['none', 'yellow', 'orange', 'orangered', 'firebrick']
+    colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
     
     contourf = ax.contourf(data_lons, data_lats, magnitude, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
     streamplot = ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='dimgrey', transform=ccrs.PlateCarree(), density=2, linewidth=0.5, zorder=11) # zorder = [1]
@@ -208,7 +208,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
         mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
         mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
         mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
-        mpatches.Patch(facecolor='firebrick', label=f'> {mag5} m/s')]
+        mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')]
     legend = ax.legend(handles=patches, loc='upper right', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small')
     legend.set_zorder(1000) # zorder = [100]
     legend.get_title().set_color('black')
@@ -225,7 +225,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     fig.suptitle(suptitle_text, fontsize='smaller', fontweight='bold', x=0.5, y=0.01, ha='center', va='bottom', color='gray')
     
     filename_datetime = get_filename_datetime(model_data)
-    fig_filename = f"GGS_{config['glider_name']}_ThresholdZones_{filename_datetime}_{config['max_depth']}m.png"
+    fig_filename = f"GGS_{config['glider_name']}_ThresholdZones_{config['max_depth']}m.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
     plt.close(fig)

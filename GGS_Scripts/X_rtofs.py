@@ -168,7 +168,7 @@ class RTOFS():
         requested_datetime = self.data.attrs.get('requested_datetime', 'unknown_datetime')
         formatted_datetime = format_datetime(requested_datetime)
 
-        rtofs_data_file = f"{config['glider_name']}_RTOFS_{formatted_datetime}_{config['max_depth']}m.nc"
+        rtofs_data_file = f"{config['glider_name']}_RTOFS_{config['max_depth']}m.nc"
         rtofs_data_path = os.path.join(directory, rtofs_data_file)
         self.data.to_netcdf(rtofs_data_path)
 
@@ -294,12 +294,12 @@ def interp_depth_average(config, directory, model_data):
     filename_datetime = get_filename_datetime(model_data)
 
     # Save 'depth_average_data' dataset as a NetCDF file
-    depth_average_data_file = f"{config['glider_name']}_DepthAverageData_{filename_datetime}.nc"
+    depth_average_data_file = f"{config['glider_name']}_DepthAverageData.nc"
     depth_average_data_path = os.path.join(directory, depth_average_data_file)
     depth_average_data.to_netcdf(depth_average_data_path)
 
     # Save 'bin_average_data' dataset as a NetCDF file
-    bin_average_data_file = f"{config['glider_name']}_BinAverageData_{filename_datetime}.nc"
+    bin_average_data_file = f"{config['glider_name']}_BinAverageData.nc"
     bin_average_data_path = os.path.join(directory, bin_average_data_file)
     bin_average_data.to_netcdf(bin_average_data_path)
 

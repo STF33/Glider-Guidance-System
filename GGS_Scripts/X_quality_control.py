@@ -89,7 +89,7 @@ def qc_uv_profile(config, directory, model_data, depth_average_data, bin_average
     plt.tight_layout()
 
     filename_datetime = get_filename_datetime(model_data)
-    fig_filename = f"GGS_{config['glider_name']}_QualityControl_{filename_datetime}.png"
+    fig_filename = f"GGS_{config['glider_name']}_QualityControl.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
 

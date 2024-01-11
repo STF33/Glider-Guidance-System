@@ -31,13 +31,13 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     date_list = get_date_list(date)
 
     config = {
-        "glider_name": "Test",
+        "glider_name": "GoM",
         "target_date": target_date,
         "date_list": date_list,
         "max_depth": 1000,
-        "extent": [(20.604, -87.022), (21.321, -86.140)],  # Test
+        # "extent": [(20.604, -87.022), (21.321, -86.140)],  # Test
         # "extent": [(17.0, -98.0), (30.5, -80.0)],  # Yucatan
-        # "extent": [(15.25, -90.5), (25.25, -80.0)],  # GoM
+        "extent": [(15.25, -90.5), (25.25, -80.0)],  # GoM
         "GPS_coords": [(20.375, -86.541), (21.025, -86.349), (21.506, -86.528)]
         }
 
@@ -161,13 +161,15 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
 #         return GGS_config()
 
 ### FUNCTION:
-def GGS_config_output(config):
+def GGS_config_output(config, path="default"):
     
     '''
     Output and save the configured Glider Guidance System mission.
     
     Args:
     - config (dict): Glider Guidance System mission configuration.
+    - path (str): Path for saving the mission configuration. 
+        - options: "default", "(custom path)"
 
     Returns:
     - directory (str): Glider Guidance System mission directory.
@@ -190,16 +192,21 @@ def GGS_config_output(config):
             output_str += "Max Depth: {}\n".format(value)
 
     formatted_date = config['target_date'].strftime("%Y%m%d")
-    directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{formatted_date}_{config['glider_name']}")
-    os.makedirs(directory, exist_ok=True)
 
-    config_pickle = os.path.join(directory, f"GGS_{formatted_date}_{config['glider_name']}_config.pkl")
+    if path == "default":
+        root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{config['glider_name']}")
+    else:
+        root_directory = os.path.join(path, f"GGS_{config['glider_name']}")
+
+    os.makedirs(root_directory, exist_ok=True)
+
+    config_pickle = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.pkl")
     pd.to_pickle(config, config_pickle)
 
-    config_text = os.path.join(directory, f"GGS_{formatted_date}_{config['glider_name']}_config.txt")
+    config_text = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.txt")
     with open(config_text, 'w') as file:
         file.write(output_str)
 
     print(output_str)
 
-    return directory
+    return root_directory
