@@ -63,7 +63,10 @@ def main(date_indices=None):
         rtofs_qc = rtofs.rtofs_qc
         rtofs.rtofs_save(config, sub_directory)
 
-        depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
+        # depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
+        
+        depth_average_data = xr.open_dataset('C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/0-Demo/Yucatan_DepthAverageData.nc')
+        bin_average_data = xr.open_dataset('C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/0-Demo/Yucatan_BinAverageData.nc')
 
         qc_latitude = '21.100'
         qc_longitude = '-86.25'
@@ -73,7 +76,7 @@ def main(date_indices=None):
         GGS_plot_threshold(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False)
 
 if __name__ == "__main__":
-    main(date_indices=None)
+    main(date_indices=[1])
 
 # =========================
 # ///// END OF SCRIPT \\\\\

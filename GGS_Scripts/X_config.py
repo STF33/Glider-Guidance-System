@@ -31,13 +31,12 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     date_list = get_date_list(date)
 
     config = {
-        "glider_name": "GoM",
+        "glider_name": "Yucatan",
         "target_date": target_date,
         "date_list": date_list,
-        "max_depth": 10,
-        # "extent": [(20.604, -87.022), (21.321, -86.140)],  # TEST
-        # "extent": [(15.25, -90.5), (25.25, -80.0)],  # Yucatan
-        "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
+        "max_depth": 1000,
+        "extent": [(16.50, -89.25), (26.00, -80.00)],  # Yucatan
+        # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
         "GPS_coords": [(20.375, -86.541), (21.025, -86.349), (21.506, -86.528)]
         }
 

@@ -5,14 +5,12 @@
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cmocean.cm as cmo
-import datetime as dt
-from datetime import timezone
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import Circle
 import numpy as np
 import os
-from X_functions import calculate_gridpoint, get_6h_interval, add_formatted_ticks, calculate_cbar_ticks, add_bathymetry, datetime_filename, datetime_title
+from X_functions import calculate_gridpoint, plot_formatted_ticks, plot_contour_cbar, plot_bathymetry, datetime_filename, datetime_title
 
 # =========================
 # PLOTTING
@@ -59,10 +57,10 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     data_extent_lon = [np.min(data_lons), np.max(data_lons)]
     data_extent_lat = [np.min(data_lats), np.max(data_lats)]
     ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
-    add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
+    plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
     
-    ticks = calculate_cbar_ticks(magnitude, num_ticks=10)
-    contour = ax.contourf(data_lons, data_lats, magnitude, levels=ticks, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10)
+    levels, ticks = plot_contour_cbar(magnitude, max_levels=10)
+    contour = ax.contourf(data_lons, data_lats, magnitude, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
     ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
 
     if show_route: # zorder = [2]
@@ -89,7 +87,7 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90) # zorder = [9]
     
-    add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False)
+    plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False)
 
     box = ax.get_position()
     left_margin = box.x0
@@ -103,7 +101,7 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     cbar.set_label('Depth Averaged Current Magnitude (m/s)', labelpad=10)
     cbar.set_ticks(ticks)
     cbar.set_ticklabels([f"{tick:.1f}" for tick in ticks])
-    
+
     title_datetime = datetime_title(model_data)
     title_text = f"Depth Averaged Currents - Depth Range: {config['max_depth']}m"
     ax.set_title(title_text, fontsize=14, fontweight='bold', pad=25)
@@ -169,7 +167,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     data_extent_lon = [np.min(data_lons), np.max(data_lons)]
     data_extent_lat = [np.min(data_lats), np.max(data_lats)]
     ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
-    add_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
+    plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     
     levels = [mag1, mag2, mag3, mag4, mag5, np.max(magnitude)]
     colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
@@ -202,7 +200,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90) # zorder = [9]
     
-    add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=True)
+    plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=True)
     bathymetry_legend = ax.get_legend()
 
     patches = [

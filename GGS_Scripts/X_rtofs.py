@@ -21,18 +21,18 @@ class RTOFS():
 
     Attributes:
     - data_origin (xarray.Dataset): Original RTOFS data.
-    - data (xarray.Dataset): Main RTOFS data.
-    - x (np.array): X-coordinates of the RTOFS grid.
-    - y (np.array): Y-coordinates of the RTOFS grid.
-    - grid_lons (np.array): Longitudes of the RTOFS grid.
-    - grid_lats (np.array): Latitudes of the RTOFS grid.
+    - data (xarray.Dataset): Subset RTOFS data.
+    - x (np.ndarray): RTOFS x-axis grid.
+    - y (np.ndarray): RTOFS y-axis grid.
+    - grid_lons (np.ndarray): RTOFS longitude grid.
+    - grid_lats (np.ndarray): RTOFS latitude grid.
     - rtofs_qc (xarray.Dataset): RTOFS data for quality control.
 
     Methods:
-    - __init__: Initialize the RTOFS instance.
-    - rtofs_load: Fetch the RTOFS data from the given URL source and set its coordinates.
-    - rtofs_subset: Subset the RTOFS data based on the GGS mission extent.
-    - rtofs_save: Save the subset RTOFS data as a NetCDF file.
+    - __init__ (datetime_index=None): Initialize the RTOFS instance.
+    - rtofs_load (datetime_index): Fetch the RTOFS data from the given URL source and set its coordinates.
+    - rtofs_subset (config, buffer=0, subset=True): Subset the RTOFS data based on the GGS mission extent.
+    - rtofs_save (config, directory): Save the subset RTOFS data as a NetCDF file.
     '''
 
     ### FUNCTION:
@@ -43,6 +43,9 @@ class RTOFS():
 
         Args:
         - datetime_index (datetime.datetime): The datetime index for data loading.
+
+        Returns:
+        - None
         '''
 
         if datetime_index is not None:

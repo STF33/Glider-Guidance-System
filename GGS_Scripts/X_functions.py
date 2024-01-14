@@ -5,7 +5,6 @@
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import datetime as dt
-from datetime import timezone
 from datetime import datetime as datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
@@ -15,7 +14,33 @@ import pandas as pd
 import xarray as xr
 
 # =========================
-# CHECK INPUTS
+# CONFIG FUNCTIONS
+# =========================
+
+### FUNCTION:
+def get_date_list(target_datetime):
+    
+    '''
+    Get the list of dates for the next 24 hours in 6 hour intervals, formatted as 'YYYY-MM-DDT00:00:00Z'.
+
+    Args:
+    - target_datetime (dt.datetime): The target datetime.
+
+    Returns:
+    - date_list (list of str): The list of formatted dates for the next 24 hours in 6 hour intervals.
+    '''
+
+    date_start = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
+    date_end = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+    freq = '6H'
+
+    date_range = pd.date_range(date_start, date_end, freq=freq)
+    date_list = [date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in date_range]
+
+    return date_list
+
+# =========================
+# CHECK FUNCTIONS
 # =========================
 
 ### FUNCTION:
@@ -80,7 +105,7 @@ def check_coordinate(coord_str):
         return None
 
 # =========================
-# CALCULATE VARIABLES
+# CALCULATE FUNCTIONS
 # =========================
 
 ### FUNCTION:
@@ -166,133 +191,6 @@ def calculate_gridpoint(model_data, target_lat, target_lon):
     print(f"Dataset Coordinates: ({lat_index:.3f}, {lon_index:.3f})")
 
     return (y_index, x_index), (lat_index, lon_index)
-
-# =========================
-# CONVERT VARIABLES
-# =========================
-
-### FUNCTION:
-def DD_to_DM(DD, coord_type='longitude'):
-    
-    '''
-    Convert a decimal degree (DD) coordinate to a degree minute (DM) coordinate.
-
-    Args:
-    - DD (float): A decimal degree coordinate.
-    - coord_type (str): A string indicating whether the position is a longitude or latitude.
-
-    Returns:
-    - str: A degree minute coordinate.
-    '''
-
-    degrees = int(DD)
-    minutes = abs(int((DD - degrees) * 60))
-
-    direction = ''
-    if degrees > 0:
-        if coord_type == 'longitude':
-            direction = 'E'
-        elif coord_type == 'latitude':
-            direction = 'N'
-    elif degrees < 0:
-        if coord_type == 'longitude':
-            direction = 'W'
-        elif coord_type == 'latitude':
-            direction = 'S'
-
-    return f"{abs(degrees)}°{minutes}'{direction}"
-
-### FUNCTION:
-def DD_to_DMS(DD):
-    
-    '''
-    Convert decimal degrees to degrees, minutes, and seconds.
-
-    Args:
-    - decimal_degrees (np.ndarray): Numpy array of decimal degrees.
-
-    Returns:
-    - degrees (np.ndarray): Degrees part of the DMS.
-    - minutes (np.ndarray): Minutes part of the DMS.
-    - seconds (np.ndarray): Seconds part of the DMS.
-    '''
-
-    negative_DD = DD < 0
-
-    absolute_decimal_degrees = np.abs(DD)
-
-    degree = np.floor(absolute_decimal_degrees)
-
-    remainder = (absolute_decimal_degrees - degree) * 60
-    minute = np.floor(remainder)
-    second = np.round((remainder - minute) * 60)
-
-    degree[negative_DD] *= -1
-
-    return degree, minute, second
-
-### FUNCTION:
-def DD_to_DDM(DD):
-    
-    '''
-    Convert a decimal degree (DD) coordinate to a degree decimal minute (DDM) coordinate.
-
-    Args:
-    - DD (float): A decimal degree coordinate.
-
-    Returns:
-    - str: A degree decimal minute coordinate.    
-    '''
-    
-    degrees = int(DD)
-    minutes = abs(DD - degrees) * 60
-
-    return f"{degrees:02d}{minutes:05.2f}"
-
-### FUNCTION:
-def get_6h_interval():
-    
-    '''
-    Get the previous 6 hour interval in UTC time.
-
-    Args:
-    - None
-    
-    Returns:
-    - str: The start time of the previous 6 hour interval in UTC time.
-    '''
-
-    current_time = dt.datetime.now(timezone.utc)
-    rounded_hour = current_time.hour - (current_time.hour % 6)
-    previous_interval_time = current_time.replace(hour=rounded_hour, minute=0, second=0, microsecond=0)
-    
-    return previous_interval_time.strftime("%H:%M")
-
-### FUNCTION:
-def get_date_list(target_datetime):
-    
-    '''
-    Get the list of dates for the next 24 hours in 6 hour intervals, formatted as 'YYYY-MM-DDT00:00:00Z'.
-
-    Args:
-    - target_datetime (dt.datetime): The target datetime.
-
-    Returns:
-    - date_list (list of str): The list of formatted dates for the next 24 hours in 6 hour intervals.
-    '''
-
-    date_start = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
-    date_end = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
-    freq = '6H'
-
-    date_range = pd.date_range(date_start, date_end, freq=freq)
-    date_list = [date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in date_range]
-
-    return date_list
-
-# =========================
-# PLOT HELPERS
-# =========================
 
 ### FUNCTION:
 def calculate_ticks(extent, direction):
@@ -404,8 +302,94 @@ def calculate_ticks(extent, direction):
 
     return minor_ticks, major_ticks, major_tick_labels
 
+# =========================
+# CONVERSION FUNCTIONS
+# =========================
+
 ### FUNCTION:
-def add_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fontsize=13, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
+def DD_to_DM(DD, coord_type='longitude'):
+    
+    '''
+    Convert a decimal degree (DD) coordinate to a degree minute (DM) coordinate.
+
+    Args:
+    - DD (float): A decimal degree coordinate.
+    - coord_type (str): A string indicating whether the position is a longitude or latitude.
+
+    Returns:
+    - str: A degree minute coordinate.
+    '''
+
+    degrees = int(DD)
+    minutes = abs(int((DD - degrees) * 60))
+
+    direction = ''
+    if degrees > 0:
+        if coord_type == 'longitude':
+            direction = 'E'
+        elif coord_type == 'latitude':
+            direction = 'N'
+    elif degrees < 0:
+        if coord_type == 'longitude':
+            direction = 'W'
+        elif coord_type == 'latitude':
+            direction = 'S'
+
+    return f"{abs(degrees)}°{minutes}'{direction}"
+
+### FUNCTION:
+def DD_to_DMS(DD):
+    
+    '''
+    Convert decimal degrees to degrees, minutes, and seconds.
+
+    Args:
+    - decimal_degrees (np.ndarray): Numpy array of decimal degrees.
+
+    Returns:
+    - degrees (np.ndarray): Degrees part of the DMS.
+    - minutes (np.ndarray): Minutes part of the DMS.
+    - seconds (np.ndarray): Seconds part of the DMS.
+    '''
+
+    negative_DD = DD < 0
+
+    absolute_decimal_degrees = np.abs(DD)
+
+    degree = np.floor(absolute_decimal_degrees)
+
+    remainder = (absolute_decimal_degrees - degree) * 60
+    minute = np.floor(remainder)
+    second = np.round((remainder - minute) * 60)
+
+    degree[negative_DD] *= -1
+
+    return degree, minute, second
+
+### FUNCTION:
+def DD_to_DDM(DD):
+    
+    '''
+    Convert a decimal degree (DD) coordinate to a degree decimal minute (DDM) coordinate.
+
+    Args:
+    - DD (float): A decimal degree coordinate.
+
+    Returns:
+    - str: A degree decimal minute coordinate.    
+    '''
+    
+    degrees = int(DD)
+    minutes = abs(DD - degrees) * 60
+
+    return f"{degrees:02d}{minutes:05.2f}"
+
+# =========================
+# PLOT FUNCTIONS
+# =========================
+
+### FUNCTION:
+def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fontsize=13, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
     
     '''
     Calculate and add formatted tick marks to the map based on longitude and latitude extents.
@@ -446,34 +430,52 @@ def add_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fon
         gl.ylocator = mticker.FixedLocator(minor_lat_ticks)
 
 ### FUNCTION:
-def calculate_cbar_ticks(magnitude, num_ticks=10):
+def plot_contour_cbar(magnitude, max_levels=10):
     
     '''
-    Calculate tick marks for a matplotlib colorbar based on the magnitude for 10 levels.
+    Dynamically calculate levels and ticks for a matplotlib colorbar based on the magnitude.
+    The tick labels will be aligned exactly at the intervals/breaks of the levels.
 
     Args:
     - magnitude (array-like): The magnitude data.
-    - num_ticks (int): Number of ticks/levels. Default is 10.
+    - max_levels (int): Maximum number of levels. Default is 10.
 
     Returns:
-    - ticks (array-like): The tick values.
+    - levels (array-like): The level values for contour plot.
+    - ticks (array-like): The tick values for the colorbar, aligned with levels.
     '''
 
     valid_magnitude = magnitude[~np.isnan(magnitude)]
     if valid_magnitude.size == 0:
-        return []
+        return [], []
 
     min_val = np.min(valid_magnitude)
     max_val = np.max(valid_magnitude)
+    magnitude_range = max_val - min_val
 
-    interval = (max_val - min_val) / (num_ticks - 1)
+    interval_options = [0.1, 0.2, 0.5, 1.0]
+    best_interval = min(interval_options, key=lambda x: abs(max_levels - np.ceil(magnitude_range / x)))
 
-    ticks = np.linspace(min_val, max_val, num_ticks)
+    upper_threshold = np.ceil(max_val / best_interval) * best_interval
+    while upper_threshold - min_val > magnitude_range:
+        upper_threshold -= best_interval
 
-    return ticks
+    levels = np.arange(min_val, upper_threshold + best_interval, best_interval)
+    levels = levels[levels <= max_val + best_interval * 0.1]
+
+    if len(levels) > 1:
+        upper_bound = levels[-1]
+        lower_bound = levels[-2]
+        count_in_uppermost_interval = np.sum((valid_magnitude > lower_bound) & (valid_magnitude <= upper_bound))
+        if count_in_uppermost_interval <= 0.01 * len(valid_magnitude):
+            levels = levels[:-1]
+
+    ticks = levels
+
+    return levels, ticks
 
 ### FUNCTION
-def add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
+def plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
     
     '''
     Add bathymetry to a plot.
@@ -525,26 +527,9 @@ def add_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=Fa
         for text in legend.get_texts():
             text.set_color('black')
 
-### FUNCTION:
-def get_rounded_range(data, interval):
-    
-    '''
-    Find the rounded-up range for the given data based on a specified interval.
-
-    Args:
-    - data (array-like): Array of values.
-    - interval (int): Interval to round to (e.g., 30 for rounding to nearest 30 degrees).
-
-    Returns:
-    - tuple: (min_range, max_range) rounded to the nearest interval.
-    '''
-
-    min_val = np.min(data)
-    max_val = np.max(data)
-    min_range = interval * np.floor(min_val / interval)
-    max_range = interval * np.ceil(max_val / interval)
-    
-    return min_range, max_range
+# =========================
+# DATETIME FUNCTIONS
+# =========================
 
 ### FUNCTION:
 def datetime_format(input_datetime):
@@ -603,7 +588,7 @@ def datetime_title(model_data):
     - model_data (xarray.core.dataset.Dataset): Model data.
 
     Returns:
-    -
+    - str: The datetime formatted as 'YYYY-MM-DD HH:MM'.
     '''
     
     model_datetime = model_data.attrs.get('requested_datetime', 'unknown_datetime')
