@@ -6,7 +6,7 @@ import datetime as dt
 from datetime import timezone
 import os
 import pandas as pd
-from X_functions import get_date_list
+from A_functions import get_date_list
 
 # =========================
 # GGS CONFIGURATION
@@ -82,12 +82,12 @@ def GGS_config_output(config, path="default"):
 
     os.makedirs(root_directory, exist_ok=True)
 
-    config_pickle = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.pkl")
-    pd.to_pickle(config, config_pickle)
+    # config_pickle = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.pkl")
+    # pd.to_pickle(config, config_pickle)
 
-    config_text = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.txt")
-    with open(config_text, 'w') as file:
-        file.write(output_str)
+    # config_text = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.txt")
+    # with open(config_text, 'w') as file:
+    #     file.write(output_str)
 
     print(output_str)
 
