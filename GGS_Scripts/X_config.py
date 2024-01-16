@@ -34,8 +34,8 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
         "glider_name": "Yucatan",
         "target_date": target_date,
         "date_list": date_list,
-        "max_depth": 1000,
-        "extent": [(16.50, -89.25), (26.00, -80.00)],  # Yucatan
+        "max_depth": 10,
+        "extent": [(15.75, -89.25), (27.00, -80.00)],  # Yucatan
         # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
         "GPS_coords": [(20.375, -86.541), (21.025, -86.349), (21.506, -86.528)]
         }

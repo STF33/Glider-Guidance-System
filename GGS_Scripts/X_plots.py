@@ -57,7 +57,7 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     data_extent_lon = [np.min(data_lons), np.max(data_lons)]
     data_extent_lat = [np.min(data_lats), np.max(data_lats)]
     ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
-    plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
+    plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     
     levels, ticks = plot_contour_cbar(magnitude, max_levels=10)
     contour = ax.contourf(data_lons, data_lats, magnitude, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
@@ -167,7 +167,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     data_extent_lon = [np.min(data_lons), np.max(data_lons)]
     data_extent_lat = [np.min(data_lats), np.max(data_lats)]
     ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
-    plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
+    plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
     
     levels = [mag1, mag2, mag3, mag4, mag5, np.max(magnitude)]
     colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']

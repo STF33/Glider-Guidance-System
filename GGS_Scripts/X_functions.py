@@ -434,7 +434,7 @@ def plot_contour_cbar(magnitude, max_levels=10):
     
     '''
     Dynamically calculate levels and ticks for a matplotlib colorbar based on the magnitude.
-    The tick labels will be aligned exactly at the intervals/breaks of the levels.
+    Merge the uppermost level with the second-highest level if it contains a very small percentage of data.
 
     Args:
     - magnitude (array-like): The magnitude data.
@@ -463,11 +463,15 @@ def plot_contour_cbar(magnitude, max_levels=10):
     levels = np.arange(min_val, upper_threshold + best_interval, best_interval)
     levels = levels[levels <= max_val + best_interval * 0.1]
 
-    if len(levels) > 1:
+    if len(levels) > 2:
         upper_bound = levels[-1]
         lower_bound = levels[-2]
-        count_in_uppermost_interval = np.sum((valid_magnitude > lower_bound) & (valid_magnitude <= upper_bound))
-        if count_in_uppermost_interval <= 0.01 * len(valid_magnitude):
+        upper_interval_count = np.sum((valid_magnitude > lower_bound) & (valid_magnitude <= upper_bound))
+        total_count = len(valid_magnitude)
+        upper_interval_percent = upper_interval_count / total_count
+
+        if upper_interval_percent <= 0.01:
+            magnitude[magnitude > lower_bound] = lower_bound
             levels = levels[:-1]
 
     ticks = levels

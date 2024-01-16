@@ -1,19 +1,24 @@
 .vscode/
 
 0-Archive/
+
 0-Demo/
+
 0-RTOFS_Binary/
+
 1-Materials/
+
 2-Outputs/
+
 3-Extra/
 
 GGS_Files/
+
 GGS_Scripts/__pycache__/
 GGS_Scripts/0-Archive/
 GGS_Scripts/0_LAB.ipynb
 GGS_Scripts/0_TEMP.ipynb
 GGS_Scripts/0_TEST.ipynb
-GGS_Scripts/0_DEBUG_NOTEBOOK.ipynb
-GGS_Scripts/ALT_slocum.py
+GGS_Scripts/GGS_rtofs_demo.ipynb
 
 !-GGS.code-workspace

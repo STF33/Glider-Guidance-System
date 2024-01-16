@@ -63,10 +63,10 @@ def main(date_indices=None):
         rtofs_qc = rtofs.rtofs_qc
         rtofs.rtofs_save(config, sub_directory)
 
-        # depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
+        depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
         
-        depth_average_data = xr.open_dataset('C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/0-Demo/Yucatan_DepthAverageData.nc')
-        bin_average_data = xr.open_dataset('C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/0-Demo/Yucatan_BinAverageData.nc')
+        # depth_average_data = xr.open_dataset('C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/0-Demo/Yucatan_DepthAverageData.nc')
+        # bin_average_data = xr.open_dataset('C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/0-Demo/Yucatan_BinAverageData.nc')
 
         qc_latitude = '21.100'
         qc_longitude = '-86.25'
