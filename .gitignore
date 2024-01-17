@@ -1,24 +1,15 @@
-.vscode/
+__ARCHIVE__/
 
-0-Archive/
-
+0-Deliverables/
 0-Demo/
-
-0-RTOFS_Binary/
-
-1-Materials/
-
-2-Outputs/
-
-3-Extra/
+0-Resources/
 
 GGS_Files/
 
-GGS_Scripts/__pycache__/
-GGS_Scripts/0-Archive/
-GGS_Scripts/0_LAB.ipynb
-GGS_Scripts/0_TEMP.ipynb
-GGS_Scripts/0_TEST.ipynb
-GGS_Scripts/GGS_rtofs_demo.ipynb
+GGS_Scripts/__ARCHIVE__/
+GGS_Scripts/_LAB.py
+GGS_Scripts/_TEMP.ipynb
+GGS_Scripts/_TEST.ipynb
+GGS_Scripts/GGS_rtofs_test.py
 
 !-GGS.code-workspace

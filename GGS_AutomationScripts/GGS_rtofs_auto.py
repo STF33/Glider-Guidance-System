@@ -40,6 +40,7 @@ def main(date_indices=None):
 
     Args:
     - date_indices (list of int): Indices of the dates to process in date_list.
+        - default: None (process all dates in date_list)
     '''
 
     config = GGS_config_static(date=dt.datetime.now(timezone.utc))
@@ -72,7 +73,7 @@ def main(date_indices=None):
         GGS_plot_threshold(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False)
 
 if __name__ == "__main__":
-    main(date_indices=[1])
+    main(date_indices=None)
 
 # =========================
 # ///// END OF SCRIPT \\\\\

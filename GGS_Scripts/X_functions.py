@@ -136,7 +136,7 @@ def calculate_distance(coordinate_1, coordinate_2):
     return R * c
 
 ### FUNCTION:
-def calculate_heading(coordinate_1, coordinate_2):
+def calculate_bearing(coordinate_1, coordinate_2):
     
     '''
     Calculate the compass bearing between two sets of decimal degree coordinates.
@@ -526,7 +526,7 @@ def plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=F
         legend_colors = [lightsteelblue, water, cornflowerblue]
         legend_labels = [f'0m - {isobath1}m', f'{isobath1}m - {isobath2}m', f'> {isobath2}m']
         patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(legend_colors, legend_labels)]
-        legend = ax.legend(handles=patches, loc='upper left', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small', markerscale=0.75)
+        legend = ax.legend(handles=patches, loc='upper left', facecolor='white', edgecolor='black', framealpha=0.75, fontsize='x-small', markerscale=0.75)
         legend.set_zorder(1000)
         for text in legend.get_texts():
             text.set_color('black')

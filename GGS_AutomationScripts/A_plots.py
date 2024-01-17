@@ -63,23 +63,23 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     contour = ax.contourf(data_lons, data_lats, magnitude, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
     ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
 
-    if show_route: # zorder = [2]
+    if show_route: # zorder = [9]
         lats, lons = zip(*config["GPS_coords"])
-        ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=21)
-        ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=22)
+        ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=91)
+        ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=92)
         
         start_coords = config["GPS_coords"][0]
         end_coords = config["GPS_coords"][-1]
-        ax.scatter(*start_coords[::-1], color='green', s=100, transform=ccrs.PlateCarree(), zorder=23)
+        ax.scatter(*start_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
         for GPS_coord in config["GPS_coords"][1:-1]:
-            ax.scatter(*GPS_coord[::-1], color='blue', s=100, transform=ccrs.PlateCarree(), zorder=23)
-        ax.scatter(*end_coords[::-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=23)
+            ax.scatter(*GPS_coord[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
+        ax.scatter(*end_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
 
-    if show_qc: # zorder = [3]
+    if show_qc: # zorder = [9]
         (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
         qc_lon = model_data['lon'].isel(x=x_index, y=y_index).values
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
-        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=35)
+        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
         ax.add_patch(circle)
     
     ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
@@ -176,23 +176,23 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     streamplot = ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='dimgrey', transform=ccrs.PlateCarree(), density=2, linewidth=0.5, zorder=11) # zorder = [1]
     streamplot.lines.set_alpha(1.0)
 
-    if show_route: # zorder = [2]
+    if show_route: # zorder = [9]
         lats, lons = zip(*config["GPS_coords"])
-        ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=21)
-        ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=22)
+        ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=91)
+        ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=92)
         
         start_coords = config["GPS_coords"][0]
         end_coords = config["GPS_coords"][-1]
-        ax.scatter(*start_coords[::-1], color='green', s=100, transform=ccrs.PlateCarree(), zorder=23)
+        ax.scatter(*start_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
         for GPS_coord in config["GPS_coords"][1:-1]:
-            ax.scatter(*GPS_coord[::-1], color='blue', s=100, transform=ccrs.PlateCarree(), zorder=23)
-        ax.scatter(*end_coords[::-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=23)
+            ax.scatter(*GPS_coord[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
+        ax.scatter(*end_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
 
-    if show_qc: # zorder = [3]
+    if show_qc: # zorder = [9]
         (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
         qc_lon = model_data['lon'].isel(x=x_index, y=y_index).values
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
-        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=35)
+        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
         ax.add_patch(circle)
     
     ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]
@@ -208,7 +208,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
         mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
         mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
         mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')]
-    legend = ax.legend(handles=patches, loc='upper right', facecolor='lightgrey', edgecolor='black', framealpha=0.75, fontsize='x-small')
+    legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', framealpha=0.75, fontsize='x-small')
     legend.set_zorder(1000) # zorder = [100]
     legend.get_title().set_color('black')
     for text in legend.get_texts():
