@@ -192,7 +192,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
         (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_data, qc_latitude, qc_longitude)
         qc_lon = model_data['lon'].isel(x=x_index, y=y_index).values
         qc_lat = model_data['lat'].isel(x=x_index, y=y_index).values
-        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
+        circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='white', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
         ax.add_patch(circle)
     
     ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90) # zorder = [9]

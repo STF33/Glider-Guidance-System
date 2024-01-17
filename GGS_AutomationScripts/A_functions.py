@@ -136,7 +136,7 @@ def calculate_distance(coordinate_1, coordinate_2):
     return R * c
 
 ### FUNCTION:
-def calculate_heading(coordinate_1, coordinate_2):
+def calculate_bearing(coordinate_1, coordinate_2):
     
     '''
     Calculate the compass bearing between two sets of decimal degree coordinates.

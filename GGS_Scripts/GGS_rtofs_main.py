@@ -43,7 +43,7 @@ def main(date_indices=None):
     '''
 
     config = GGS_config_static(date=dt.datetime.now(timezone.utc))
-    root_directory = GGS_config_output(config)
+    root_directory = GGS_config_output(config, path="default")
 
     if date_indices is not None:
         date_list = [config['date_list'][i] for i in date_indices]
@@ -51,28 +51,30 @@ def main(date_indices=None):
         date_list = config['date_list']
 
     for datetime_index in date_list:
-
         formatted_datetime = datetime_format(datetime_index)
         sub_directory = os.path.join(root_directory, formatted_datetime)
-        os.makedirs(sub_directory, exist_ok=True)
-
-        rtofs = RTOFS(datetime_index)
-        rtofs.rtofs_subset(config, subset=True)
-        rtofs_data = rtofs.data
-        rtofs_qc = rtofs.rtofs_qc
-        rtofs.rtofs_save(config, sub_directory)
-
-        depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
         
-        qc_latitude = '21.100'
-        qc_longitude = '-86.25'
-        qc_uv_profile(config, sub_directory, rtofs_qc, depth_average_data, bin_average_data, qc_latitude, qc_longitude)
+        if not os.path.exists(sub_directory):
+            os.makedirs(sub_directory, exist_ok=True)
 
-        GGS_plot_currents(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, show_route=False, show_qc=False)
-        GGS_plot_threshold(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False)
+            rtofs = RTOFS(datetime_index)
+            rtofs.rtofs_subset(config, subset=True)
+            rtofs_data = rtofs.data
+            rtofs_qc = rtofs.rtofs_qc
+            rtofs.rtofs_save(config, sub_directory)
+
+            depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
+            
+            qc_latitude = '21.100'
+            qc_longitude = '-86.25'
+            qc_uv_profile(config, sub_directory, rtofs_qc, depth_average_data, bin_average_data, qc_latitude, qc_longitude)
+            GGS_plot_currents(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, show_route=False, show_qc=False)
+            GGS_plot_threshold(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False)
+        else:
+            print(f'Skipping processing for datetime index: {datetime_index}')
 
 if __name__ == "__main__":
-    main(date_indices=[1])
+    main(date_indices=None)
 
 # =========================
 # ///// END OF SCRIPT \\\\\
