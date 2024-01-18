@@ -4,9 +4,9 @@ __ARCHIVE__/
 0-Demo/
 0-Resources/
 
-GGS_Files/
+GGS_AutomationScripts/__pycache__/
+GGS_AutomationScripts/data/
 
-GGS_Scripts/__ARCHIVE__/
 GGS_Scripts/__pycache__/
 GGS_Scripts/data/
 GGS_Scripts/_LAB.py
