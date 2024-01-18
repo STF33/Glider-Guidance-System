@@ -7,6 +7,8 @@ __ARCHIVE__/
 GGS_Files/
 
 GGS_Scripts/__ARCHIVE__/
+GGS_Scripts/__pycache__/
+GGS_Scripts/data/
 GGS_Scripts/_LAB.py
 GGS_Scripts/_TEMP.ipynb
 GGS_Scripts/_TEST.ipynb

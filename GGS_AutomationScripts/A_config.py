@@ -30,6 +30,9 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     target_date = date
     date_list = get_date_list(date)
 
+    current_directory = os.path.dirname(__file__)
+    bathymetry_path = os.path.join(current_directory, "data", "bathymetry", "GEBCO_2023_sub_ice_topo.nc")
+
     config = {
         "glider_name": "Yucatan",
         "target_date": target_date,
@@ -37,7 +40,8 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
         "max_depth": 1000,
         "extent": [(15.75, -89.25), (27.00, -80.00)],  # Yucatan
         # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
-        "GPS_coords": [(16.645, -87.880), (16.952, -87.163), (18.196, -86.727), (19.562, -86.281), (21.621, -86.099)]
+        "GPS_coords": [(16.645, -87.880), (16.952, -87.163), (18.196, -86.727), (19.562, -86.281), (21.621, -86.099)],
+        "bathymetry_path": bathymetry_path
         }
 
     return config

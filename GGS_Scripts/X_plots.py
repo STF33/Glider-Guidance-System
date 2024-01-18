@@ -87,7 +87,7 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90) # zorder = [9]
     
-    plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False)
+    plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_legend=False)
 
     box = ax.get_position()
     left_margin = box.x0
@@ -200,7 +200,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90) # zorder = [9]
     ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90) # zorder = [9]
     
-    plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=True)
+    plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_legend=True)
     bathymetry_legend = ax.get_legend()
 
     patches = [

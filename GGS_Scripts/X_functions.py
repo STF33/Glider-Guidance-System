@@ -479,13 +479,14 @@ def plot_contour_cbar(magnitude, max_levels=10):
     return levels, ticks
 
 ### FUNCTION
-def plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
+def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
     
     '''
     Add bathymetry to a plot.
 
     Args:
     - ax (matplotlib.axes._subplots.AxesSubplot): Matplotlib subplot.
+    - config (dict): Glider Guidance System mission configuration.
     - model_data (xarray.core.dataset.Dataset): Model data.
     - isobath1 (int): First isobath level.
         - default: -100
@@ -498,8 +499,8 @@ def plot_bathymetry(ax, model_data, isobath1=-100, isobath2=-1000, show_legend=F
     - none
     '''
 
-    bathymetry_file = 'C:/Users/sal_f/OneDrive/Desktop/STF-0/!-GGS/GGS_Files/GEBCO_2023_sub_ice_topo.nc'
-    bathy_data = xr.open_dataset(bathymetry_file)
+    bathymetry_path = config["bathymetry_path"]
+    bathy_data = xr.open_dataset(bathymetry_path)
 
     subset_bathy = bathy_data.sel(lat=slice(model_data.lat.min(), model_data.lat.max()), lon=slice(model_data.lon.min(), model_data.lon.max()))
 
