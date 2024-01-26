@@ -9,9 +9,8 @@ GGS_AutomationScripts/data/
 
 GGS_Scripts/__pycache__/
 GGS_Scripts/data/
-GGS_Scripts/_LAB.py
-GGS_Scripts/_TEMP.ipynb
-GGS_Scripts/_TEST.ipynb
-GGS_Scripts/GGS_rtofs_test.py
 
+GGS_TEST/
+
+GGS_Outline.mkd
 !-GGS.code-workspace

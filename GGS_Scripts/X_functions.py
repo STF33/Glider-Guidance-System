@@ -59,7 +59,9 @@ def check_abort(input_string):
     '''
     
     if input_string.upper() == EXIT_KEYWORD:
-        print("!!! [CONFIGURATION ABORTED] !!!")
+        print("\n")
+        print("### CONFIGURATION ABORTED] ###")
+        print("\n")
         exit()
 
 ### FUNCTION:
@@ -189,6 +191,7 @@ def calculate_gridpoint(model_data, target_lat, target_lon):
     print(f"Input Coordinates: ({target_lat}, {target_lon})")
     print(f"Dataset Indices: ({y_index}, {x_index})")
     print(f"Dataset Coordinates: ({lat_index:.3f}, {lon_index:.3f})")
+    print("\n")
 
     return (y_index, x_index), (lat_index, lon_index)
 
@@ -470,7 +473,7 @@ def plot_contour_cbar(magnitude, max_levels=10):
         total_count = len(valid_magnitude)
         upper_interval_percent = upper_interval_count / total_count
 
-        if upper_interval_percent <= 0.01:
+        if upper_interval_percent <= 0.001:
             magnitude[magnitude > lower_bound] = lower_bound
             levels = levels[:-1]
 
@@ -531,6 +534,40 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_
         legend.set_zorder(1000)
         for text in legend.get_texts():
             text.set_color('black')
+
+### FUNCTION:
+def plot_profile_thresholds(ax, data, threshold, color):
+    
+    '''
+    Apply shading to regions where data exceeds the threshold and update the legend.
+    
+    Args:
+    - ax (matplotlib.axes.Axes): The axes object to apply shading to.
+    - data (array): Data array for the plot.
+    - threshold (float): Threshold value for shading.
+    - color (str): Color for the shaded region.
+    '''
+
+    depth_values = np.arange(len(data))
+
+    above_threshold = data > threshold
+    regions = []
+    start = None
+
+    for i, is_above in enumerate(above_threshold):
+        if is_above and start is None:
+            start = i
+        elif not is_above and start is not None:
+            regions.append((start, i))
+            start = None
+    
+    if start is not None:
+        regions.append((start, len(data)))
+
+    for start, end in regions:
+        ax.fill_betweenx(depth_values[start:end+1], ax.get_xlim()[0], ax.get_xlim()[1], color=color, alpha=0.25)
+
+    ax.plot([], [], color=color, alpha=1.0, linewidth=5, label=f'Above Threshold = {threshold:.2f}')
 
 # =========================
 # DATETIME FUNCTIONS

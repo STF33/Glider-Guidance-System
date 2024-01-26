@@ -26,7 +26,7 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     Returns:
     - config (dict): Glider Guidance System mission configuration.
     '''
-    
+
     target_date = date
     date_list = get_date_list(date)
 
@@ -37,7 +37,7 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
         "glider_name": "Yucatan",
         "target_date": target_date,
         "date_list": date_list,
-        "max_depth": 1000,
+        "max_depth": 10,
         "extent": [(15.75, -89.25), (27.00, -80.00)],  # Yucatan
         # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
         "GPS_coords": [(16.645, -87.880), (16.952, -87.163), (18.196, -86.727), (19.562, -86.281), (21.621, -86.099)],

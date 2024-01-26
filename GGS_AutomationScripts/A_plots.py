@@ -45,9 +45,13 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     - None
     '''
 
-    u_avg = depth_average_data['u_avg'].values
-    v_avg = depth_average_data['v_avg'].values
-    magnitude = depth_average_data['magnitude_avg'].values
+    print("\n")
+    print("### CREATING MAGNITUDE PLOT ###")
+    print("\n")
+
+    u_depth_avg = depth_average_data['u_depth_avg'].values
+    v_depth_avg = depth_average_data['v_depth_avg'].values
+    mag_depth_avg = depth_average_data['mag_depth_avg'].values
     
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
@@ -59,9 +63,9 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
     ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
     plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
     
-    levels, ticks = plot_contour_cbar(magnitude, max_levels=10)
-    contour = ax.contourf(data_lons, data_lats, magnitude, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
-    ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
+    levels, ticks = plot_contour_cbar(mag_depth_avg, max_levels=10)
+    contour = ax.contourf(data_lons, data_lats, mag_depth_avg, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
+    ax.streamplot(data_lons, data_lats, u_depth_avg, v_depth_avg, color='black', transform=ccrs.PlateCarree(), density=density, linewidth=0.5, zorder=10) # zorder = [1]
 
     if show_route: # zorder = [9]
         lats, lons = zip(*config["GPS_coords"])
@@ -98,7 +102,7 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
 
     cbar_ax = fig.add_axes([left_margin + plot_width + 0.02, bottom_margin, 0.03, plot_height])
     cbar = fig.colorbar(contour, cax=cbar_ax, orientation='vertical')
-    cbar.set_label('Depth Averaged Current Magnitude (m/s)', labelpad=10)
+    cbar.set_label('Depth Averaged Current mag_depth_avg (m/s)', labelpad=10)
     cbar.set_ticks(ticks)
     cbar.set_ticklabels([f"{tick:.1f}" for tick in ticks])
 
@@ -117,11 +121,13 @@ def GGS_plot_currents(config, directory, model_data, depth_average_data, qc_lati
 
     plt.close(fig)
 
+    print("### MAGNITUDE PLOT SAVED ###")
+
 ### FUNCTION:
 def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False):
     
     '''
-    Plots the depth-averaged current magnitude threshold zones for the currents data.
+    Plots the depth-averaged current mag_depth_avg threshold zones for the currents data.
     Optionally display the mission route and/or quality control sample location.
     
     Args:
@@ -129,15 +135,15 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     - directory (str): Glider Guidance System mission directory.
     - model_data (xarray.Dataset): Ocean model dataset.
     - depth_average_data (xarray.Dataset): Dataset with the computed variables and layer information.
-    - mag1 (float): First threshold magnitude.
+    - mag1 (float): First threshold mag_depth_avg.
         - default: 0.0
-    - mag2 (float): Second threshold magnitude.
+    - mag2 (float): Second threshold mag_depth_avg.
         - default: 0.2
-    - mag3 (float): Third threshold magnitude.
+    - mag3 (float): Third threshold mag_depth_avg.
         - default: 0.3
-    - mag4 (float): Fourth threshold magnitude.
+    - mag4 (float): Fourth threshold mag_depth_avg.
         - default: 0.4
-    - mag5 (float): Fifth threshold magnitude.
+    - mag5 (float): Fifth threshold mag_depth_avg.
         - default: 0.5
     - qc_latitude (float): Latitude of the QC sample point.
     - qc_longitude (float): Longitude of the QC sample point.
@@ -154,10 +160,14 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     - None
     '''
 
-    u_avg = depth_average_data['u_avg'].values
-    v_avg = depth_average_data['v_avg'].values
-    magnitude = depth_average_data['magnitude_avg'].values
-    magnitude = np.nan_to_num(magnitude, nan=0.0, posinf=0.0, neginf=0.0)
+    print("\n")
+    print("### CREATING THRESHOLD PLOT ###")
+    print("\n")
+
+    u_depth_avg = depth_average_data['u_depth_avg'].values
+    v_depth_avg = depth_average_data['v_depth_avg'].values
+    mag_depth_avg = depth_average_data['mag_depth_avg'].values
+    mag_depth_avg = np.nan_to_num(mag_depth_avg, nan=0.0, posinf=0.0, neginf=0.0)
 
     data_lons = model_data.lon.values
     data_lats = model_data.lat.values
@@ -169,11 +179,11 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     ax.set_extent(data_extent_lon + data_extent_lat, crs=ccrs.PlateCarree())
     plot_formatted_ticks(ax, data_extent_lon, data_extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
     
-    levels = [mag1, mag2, mag3, mag4, mag5, np.max(magnitude)]
+    levels = [mag1, mag2, mag3, mag4, mag5, np.max(mag_depth_avg)]
     colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
     
-    contourf = ax.contourf(data_lons, data_lats, magnitude, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
-    streamplot = ax.streamplot(data_lons, data_lats, u_avg, v_avg, color='dimgrey', transform=ccrs.PlateCarree(), density=2, linewidth=0.5, zorder=11) # zorder = [1]
+    contourf = ax.contourf(data_lons, data_lats, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10) # zorder = [1]
+    streamplot = ax.streamplot(data_lons, data_lats, u_depth_avg, v_depth_avg, color='dimgrey', transform=ccrs.PlateCarree(), density=2, linewidth=0.5, zorder=11) # zorder = [1]
     streamplot.lines.set_alpha(1.0)
 
     if show_route: # zorder = [9]
@@ -228,4 +238,7 @@ def GGS_plot_threshold(config, directory, model_data, depth_average_data, qc_lat
     fig_filename = f"GGS_{config['glider_name']}_ThresholdZones_{config['max_depth']}m.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
+    
     plt.close(fig)
+
+    print("### THRESHOLD PLOT SAVED ###")

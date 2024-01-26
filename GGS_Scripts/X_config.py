@@ -26,7 +26,7 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     Returns:
     - config (dict): Glider Guidance System mission configuration.
     '''
-    
+
     target_date = date
     date_list = get_date_list(date)
 

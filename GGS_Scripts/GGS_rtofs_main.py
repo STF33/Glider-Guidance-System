@@ -17,6 +17,12 @@ from X_config import *
 from X_rtofs import *
 
 # =========================
+# INTERPOLATION CALCULATION
+# =========================
+
+from X_interpolation import *
+
+# =========================
 # QUALITY CONTROL CHECKS
 # =========================
 
@@ -40,6 +46,7 @@ def main(date_indices=None):
 
     Args:
     - date_indices (list of int): Indices of the dates to process in date_list.
+        - default: None (process all dates in date_list)
     '''
 
     config = GGS_config_static(date=dt.datetime.now(timezone.utc))
@@ -56,18 +63,18 @@ def main(date_indices=None):
         
         if not os.path.exists(sub_directory):
             os.makedirs(sub_directory, exist_ok=True)
-
+            
             rtofs = RTOFS(datetime_index)
             rtofs.rtofs_subset(config, subset=True)
             rtofs_data = rtofs.data
             rtofs_qc = rtofs.rtofs_qc
             rtofs.rtofs_save(config, sub_directory)
 
-            depth_average_data, bin_average_data = interp_depth_average(config, sub_directory, rtofs_data)
+            depth_average_data, bin_average_data = interpolation_model(config, sub_directory, rtofs_data)
             
             qc_latitude = '21.100'
             qc_longitude = '-86.25'
-            qc_uv_profile(config, sub_directory, rtofs_qc, depth_average_data, bin_average_data, qc_latitude, qc_longitude)
+            GGSS_plot_qc(config, sub_directory, rtofs_qc, depth_average_data, bin_average_data, qc_latitude, qc_longitude, threshold=0.5)
             GGS_plot_currents(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, show_route=False, show_qc=False)
             GGS_plot_threshold(config, sub_directory, rtofs_data, depth_average_data, qc_latitude, qc_longitude, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, show_route=False, show_qc=False)
         else:
