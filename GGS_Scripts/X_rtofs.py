@@ -5,15 +5,15 @@
 import numpy as np
 import os
 import pandas as pd
-from scipy.interpolate import interp1d
 import xarray as xr
-from X_functions import datetime_format, datetime_filename
+from X_functions import datetime_format
 
 # =========================
 # [RTOFS] DATA PROCESSING
 # =========================
 
 ### CLASS:
+# @profile
 class RTOFS():
     
     '''
@@ -92,7 +92,6 @@ class RTOFS():
             rtofs_raw.attrs['requested_datetime'] = datetime_index
             rtofs_raw.attrs['acquired_datetime'] = str(rtofs_raw.time.values)
 
-            print("\n")
             print("MODEL DATA ACQUIRED")
             print("Requested datetime:", datetime_index)
             print("Nearest datetime index in the dataset:", time_index)
@@ -125,9 +124,6 @@ class RTOFS():
 
         if subset:
 
-            print("\n")
-            print("MODEL DATA SUBSET: [TRUE]")
-
             lats, lons = zip(*config['extent'])
 
             min_lon, max_lon = min(lons) - buffer, max(lons) + buffer
@@ -155,9 +151,6 @@ class RTOFS():
             self.rtofs_qc = self.rtofs_qc.sel(depth=slice(None, config["max_depth"]))
 
         else:
-
-            print("\n")
-            print("MODEL DATA SUBSET: [FALSE]")
 
             self.data = self.data_origin
 
@@ -187,6 +180,3 @@ class RTOFS():
         rtofs_data_file = f"{config['glider_name']}_RTOFS_{config['max_depth']}m.nc"
         rtofs_data_path = os.path.join(directory, rtofs_data_file)
         self.data.to_netcdf(rtofs_data_path)
-
-        print("\n")
-        print("MODEL DATA SAVED")

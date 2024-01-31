@@ -6,19 +6,21 @@ import numpy as np
 import os
 from scipy.interpolate import interp1d
 import xarray as xr
+from A_functions import print_starttime, print_endtime, print_runtime
 
 # =========================
 # INTERPOLATION CALCULATION
 # =========================
 
 ### FUNCTION:
-def interpolation_function(u, v, temp, sal, depths, max_depth):
+# @profile
+def interpolation_function(u, v, temp, salt, depths, max_depth):
     
     '''
     Interpolate and process calculations for bin averages and depth average data for a single XY grid point.
 
-    Args:
-    - u, v, temp, sal (xr.DataArray): DataArrays of ocean model variables over depth.
+    Args:https://rucool.slack.com/files/U0GSVPMN0/F06GSCER21E/a_interpolation.py?origin_team=T0GT1PE00&origin_channel=D0635E3EQ5Q
+    - u, v, temp, salt (xr.DataArray): DataArrays of ocean model variables over depth.
     - depths (xr.DataArray): DataArray of depth values.
     - max_depth (int): Maximum depth for bin calculation.
 
@@ -36,15 +38,15 @@ def interpolation_function(u, v, temp, sal, depths, max_depth):
     dir_bin_avg = np.full(num_bins, np.nan)
 
     # Check for valid data
-    valid_mask = ~np.isnan(u) & ~np.isnan(v) & ~np.isnan(temp) & ~np.isnan(sal)
+    valid_mask = ~np.isnan(u) & ~np.isnan(v) & ~np.isnan(temp) & ~np.isnan(salt)
     if np.any(valid_mask):
         valid_depths = depths[valid_mask]
 
         # Create interpolation functions using valid data
-        u_interp = interp1d(valid_depths, u[valid_mask], bounds_error=False, fill_value="extrapolate")
-        v_interp = interp1d(valid_depths, v[valid_mask], bounds_error=False, fill_value="extrapolate")
-        temp_interp = interp1d(valid_depths, temp[valid_mask], bounds_error=False, fill_value="extrapolate")
-        salt_interp = interp1d(valid_depths, sal[valid_mask], bounds_error=False, fill_value="extrapolate")
+        u_interp = interp1d(valid_depths, u[valid_mask], bounds_error=False)
+        v_interp = interp1d(valid_depths, v[valid_mask], bounds_error=False)
+        temp_interp = interp1d(valid_depths, temp[valid_mask], bounds_error=False)
+        salt_interp = interp1d(valid_depths, salt[valid_mask], bounds_error=False)
 
         # Interpolating and averaging over each bin
         for bin_idx in range(num_bins):
@@ -80,7 +82,8 @@ def interpolation_function(u, v, temp, sal, depths, max_depth):
             u_depth_avg, v_depth_avg, temp_depth_avg, salt_depth_avg, mag_depth_avg, dir_depth_avg)
 
 ### FUNCTION:
-def interpolation_model(config, directory, model_data):
+# @profile
+def interpolation_model(config, directory, model_data, save_depth_average=True, save_bin_average=True):
     
     '''
     Compute depth-averaged values using xarray's apply_ufunc for the entire dataset.
@@ -93,34 +96,35 @@ def interpolation_model(config, directory, model_data):
     Returns:
     - Depth average data and bin average data as xarray.Dataset.
     '''
+
     print("\n")
     print("### INTERPOLATING MODEL DATA ###")
     print("\n")
+    start_time = print_starttime()
 
-    # Chunk the data for optimal parallel processing
-    chunked_data = model_data.chunk({'y': 50, 'x': 50})
+    # Load model data
+    model_data = model_data.load()
     max_depth = config['max_depth']
-    depth_data = chunked_data['depth']
+    depth_data = model_data['depth']
 
     # Apply interpolation_function to each grid point
     results = xr.apply_ufunc(
         interpolation_function,
-        chunked_data['u'],
-        chunked_data['v'],
-        chunked_data['temperature'],
-        chunked_data['salinity'],
+        model_data['u'],
+        model_data['v'],
+        model_data['temperature'],
+        model_data['salinity'],
         depth_data,
         kwargs={'max_depth': max_depth},
         input_core_dims=[['depth'], ['depth'], ['depth'], ['depth'], ['depth']],
         output_core_dims=[['bin'], ['bin'], ['bin'], ['bin'], ['bin'], ['bin'], [], [], [], [], [], []],
         dask_gufunc_kwargs={'output_sizes': {'bin': max_depth}},
-        vectorize=True,
-        dask='parallelized')
-    
+        vectorize=True)
+
     # Unpack results
     u_bin_avg, v_bin_avg, temp_bin_avg, salt_bin_avg, mag_bin_avg, dir_bin_avg, u_depth_avg, v_depth_avg, temp_depth_avg, salt_depth_avg, mag_depth_avg, dir_depth_avg = [da.data for da in results]
 
-    # Create datasets
+    # Create the 'depth_average_data' datasets
     depth_average_data = xr.Dataset({
         'u_depth_avg': (('y', 'x'), u_depth_avg),
         'v_depth_avg': (('y', 'x'), v_depth_avg),
@@ -129,6 +133,9 @@ def interpolation_model(config, directory, model_data):
         'mag_depth_avg': (('y', 'x'), mag_depth_avg),
         'dir_depth_avg': (('y', 'x'), dir_depth_avg)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon})
+    depth_average_data = depth_average_data.expand_dims('time')
+
+    # Create the 'bin_average_data' datasets
     bin_average_data = xr.Dataset({
         'u_bin_avg': (('y', 'x', 'bin'), u_bin_avg),
         'v_bin_avg': (('y', 'x', 'bin'), v_bin_avg),
@@ -137,11 +144,15 @@ def interpolation_model(config, directory, model_data):
         'mag_bin_avg': (('y', 'x', 'bin'), mag_bin_avg),
         'dir_bin_avg': (('y', 'x', 'bin'), dir_bin_avg)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_depth)})
+    bin_average_data = bin_average_data.expand_dims('time')
 
-    # Save datasets as NetCDF files
-    depth_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_DepthAverageData.nc"))
-    bin_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_BinAverageData.nc"))
-
-    print("INTERPOLATED DATASETS CREATED")
-
+    # Save the datasets
+    if save_depth_average:
+        depth_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_DepthAverageData.nc"), unlimited_dims=['time'])
+    if save_bin_average:
+        bin_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_BinAverageData.nc"), unlimited_dims=['time'])
+    
+    end_time = print_endtime()
+    print_runtime(start_time, end_time)
+    
     return depth_average_data, bin_average_data

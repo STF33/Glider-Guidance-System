@@ -4,6 +4,7 @@
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+import dask.array
 import datetime as dt
 from datetime import datetime as datetime
 import matplotlib.pyplot as plt
@@ -40,127 +41,8 @@ def get_date_list(target_datetime):
     return date_list
 
 # =========================
-# CHECK FUNCTIONS
-# =========================
-
-### FUNCTION:
-EXIT_KEYWORD = "EXIT"
-def check_abort(input_string):
-    
-    '''
-    Check if the input string matches the exit keyword.
-    If the input is the exit keyword, abort the program.
-    
-    Args:
-    - input_string (str): The input string to be checked.
-
-    Returns:
-    - None
-    '''
-    
-    if input_string.upper() == EXIT_KEYWORD:
-        print("\n")
-        print("### CONFIGURATION ABORTED] ###")
-        print("\n")
-        exit()
-
-### FUNCTION:
-def check_float(prompt_msg):
-    
-    '''
-    Check for a valid float input.
-    If invalid, prompt again with an error message.
-    
-    Args:
-    - prompt_msg (str): The message to prompt the user with.
-
-    Returns:
-    - float: The parsed float value.
-    '''
-    
-    while True:
-        user_input = input(prompt_msg)
-        check_abort(user_input)
-        try:
-            return float(user_input)
-        except ValueError:
-            prompt_msg = "[INPUT ERROR] " + prompt_msg
-
-### FUNCTION:
-def check_coordinate(coord_str):
-    
-    '''
-    Check if the input decimal degree coordinates can be parsed into a valid latitude and longitude coordinate.
-    
-    Args:
-    - coord_str (str): The input string containing coordinate values.
-
-    Returns:
-    - tuple: A tuple containing the latitude and longitude if valid. None otherwise.
-    '''
-    
-    try:
-        lat, lon = map(float, coord_str.split(","))
-        if -90 <= lat <= 90 and -180 <= lon <= 180:
-            return (lat, lon)
-    except ValueError:
-        return None
-
-# =========================
 # CALCULATE FUNCTIONS
 # =========================
-
-### FUNCTION:
-def calculate_distance(coordinate_1, coordinate_2):
-    
-    '''
-    Calculate the Haversine distance between two sets of decimal degree coordinates.
-    
-    Args:
-    - coordinate_1 (tuple): Starting coordinate as (latitude, longitude).
-    - coordinate_2 (tuple): Ending coordinate as (latitude, longitude).
-
-    Returns:
-    - float: The distance between the two coordinates in meters.
-    '''
-    
-    R = 6371000
-
-    lat1, lon1 = np.radians(coordinate_1)
-    lat2, lon2 = np.radians(coordinate_2)
-    
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    
-    a = (np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2)
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-    
-    return R * c
-
-### FUNCTION:
-def calculate_bearing(coordinate_1, coordinate_2):
-    
-    '''
-    Calculate the compass bearing between two sets of decimal degree coordinates.
-    
-    Args:
-    - coordinate_1 (tuple): Starting coordinate as (latitude, longitude).
-    - coordinate_2 (tuple): Ending coordinate as (latitude, longitude).
-
-    Returns:
-    - float: The bearing from coordinate_1 to coordinate_2 in degrees.
-    '''
-
-    lat1, lon1 = np.radians(coordinate_1)
-    lat2, lon2 = np.radians(coordinate_2)
-    
-    dlon = lon2 - lon1
-    x = np.sin(dlon) * np.cos(lat2)
-    y = np.cos(lat1) * np.sin(lat2) - (np.sin(lat1) * np.cos(lat2) * np.cos(dlon))
-    
-    initial_bearing = np.degrees(np.arctan2(x, y))
-
-    return (initial_bearing + 360) % 360
 
 ### FUNCTION:
 def calculate_gridpoint(model_data, target_lat, target_lon):
@@ -186,12 +68,6 @@ def calculate_gridpoint(model_data, target_lat, target_lon):
 
     lat_index = model_data['lat'].isel(y=y_index, x=x_index).values
     lon_index = model_data['lon'].isel(y=y_index, x=x_index).values
-
-    print("\n")
-    print(f"Input Coordinates: ({target_lat}, {target_lon})")
-    print(f"Dataset Indices: ({y_index}, {x_index})")
-    print(f"Dataset Coordinates: ({lat_index:.3f}, {lon_index:.3f})")
-    print("\n")
 
     return (y_index, x_index), (lat_index, lon_index)
 
@@ -306,88 +182,6 @@ def calculate_ticks(extent, direction):
     return minor_ticks, major_ticks, major_tick_labels
 
 # =========================
-# CONVERSION FUNCTIONS
-# =========================
-
-### FUNCTION:
-def DD_to_DM(DD, coord_type='longitude'):
-    
-    '''
-    Convert a decimal degree (DD) coordinate to a degree minute (DM) coordinate.
-
-    Args:
-    - DD (float): A decimal degree coordinate.
-    - coord_type (str): A string indicating whether the position is a longitude or latitude.
-
-    Returns:
-    - str: A degree minute coordinate.
-    '''
-
-    degrees = int(DD)
-    minutes = abs(int((DD - degrees) * 60))
-
-    direction = ''
-    if degrees > 0:
-        if coord_type == 'longitude':
-            direction = 'E'
-        elif coord_type == 'latitude':
-            direction = 'N'
-    elif degrees < 0:
-        if coord_type == 'longitude':
-            direction = 'W'
-        elif coord_type == 'latitude':
-            direction = 'S'
-
-    return f"{abs(degrees)}°{minutes}'{direction}"
-
-### FUNCTION:
-def DD_to_DMS(DD):
-    
-    '''
-    Convert decimal degrees to degrees, minutes, and seconds.
-
-    Args:
-    - decimal_degrees (np.ndarray): Numpy array of decimal degrees.
-
-    Returns:
-    - degrees (np.ndarray): Degrees part of the DMS.
-    - minutes (np.ndarray): Minutes part of the DMS.
-    - seconds (np.ndarray): Seconds part of the DMS.
-    '''
-
-    negative_DD = DD < 0
-
-    absolute_decimal_degrees = np.abs(DD)
-
-    degree = np.floor(absolute_decimal_degrees)
-
-    remainder = (absolute_decimal_degrees - degree) * 60
-    minute = np.floor(remainder)
-    second = np.round((remainder - minute) * 60)
-
-    degree[negative_DD] *= -1
-
-    return degree, minute, second
-
-### FUNCTION:
-def DD_to_DDM(DD):
-    
-    '''
-    Convert a decimal degree (DD) coordinate to a degree decimal minute (DDM) coordinate.
-
-    Args:
-    - DD (float): A decimal degree coordinate.
-
-    Returns:
-    - str: A degree decimal minute coordinate.    
-    '''
-    
-    degrees = int(DD)
-    minutes = abs(DD - degrees) * 60
-
-    return f"{degrees:02d}{minutes:05.2f}"
-
-# =========================
 # PLOT FUNCTIONS
 # =========================
 
@@ -433,20 +227,27 @@ def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fo
         gl.ylocator = mticker.FixedLocator(minor_lat_ticks)
 
 ### FUNCTION:
-def plot_contour_cbar(magnitude, max_levels=10):
+def plot_contour_cbar(magnitude, max_levels=10, extend_max=True):
     
     '''
-    Dynamically calculate levels and ticks for a matplotlib colorbar based on the magnitude.
-    Merge the uppermost level with the second-highest level if it contains a very small percentage of data.
+    Calculate levels for a matplotlib colorbar based on the magnitude. Optionally extend the maximum color level.
 
     Args:
-    - magnitude (array-like): The magnitude data.
+    - magnitude (array-like or xarray.DataArray): The magnitude data.
     - max_levels (int): Maximum number of levels. Default is 10.
+    - extend_max (bool): Extend the maximum color level to indicate values exceeding the set levels.
+        - default: False
 
     Returns:
     - levels (array-like): The level values for contour plot.
     - ticks (array-like): The tick values for the colorbar, aligned with levels.
+    - extend (str): String indicating if the colorbar should be extended. 'max', 'neither', or 'both'.
     '''
+
+    if isinstance(magnitude, xr.DataArray):
+        if isinstance(magnitude.data, dask.array.Array):
+            magnitude = magnitude.compute()
+        magnitude = magnitude.values
 
     valid_magnitude = magnitude[~np.isnan(magnitude)]
     if valid_magnitude.size == 0:
@@ -459,29 +260,18 @@ def plot_contour_cbar(magnitude, max_levels=10):
     interval_options = [0.1, 0.2, 0.5, 1.0]
     best_interval = min(interval_options, key=lambda x: abs(max_levels - np.ceil(magnitude_range / x)))
 
-    upper_threshold = np.ceil(max_val / best_interval) * best_interval
-    while upper_threshold - min_val > magnitude_range:
-        upper_threshold -= best_interval
+    levels = np.arange(min_val, max_val, best_interval)
 
-    levels = np.arange(min_val, upper_threshold + best_interval, best_interval)
-    levels = levels[levels <= max_val + best_interval * 0.1]
-
-    if len(levels) > 2:
-        upper_bound = levels[-1]
-        lower_bound = levels[-2]
-        upper_interval_count = np.sum((valid_magnitude > lower_bound) & (valid_magnitude <= upper_bound))
-        total_count = len(valid_magnitude)
-        upper_interval_percent = upper_interval_count / total_count
-
-        if upper_interval_percent <= 0.001:
-            magnitude[magnitude > lower_bound] = lower_bound
-            levels = levels[:-1]
+    if extend_max and max_val > levels[-1]:
+        extend = 'max'
+    else:
+        extend = 'neither'
 
     ticks = levels
 
-    return levels, ticks
+    return levels, ticks, extend
 
-### FUNCTION
+### FUNCTION:
 def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
     
     '''
@@ -549,25 +339,58 @@ def plot_profile_thresholds(ax, data, threshold, color):
     '''
 
     depth_values = np.arange(len(data))
-
-    above_threshold = data > threshold
     regions = []
     start = None
 
-    for i, is_above in enumerate(above_threshold):
-        if is_above and start is None:
-            start = i
-        elif not is_above and start is not None:
-            regions.append((start, i))
-            start = None
-    
+    for i, value in enumerate(data):
+        if value > threshold:
+            if start is None:
+                start = i
+        else:
+            if start is not None:
+                regions.append((start, i))
+                start = None
+
     if start is not None:
         regions.append((start, len(data)))
 
     for start, end in regions:
-        ax.fill_betweenx(depth_values[start:end+1], ax.get_xlim()[0], ax.get_xlim()[1], color=color, alpha=0.25)
+        ax.fill_betweenx(depth_values[start:end], ax.get_xlim()[0], ax.get_xlim()[1], color=color, alpha=0.25)
 
-    ax.plot([], [], color=color, alpha=1.0, linewidth=5, label=f'Above Threshold = {threshold:.2f}')
+    ax.plot([], [], color=color, alpha=0.5, linewidth=10, label=f'Above Threshold = [{threshold}]')
+
+# =========================
+# CONVERSION FUNCTIONS
+# =========================
+
+### FUNCTION:
+def DD_to_DMS(DD):
+    
+    '''
+    Convert decimal degrees to degrees, minutes, and seconds.
+
+    Args:
+    - decimal_degrees (np.ndarray): Numpy array of decimal degrees.
+
+    Returns:
+    - degrees (np.ndarray): Degrees part of the DMS.
+    - minutes (np.ndarray): Minutes part of the DMS.
+    - seconds (np.ndarray): Seconds part of the DMS.
+    '''
+
+    negative_DD = DD < 0
+
+    absolute_decimal_degrees = np.abs(DD)
+
+    degree = np.floor(absolute_decimal_degrees)
+
+    remainder = (absolute_decimal_degrees - degree) * 60
+    minute = np.floor(remainder)
+    second = np.round((remainder - minute) * 60)
+
+    degree[negative_DD] *= -1
+
+    return degree, minute, second
 
 # =========================
 # DATETIME FUNCTIONS
@@ -595,32 +418,6 @@ def datetime_format(input_datetime):
     return formatted_datetime
 
 ### FUNCTION:
-def datetime_filename(model_data):
-
-    '''
-    Format a datetime string from 'YYYY-MM-DDTHH:MM:SSZ' to 'YYYYMMDDTHH'.
-
-    Args:
-    - model_data (xarray.core.dataset.Dataset): Model data.
-
-    Returns:
-    - str: The datetime formatted as 'YYYYMMDDTHH'.
-    '''
-
-    model_datetime = model_data.attrs.get('requested_datetime', 'unknown_datetime')
-
-    if model_datetime != 'unknown_datetime':
-        try:
-            datetime_obj = datetime.strptime(model_datetime, "%Y-%m-%dT%H:%M:%SZ")
-            filename_datetime = datetime_obj.strftime("%Y%m%dT%H")
-        except ValueError:
-            filename_datetime = 'invalid_datetime'
-    else:
-        filename_datetime = 'unknown_datetime'
-    
-    return filename_datetime
-
-### FUNCTION:
 def datetime_title(model_data):
     
     '''
@@ -645,3 +442,59 @@ def datetime_title(model_data):
         formatted_datetime = 'unknown_datetime'
 
     return formatted_datetime
+
+# =========================
+# PRINT FUNCTIONS
+# =========================
+
+### FUNCTION:
+def print_starttime():
+
+    '''
+    Print the start time of the program.
+
+    Args:
+    - None
+
+    Returns:
+    - start_time (datetime.datetime): The start time of the program.
+    '''
+
+    start_time = dt.datetime.utcnow()
+    print(f"Start time (UTC): {start_time}")
+
+    return start_time
+
+### FUNCTION:
+def print_endtime():
+
+    '''
+    Print the end time of the program.
+
+    Args:
+    - None
+
+    Returns:
+    - end_time (datetime.datetime): The end time of the program.
+    '''
+
+    end_time = dt.datetime.utcnow()
+    print(f"End time (UTC): {end_time}")
+
+    return end_time
+
+### FUNCTION:
+def print_runtime(start_time, end_time):
+
+    '''
+    Print the runtime of the program.
+
+    Args:
+    - None
+
+    Returns:
+    - None
+    '''
+
+    print(f"Run time: {end_time - start_time}")
+    
