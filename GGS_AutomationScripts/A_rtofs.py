@@ -6,14 +6,10 @@ import numpy as np
 import os
 import pandas as pd
 import xarray as xr
-from A_functions import datetime_format
 
-# =========================
-# [RTOFS] DATA PROCESSING
 # =========================
 
 ### CLASS:
-# @profile
 class RTOFS():
     
     '''
@@ -21,22 +17,16 @@ class RTOFS():
 
     Attributes:
     - data_origin (xarray.Dataset): Original RTOFS data.
-    - data (xarray.Dataset): Subset RTOFS data.
+    - data (xarray.Dataset): Subset or full RTOFS data.
     - x (np.ndarray): RTOFS x-axis grid.
     - y (np.ndarray): RTOFS y-axis grid.
     - grid_lons (np.ndarray): RTOFS longitude grid.
     - grid_lats (np.ndarray): RTOFS latitude grid.
     - rtofs_qc (xarray.Dataset): RTOFS data for quality control.
-
-    Methods:
-    - __init__ (datetime_index=None): Initialize the RTOFS instance.
-    - rtofs_load (datetime_index): Fetch the RTOFS data from the given URL source and set its coordinates.
-    - rtofs_subset (config, buffer=0, subset=True): Subset the RTOFS data based on the GGS mission extent.
-    - rtofs_save (config, directory): Save the subset RTOFS data as a NetCDF file.
     '''
 
     ### FUNCTION:
-    def __init__(self, datetime_index=None) -> None:
+    def __init__(self) -> None:
         
         '''
         Initialize the RTOFS instance.
@@ -48,24 +38,13 @@ class RTOFS():
         - None
         '''
 
-        print("\n")
-        print("### MODEL DATA: [RTOFS] ###")
-        print("\n")
+        print("\n### MODEL DATA: [RTOFS] ###\n")
 
-        if datetime_index is not None:
-            self.data_origin = self.rtofs_load(datetime_index)
-        else:
-            self.data_origin = xr.Dataset()
-
-        self.data_origin = self.data_origin.set_coords(['lat', 'lon'])
-        self.data = self.data_origin.copy()
-
-        self.x = self.data.x.values
-        self.y = self.data.y.values
-        self.grid_lons = self.data.lon.values[0,:]
-        self.grid_lats = self.data.lat.values[:,0]
-
-        self.rtofs_qc = self.data_origin.copy()
+        self.data_origin = None
+        self.x = None
+        self.y = None
+        self.grid_lons = None
+        self.grid_lats = None
 
     ### FUNCTION:
     def rtofs_load(self, datetime_index):
@@ -84,27 +63,30 @@ class RTOFS():
 
         try:
             rtofs_raw = xr.open_dataset(rtofs_access)
-            
-            datetime = pd.Timestamp(datetime_index).tz_localize(None)
-            time_values = rtofs_raw.time.values
-            time_index = np.argmin(np.abs(time_values - np.datetime64(datetime)))
-            rtofs_raw = rtofs_raw.isel(time=time_index)
-            rtofs_raw.attrs['requested_datetime'] = datetime_index
-            rtofs_raw.attrs['acquired_datetime'] = str(rtofs_raw.time.values)
+            if rtofs_raw:
+                datetime = pd.Timestamp(datetime_index).tz_localize(None)
+                time_values = rtofs_raw.time.values
+                time_index = np.argmin(np.abs(time_values - np.datetime64(datetime)))
+                rtofs_raw = rtofs_raw.isel(time=time_index)
 
-            print("MODEL DATA ACQUIRED")
-            print("Requested datetime:", datetime_index)
-            print("Nearest datetime index in the dataset:", time_index)
-            print("Acquired datetime:", rtofs_raw.attrs['acquired_datetime'])
+                self.data_origin = rtofs_raw
+                self.x = self.data_origin.x.values
+                self.y = self.data_origin.y.values
+                self.grid_lons = self.data_origin.lon.values[0,:]
+                self.grid_lats = self.data_origin.lat.values[:,0]
+                self.data_origin.attrs['model_datetime'] = str(rtofs_raw.time.values)
 
-            return rtofs_raw
-
+                print("MODEL DATA ACQUIRED")
+                print(f"Requested datetime: {datetime_index}")
+                print(f"Nearest datetime index in the dataset: {time_index}")
+                print(f"Acquired datetime: {rtofs_raw.attrs['model_datetime']}")
+            else:
+                print("Failed to load RTOFS data. Dataset is None.")
         except Exception as e:
             print(f"Error fetching RTOFS data: {e}")
-            return None
     
     ### FUNCTION:
-    def rtofs_subset(self, config, buffer=0, subset=True):
+    def rtofs_subset(self, config, subset=True):
 
         '''
         Subset the RTOFS data based on the GGS mission extent.
@@ -121,47 +103,36 @@ class RTOFS():
         Returns:
         - None
         '''
+        
+        max_depth = config["max_depth"]
+        depth_indices = self.data_origin.depth.values
+        target_depth_index = depth_indices[depth_indices >= max_depth][0]
 
         if subset:
-
             lats, lons = zip(*config['extent'])
+            min_lon, max_lon = min(lons), max(lons)
+            min_lat, max_lat = min(lats), max(lats)
 
-            min_lon, max_lon = min(lons) - buffer, max(lons) + buffer
-            min_lat, max_lat = min(lats) - buffer, max(lats) + buffer
-
-            lons_ind = np.interp([min_lon, max_lon], self.grid_lons, self.x)
-            lats_ind = np.interp([min_lat, max_lat], self.grid_lats, self.y)
+            lons_idx = np.interp([min_lon, max_lon], self.grid_lons, self.x)
+            lats_idx = np.interp([min_lat, max_lat], self.grid_lats, self.y)
 
             extent = [
-                np.floor(lons_ind[0]).astype(int),
-                np.ceil(lons_ind[1]).astype(int),
-                np.floor(lats_ind[0]).astype(int),
-                np.ceil(lats_ind[1]).astype(int)
+                np.floor(lons_idx[0]).astype(int),
+                np.ceil(lons_idx[1]).astype(int),
+                np.floor(lats_idx[0]).astype(int),
+                np.ceil(lats_idx[1]).astype(int)
             ]
 
-            self.data = self.data_origin.isel(
+            self.data_origin = self.data_origin.isel(
                 x=slice(extent[0], extent[1]),
                 y=slice(extent[2], extent[3])
-            )
-
-            self.data_lons = self.data.lon.values[0,:]
-            self.data_lats = self.data.lat.values[:,0]
-            
-            self.data = self.data.sel(depth=slice(None, config["max_depth"]))
-            self.rtofs_qc = self.rtofs_qc.sel(depth=slice(None, config["max_depth"]))
+            ).sel(depth=slice(0, target_depth_index))
 
         else:
-
-            self.data = self.data_origin
-
-            self.data_lons = self.data.lon.values[0, :]
-            self.data_lats = self.data.lat.values[:, 0]
-
-            self.data = self.data.sel(depth=slice(None, config["max_depth"]))
-            self.rtofs_qc = self.rtofs_qc.sel(depth=slice(None, config["max_depth"]))
-
+            self.data_origin = self.data_origin.sel(depth=slice(0, target_depth_index))
+        
     ### FUNCTION:
-    def rtofs_save(self, config, directory):
+    def rtofs_save(self, config, directory, save_data=True, save_qc=True):
         
         '''
         Save the subset RTOFS data as a NetCDF file.
@@ -174,9 +145,17 @@ class RTOFS():
         - None
         '''
 
-        requested_datetime = self.data.attrs.get('requested_datetime', 'unknown_datetime')
-        formatted_datetime = datetime_format(requested_datetime)
+        self.data = self.data_origin.copy()
+        self.qc = self.data_origin.copy()
 
-        rtofs_data_file = f"{config['glider_name']}_RTOFS_{config['max_depth']}m.nc"
-        rtofs_data_path = os.path.join(directory, rtofs_data_file)
-        self.data.to_netcdf(rtofs_data_path)
+        if save_data:
+            rtofs_data_file = f"{config['glider_name']}_RTOFS_Data_{config['max_depth']}m.nc"
+            rtofs_data_path = os.path.join(directory, rtofs_data_file)
+            self.data.to_netcdf(rtofs_data_path)
+            print(f"RTOFS Data saved to: {rtofs_data_path}")
+        
+        if save_qc:
+            rtofs_qc_file = f"{config['glider_name']}_RTOFS_QC_{config['max_depth']}m.nc"
+            rtofs_qc_path = os.path.join(directory, rtofs_qc_file)
+            self.qc.to_netcdf(rtofs_qc_path)
+            print(f"RTOFS qc saved to: {rtofs_qc_path}")

@@ -10,6 +10,8 @@ GGS_AutomationScripts/data/
 GGS_Scripts/__pycache__/
 GGS_Scripts/data/
 
+GGS_TEST/__pycache__/
+GGS_TEST/data/
 GGS_TEST/
 
 GGS_Outline.mkd

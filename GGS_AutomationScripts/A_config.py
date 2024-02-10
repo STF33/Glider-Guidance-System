@@ -6,14 +6,11 @@ import datetime as dt
 from datetime import timezone
 import os
 import pandas as pd
-from A_functions import get_date_list
+from X_functions import get_date_list
 
-# =========================
-# GGS CONFIGURATION
 # =========================
 
 ### FUNCTION:
-# @profile
 def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     
     '''
@@ -38,17 +35,15 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
         "glider_name": "Yucatan",
         "target_date": target_date,
         "date_list": date_list,
-        "max_depth": 100,
+        "max_depth": 1000,
         "extent": [(15.75, -89.25), (27.00, -80.00)],  # Yucatan
-        # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
-        "GPS_coords": [(16.645, -87.880), (16.952, -87.163), (18.196, -86.727), (19.562, -86.281), (21.621, -86.099)],
+        "GPS_coords": [(39.40, -74.20), (39.30, -71.20)],
         "bathymetry_path": bathymetry_path
         }
 
     return config
 
 ### FUNCTION:
-# @profile
 def GGS_config_output(config, path="default"):
     
     '''
@@ -88,12 +83,12 @@ def GGS_config_output(config, path="default"):
 
     os.makedirs(root_directory, exist_ok=True)
 
-    # config_pickle = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.pkl")
-    # pd.to_pickle(config, config_pickle)
+    config_pickle = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.pkl")
+    pd.to_pickle(config, config_pickle)
 
-    # config_text = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.txt")
-    # with open(config_text, 'w') as file:
-    #     file.write(output_str)
+    config_text = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.txt")
+    with open(config_text, 'w') as file:
+        file.write(output_str)
 
     print(output_str)
 

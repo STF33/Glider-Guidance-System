@@ -9,11 +9,8 @@ import pandas as pd
 from X_functions import get_date_list
 
 # =========================
-# GGS CONFIGURATION
-# =========================
 
 ### FUNCTION:
-# @profile
 def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     
     '''
@@ -38,17 +35,15 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
         "glider_name": "Yucatan",
         "target_date": target_date,
         "date_list": date_list,
-        "max_depth": 100,
+        "max_depth": 1000,
         "extent": [(15.75, -89.25), (27.00, -80.00)],  # Yucatan
-        # "extent": [(17.0, -98.0), (30.5, -80.0)],  # GoM
-        "GPS_coords": [(16.645, -87.880), (16.952, -87.163), (18.196, -86.727), (19.562, -86.281), (21.621, -86.099)],
+        "GPS_coords": [(39.40, -74.20), (39.30, -71.20)],
         "bathymetry_path": bathymetry_path
         }
 
     return config
 
 ### FUNCTION:
-# @profile
 def GGS_config_output(config, path="default"):
     
     '''
