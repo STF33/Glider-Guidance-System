@@ -1,12 +1,11 @@
 # =========================
-# X - IMPORTS
+# IMPORTS
 # =========================
 
 import datetime as dt
 from datetime import timezone
 import os
 import pandas as pd
-from X_functions import get_date_list
 
 # =========================
 
@@ -25,18 +24,16 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     - config (dict): Glider Guidance System mission configuration.
     '''
 
-    target_date = date
-    date_list = get_date_list(date)
+    execution_date = date
 
     current_directory = os.path.dirname(__file__)
     bathymetry_path = os.path.join(current_directory, "data", "bathymetry", "GEBCO_2023_sub_ice_topo.nc")
 
     config = {
         "glider_name": "Yucatan",
-        "target_date": target_date,
-        "date_list": date_list,
-        "max_depth": 1000,
-        "extent": [(15.75, -89.25), (27.00, -80.00)],  # Yucatan
+        "execution_date": execution_date,
+        "max_depth": 100,
+        "extent": [(15, -93), (30, -77)], # Yucatan
         "GPS_coords": [(39.40, -74.20), (39.30, -71.20)],
         "bathymetry_path": bathymetry_path
         }
@@ -52,7 +49,7 @@ def GGS_config_output(config, path="default"):
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - path (str): Path for saving the mission configuration. 
-        - options: "default", "(custom path)"
+        - default: 'default'
 
     Returns:
     - directory (str): Glider Guidance System mission directory.
@@ -69,12 +66,12 @@ def GGS_config_output(config, path="default"):
             output_str += "\nExtent:\n"
             for i, coord in enumerate(value, 1):
                 output_str += "  Boundary {}: {}\n".format(i, coord)
-        elif key in ["glider_name", "target_date", "date_list"]:
+        elif key in ["glider_name", "execution_date"]:
             output_str += "{}: {}\n\n".format(key.capitalize().replace('_', ' '), value)
         elif key == "max_depth":
             output_str += "Max Depth: {}\n".format(value)
 
-    formatted_date = config['target_date'].strftime("%Y%m%d")
+    formatted_date = config['execution_date'].strftime("%Y%m%d")
 
     if path == "default":
         root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{config['glider_name']}")

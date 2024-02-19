@@ -1,30 +1,36 @@
 # =========================
-# X - IMPORTS
+# IMPORTS
 # =========================
 
 import numpy as np
 import os
 from scipy.interpolate import interp1d
 import xarray as xr
-from X_functions import format_save_datetime, print_starttime, print_endtime, print_runtime
+from A_functions import format_save_datetime, print_starttime, print_endtime, print_runtime
 
-# =========================
-# INTERPOLATION CALCULATION
 # =========================
 
 ### FUNCTION:
-def interpolation_function(u, v, depths, max_bins):
+def interpolation_model(u, v, depths, max_bins):
     
     '''
-    Interpolate and process calculations for bin averages and depth average data for a single XY grid point.
+    Compute depth-averages across spatial datapoints via 1-meter interpolation.
 
     Args:
-    - u, v, temp, salt (xr.DataArray): DataArrays of ocean model variables over depth.
+    - u (xr.DataArray): DataArray of u values.
+    - v (xr.DataArray): DataArray of v values.
     - depths (xr.DataArray): DataArray of depth values.
     - max_bins (int): Maximum bin number calculation.
 
     Returns:
-    - Tuple of arrays containing bin averages and depth averages for u, v, temperature, and salinity.
+    - u_bin_avg (np.array): Array of u bin averages.
+    - v_bin_avg (np.array): Array of v bin averages.
+    - mag_bin_avg (np.array): Array of magnitude bin averages.
+    - dir_bin_avg (np.array): Array of direction bin averages.
+    - u_depth_avg (float): Depth-averaged u value.
+    - v_depth_avg (float): Depth-averaged v value.
+    - mag_depth_avg (float): Depth-averaged magnitude value.
+    - dir_depth_avg (float): Depth-averaged direction value.
     '''
 
     # Initialize bin output arrays
@@ -68,22 +74,34 @@ def interpolation_function(u, v, depths, max_bins):
     return (u_bin_avg, v_bin_avg, mag_bin_avg, dir_bin_avg, u_depth_avg, v_depth_avg, mag_depth_avg, dir_depth_avg)
 
 ### FUNCTION:
-def interpolation_model(config, directory, model_data, save_depth_average=True, save_bin_average=True):
+def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_average=True, save_bin_average=False):
     
     '''
     Compute depth-averaged values using xarray's apply_ufunc for the entire dataset.
+    Optimized for RTOFS model datasets.
 
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - directory (str): Glider Guidance System mission directory.
     - model_data (xarray.Dataset): Ocean model dataset.
+    - chunk (bool): Chunk the data.
+        - default: 'False'
+    - save_depth_average (bool): Save the depth average data.
+        - default: 'True'
+    - save_bin_average (bool): Save the bin average data.
+        - default: 'False'
 
     Returns:
-    - Depth average data and bin average data as xarray.Dataset.
+    - depth_average_data (xarray.Dataset): Depth average data.
+    - bin_average_data (xarray.Dataset): Bin average data.
     '''
 
     print("\n### INTERPOLATING MODEL DATA ###\n")
     start_time = print_starttime()
+
+    # Chunk the data
+    if chunk:
+        model_data = model_data.chunk({'y': 'auto', 'x': 'auto'})
 
     # Load model data
     model_data = model_data.load()
@@ -92,17 +110,17 @@ def interpolation_model(config, directory, model_data, save_depth_average=True, 
     max_depth = model_data.depth.max().item()
     max_bins = max_depth + 1
 
-    # Apply interpolation_function to each grid point
+    # Apply the interpolation function to each grid point
     results = xr.apply_ufunc(
-        interpolation_function,
+        interpolation_model,
         model_data['u'],
         model_data['v'],
         model_data['depth'],
         kwargs={'max_bins': max_bins},
         input_core_dims=[['depth'], ['depth'], ['depth']],
         output_core_dims=[['bin'], ['bin'], ['bin'], ['bin'], [], [], [], []],
-        dask="parallelized",
         output_dtypes=[float, float, float, float, float, float, float, float],
+        dask_gufunc_kwargs={'output_sizes': {'bin': max_depth}},
         vectorize=True
     )
 
@@ -117,6 +135,8 @@ def interpolation_model(config, directory, model_data, save_depth_average=True, 
         'dir_depth_avg': (('y', 'x'), dir_depth_avg.data)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon})
     depth_average_data = depth_average_data.expand_dims('time')
+    if 'model_datetime' in model_data.attrs:
+        depth_average_data.attrs['model_datetime'] = model_data.attrs['model_datetime']
 
     # Create the 'bin_average_data' datasets
     bin_average_data = xr.Dataset({
@@ -126,14 +146,115 @@ def interpolation_model(config, directory, model_data, save_depth_average=True, 
         'dir_bin_avg': (('y', 'x', 'bin'), dir_bin_avg.data)
     }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_bins)})
     bin_average_data = bin_average_data.expand_dims('time')
+    if 'model_datetime' in model_data.attrs:
+        bin_average_data.attrs['model_datetime'] = model_data.attrs['model_datetime']
     
     # Save the datasets
     if save_depth_average:
         file_datetime = format_save_datetime(model_data)
-        depth_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_DepthAverageData_{file_datetime}.nc"), unlimited_dims=['time'])
+        depth_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_RTOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         file_datetime = format_save_datetime(model_data)
-        bin_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_BinAverageData_{file_datetime}.nc"), unlimited_dims=['time'])
+        bin_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_RTOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+    
+    end_time = print_endtime()
+    print_runtime(start_time, end_time)
+    
+    return depth_average_data, bin_average_data
+
+### FUNCTION:
+def interpolate_cmems(config, directory, model_data, chunk=False, save_depth_average=True, save_bin_average=False):
+
+    '''
+    Compute depth-averaged values using xarray's apply_ufunc for the entire dataset.
+    Optimized for CMEMS model datasets.
+
+    Args:
+    - config (dict): Glider Guidance System mission configuration.
+    - directory (str): Glider Guidance System mission directory.
+    - model_data (xarray.Dataset): Ocean model dataset.
+    - chunk (bool): Chunk the data.
+        - default: 'False'
+    - save_depth_average (bool): Save the depth average data.
+        - default: 'True'
+    - save_bin_average (bool): Save the bin average data.
+        - default: 'False'
+
+    Returns:
+    - depth_average_data (xarray.Dataset): Depth average data.
+    - bin_average_data (xarray.Dataset): Bin average data.
+    '''
+
+    print("\n### INTERPOLATING MODEL DATA ###\n")
+    start_time = print_starttime()
+
+    # Chunk the data
+    if chunk:
+        model_data = model_data.chunk({'lat': 'auto', 'lon': 'auto'})
+
+    # Load model data
+    model_data = model_data.load()
+
+    # Get the maximum depth
+    max_depth = model_data.depth.max().item()
+    max_bins = max_depth + 1
+
+    # Apply the interpolation function to each grid point
+    results = xr.apply_ufunc(
+        interpolation_model,
+        model_data['u'],
+        model_data['v'],
+        model_data['depth'],
+        kwargs={'max_bins': max_bins},
+        input_core_dims=[['depth'], ['depth'], ['depth']],
+        output_core_dims=[['bin'], ['bin'], ['bin'], ['bin'], [], [], [], []],
+        output_dtypes=[float, float, float, float, float, float, float, float],
+        dask_gufunc_kwargs={'output_sizes': {'bin': max_depth}},
+        vectorize=True
+    )
+
+    # Unpack results
+    u_bin_avg, v_bin_avg, mag_bin_avg, dir_bin_avg, u_depth_avg, v_depth_avg, mag_depth_avg, dir_depth_avg = results
+
+    # Reshape the results
+    u_depth_avg = u_depth_avg.data.squeeze()
+    v_depth_avg = v_depth_avg.data.squeeze()
+    mag_depth_avg = mag_depth_avg.data.squeeze()
+    dir_depth_avg = dir_depth_avg.data.squeeze()
+    u_bin_avg = u_bin_avg.data.squeeze()
+    v_bin_avg = v_bin_avg.data.squeeze()
+    mag_bin_avg = mag_bin_avg.data.squeeze()
+    dir_bin_avg = dir_bin_avg.data.squeeze()
+
+    # Create the 'depth_average_data' datasets
+    depth_average_data = xr.Dataset({
+        'u_depth_avg': (('lat', 'lon'), u_depth_avg.data),
+        'v_depth_avg': (('lat', 'lon'), v_depth_avg.data),
+        'mag_depth_avg': (('lat', 'lon'), mag_depth_avg.data),
+        'dir_depth_avg': (('lat', 'lon'), dir_depth_avg.data)
+    }, coords={'lat': model_data.lat, 'lon': model_data.lon})
+    depth_average_data = depth_average_data.expand_dims('time')
+    if 'model_datetime' in model_data.attrs:
+        depth_average_data.attrs['model_datetime'] = model_data.attrs['model_datetime']
+
+    # Create the 'bin_average_data' datasets
+    bin_average_data = xr.Dataset({
+        'u_bin_avg': (('lat', 'lon', 'bin'), u_bin_avg.data),
+        'v_bin_avg': (('lat', 'lon', 'bin'), v_bin_avg.data),
+        'mag_bin_avg': (('lat', 'lon', 'bin'), mag_bin_avg.data),
+        'dir_bin_avg': (('lat', 'lon', 'bin'), dir_bin_avg.data)
+    }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_bins)})
+    bin_average_data = bin_average_data.expand_dims('time')
+    if 'model_datetime' in model_data.attrs:
+        bin_average_data.attrs['model_datetime'] = model_data.attrs['model_datetime']
+    
+    # Save the datasets
+    if save_depth_average:
+        file_datetime = format_save_datetime(model_data)
+        depth_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_CMEMS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+    if save_bin_average:
+        file_datetime = format_save_datetime(model_data)
+        bin_average_data.to_netcdf(os.path.join(directory, f"{config['glider_name']}_CMEMS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)

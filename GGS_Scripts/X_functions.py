@@ -1,5 +1,5 @@
 # =========================
-# X - IMPORTS
+# IMPORTS
 # =========================
 
 import cartopy.crs as ccrs
@@ -22,29 +22,143 @@ import xarray as xr
 
 # =========================
 
-# CONFIG FUNCTIONS
+# DATA ACQUISITION FUNCTIONS
 
 ### FUNCTION:
-def get_date_list(target_datetime):
+def acquire_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.timedelta(days=1), requested_variables=["time", "longitude", "latitude", "profile_id", "depth"], print_vars=False, target="all", request_timeout=5, enable_parallel=False):
     
     '''
-    Get the list of dates for the next 24 hours in 6 hour intervals, formatted as 'YYYY-MM-DDT00:00:00Z'.
-
+    Fetches active glider datasets from the IOOS Glider DAC ERDDAP server, focusing on specified targets within a given spatial extent and time frame.
+    
     Args:
-    - target_datetime (dt.datetime): The target datetime.
-
+    - extent (list): The spatial extent to search for gliders. Format: [min_lon, max_lon, min_lat, max_lat].
+    - target_date (datetime.datetime): The target date for the search window.
+        - default: dt.datetime.now()
+    - date_delta (datetime.timedelta): The duration of the search window.
+        - default: dt.timedelta(days=1)
+    - requested_variables (list): The variables to request from the glider datasets.
+        - default: ["time", "longitude", "latitude", "profile_id", "depth"]
+    - print_vars (bool): Print available variables for each glider dataset.
+        - default: False
+    - target (str or list): The target glider(s) to fetch datasets for. Accepts "all" or specific glider IDs.
+        - default: "all"
+    - request_timeout (int): The timeout for the ERDDAP requests.
+        - default: 5
+    - enable_parallel (bool or int): Enables parallel downloads if True or an integer specifying the number of cores.
+        - default: False
+    
     Returns:
-    - date_list (list of str): The list of formatted dates for the next 24 hours in 6 hour intervals.
+    - glider_dataframes (pandas.DataFrame): The concatenated glider datasets.
     '''
 
-    date_start = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0)
-    date_end = target_datetime.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
-    freq = '6h'
+    if extent is None:
+        extent = [-180, 180, -90, 90]
 
-    date_range = pd.date_range(date_start, date_end, freq=freq)
-    date_list = [date.strftime('%Y-%m-%dT%H:%M:%SZ') for date in date_range]
+    start_date = target_date - date_delta
+    end_date = target_date
 
-    return date_list
+    formatted_start_date = start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+    formatted_end_date = end_date.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    erddap_server = ERDDAP(server='https://data.ioos.us/gliders/erddap')
+    erddap_server.requests_kwargs = {'timeout': request_timeout}
+
+    search_params = {
+        'min_time': formatted_start_date,
+        'max_time': formatted_end_date,
+        'min_lon': extent[0],
+        'max_lon': extent[1],
+        'min_lat': extent[2],
+        'max_lat': extent[3],
+    }
+
+    search_url = erddap_server.get_search_url(search_for="gliders", response='csv', **search_params)
+
+    try:
+        search_results = pd.read_csv(search_url)
+    except Exception as error:
+        print(f"Error during initial glider search: {error}")
+        return pd.DataFrame()
+
+    glider_ids = search_results['Dataset ID'].values
+    print(f"Found {len(glider_ids)} Glider Datasets within search window.")
+    print("Glider Indexes found:", ", ".join(glider_ids))
+
+    target_glider_ids = []
+    if target != "all":
+        target_glider_ids = [target] if isinstance(target, str) else target
+
+    def available_variables(glider_id, print_vars):
+        info_url = erddap_server.get_info_url(dataset_id=glider_id, response="csv")
+        try:
+            info = pd.read_csv(info_url)
+            available_vars = info[info['Variable Name'].notnull()]['Variable Name'].tolist()
+            if print_vars:
+                print(f"Available variables for {glider_id}: {available_vars}")
+            return available_vars
+        except Exception as error:
+            print(f"Error fetching available variables for glider {glider_id}: {error}")
+            return []
+
+    def acquire_glider_dataset(glider_id):
+        if target_glider_ids and glider_id not in target_glider_ids:
+            return glider_id, pd.DataFrame()
+
+        available_vars = available_variables(glider_id, print_vars)
+        vars_to_request = [var for var in requested_variables if var in available_vars]
+
+        missing_vars = set(requested_variables) - set(vars_to_request)
+        if missing_vars:
+            print(f"Variables {missing_vars} not available for glider {glider_id} and will be skipped.")
+
+        if not vars_to_request:
+            print(f"No requested variables are available for glider {glider_id}.")
+            return glider_id, pd.DataFrame()
+
+        erddap_server.constraints = {}
+        erddap_server.protocol = 'tabledap'
+        erddap_server.variables = vars_to_request
+        erddap_server.dataset_id = glider_id
+
+        try:
+            dataset_df = erddap_server.to_pandas(
+                response="csv",
+                index_col="time",
+                parse_dates=True,
+                skiprows=(1,)
+            ).tz_localize(None)
+            
+            if 'lon' in dataset_df.columns and 'lat' in dataset_df.columns:
+                dataset_df.rename(columns={'lon': 'longitude', 'lat': 'latitude'}, inplace=True)
+            elif 'longitude' not in dataset_df.columns or 'latitude' not in dataset_df.columns:
+                print(f"Missing 'longitude' or 'latitude' columns in dataset for glider {glider_id}. Requested variables might not be available.")
+                return glider_id, pd.DataFrame()
+            
+            return glider_id, dataset_df
+        except Exception as error:
+            print(f"Error fetching dataset for glider {glider_id} with requested variables: {error}")
+            return glider_id, pd.DataFrame()
+
+    if enable_parallel:
+        num_cores = multiprocessing.cpu_count() if isinstance(enable_parallel, bool) else enable_parallel
+        parallel_downloads = Parallel(n_jobs=num_cores)(delayed(acquire_glider_dataset)(glider_id) for glider_id in glider_ids)
+        glider_datasets = {glider: df for glider, df in parallel_downloads}
+    else:
+        glider_datasets = {glider: df for glider, df in (acquire_glider_dataset(glider_id) for glider_id in glider_ids)}
+    
+    non_empty_glider_datasets = {glider: df for glider, df in glider_datasets.items() if not df.empty}
+
+    try:
+        if non_empty_glider_datasets:
+            glider_dataframes = pd.concat(non_empty_glider_datasets, names=["glider", "time"]).sort_index()
+        else:
+            print("No non-empty datasets found for concatenation.")
+            glider_dataframes = pd.DataFrame()
+    except ValueError as e:
+        print(f"Error during DataFrame concatenation: {e}")
+        glider_dataframes = pd.DataFrame()
+        
+    return glider_dataframes
 
 # CALCULATE FUNCTIONS
 
@@ -188,7 +302,7 @@ def calculate_ticks(extent, direction):
 # PLOT FUNCTIONS
 
 ### FUNCTION:
-def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fontsize=13, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
+def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
     
     '''
     Calculate and add formatted tick marks to the map based on longitude and latitude extents.
@@ -197,8 +311,18 @@ def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fo
     - ax (matplotlib.axes._subplots.AxesSubplot): The axes to set the ticks for.
     - extent_lon (list): Longitude bounds of the map, [min_longitude, max_longitude].
     - extent_lat (list): Latitude bounds of the map, [min_latitude, max_latitude].
-    - proj (cartopy.crs class, optional): Define a projected coordinate system for ticks. Defaults to ccrs.PlateCarree().
-    - fontsize (int, optional): Font size of tick labels. Defaults to 13.
+    - proj (cartopy.crs class, optional): Define a projected coordinate system for ticks.
+        - default: ccrs.PlateCarree()
+    - fontsize (int, optional): Font size of tick labels.
+        - default: 10
+    - label_left (bool, optional): Label the left side of the map.
+        - default: True
+    - label_right (bool, optional): Label the right side of the map.
+        - default: False
+    - label_bottom (bool, optional): Label the bottom side of the map.  
+        - default: True
+    - label_top (bool, optional): Label the top side of the map.
+        - default: False
     - gridlines (bool, optional): Add gridlines to map. Defaults to False.
     
     Returns:
@@ -236,9 +360,10 @@ def plot_contour_cbar(magnitude, max_levels=10, extend_max=True):
 
     Args:
     - magnitude (array-like or xarray.DataArray): The magnitude data.
-    - max_levels (int): Maximum number of levels. Default is 10.
+    - max_levels (int): Maximum number of levels.
+        - default: 10
     - extend_max (bool): Extend the maximum color level to indicate values exceeding the set levels.
-        - default: False
+        - default: True
 
     Returns:
     - levels (array-like): The level values for contour plot.
@@ -272,6 +397,35 @@ def plot_contour_cbar(magnitude, max_levels=10, extend_max=True):
     ticks = levels
 
     return levels, ticks, extend
+
+### FUNCTION:
+def plot_threshold_legend(ax, mag2, mag3, mag4, mag5):
+    
+    '''
+    Creates and adds a custom legend to the plot indicating threshold zones for current magnitudes.
+
+    Args:
+    - ax (matplotlib.axes.Axes): The axes object to add the legend to.
+    - mag2 (float): Second threshold magnitude.
+    - mag3 (float): Third threshold magnitude.
+    - mag4 (float): Fourth threshold magnitude.
+    - mag5 (float): Fifth threshold magnitude.
+
+    Returns:
+    - None
+    '''
+
+    patches = [
+        mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
+        mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
+        mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
+        mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')
+    ]
+
+    threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', fontsize='x-small')
+    threshold_legend.set_zorder(10000)
+    for text in threshold_legend.get_texts():
+        text.set_color('black')
 
 ### FUNCTION:
 def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
@@ -322,8 +476,8 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_
         legend_colors = [lightsteelblue, water, cornflowerblue]
         legend_labels = [f'0m - {isobath1}m', f'{isobath1}m - {isobath2}m', f'> {isobath2}m']
         patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(legend_colors, legend_labels)]
-        bathymetry_legend = ax.legend(handles=patches, loc='upper left', facecolor='white', edgecolor='black', framealpha=0.75, fontsize='x-small', markerscale=0.75)
-        bathymetry_legend.set_zorder(1000)
+        bathymetry_legend = ax.legend(handles=patches, loc='upper left', facecolor='white', edgecolor='black', fontsize='x-small', markerscale=0.75)
+        bathymetry_legend.set_zorder(10000)
         for text in bathymetry_legend.get_texts():
             text.set_color('black')
 
@@ -370,8 +524,9 @@ def plot_add_gliders(ax, glider_data_frame, legend=True):
     Args:
     - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the glider tracks to.
     - glider_data_frame (pd.DataFrame): The glider data as a pandas DataFrame.
-    - color (str): The color of the glider tracks.
-    
+    - legend (bool): Show legend.
+        - default: True
+        
     Returns:
     - None
     '''
@@ -391,136 +546,44 @@ def plot_add_gliders(ax, glider_data_frame, legend=True):
         legend_handles.append(custom_handle)
 
     if legend:
-        glider_legend = ax.legend(handles=legend_handles, title="Gliders", loc='lower right', facecolor='white', edgecolor='black', framealpha=0.75, fontsize='x-small', markerscale=0.75)
-        glider_legend.set_zorder(1000)
+        glider_legend = ax.legend(handles=legend_handles, title="Gliders", loc='lower right', facecolor='white', edgecolor='black', fontsize='x-small', markerscale=0.75)
+        glider_legend.set_zorder(10000)
         for text in glider_legend.get_texts():
             text.set_color('black')
 
-### FUNCTION:
-def plot_get_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.timedelta(days=1), requested_variables=["time", "longitude", "latitude", "profile_id", "depth"], request_timeout=5, enable_parallel=False):
-    
-    '''
-    Fetches active glider datasets from the IOOS Glider DAC ERDDAP server, and retrieves their entire dataset track lines.
-    
-    Args:
-    - extent (list): The spatial extent to search for gliders. Format: [min_lon, max_lon, min_lat, max_lat].
-    - target_date (datetime.datetime): The target date for the search window.
-    - date_delta (datetime.timedelta): The duration of the search window.
-    - requested_variables (list): The variables to request from the glider datasets.
-    - request_timeout (int): The timeout for the ERDDAP requests.
-    - enable_parallel (bool or int): Enables parallel downloads if True or an integer specifying the number of cores.
-    
-    Returns:
-    - pd.DataFrame: A combined pandas DataFrame of all the glider datasets, with entire dataset track lines.
-    '''
-
-    if extent is None:
-        extent = [-180, 180, -90, 90]
-
-    start_date = target_date - date_delta
-    end_date = target_date
-
-    formatted_start_date = start_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-    formatted_end_date = end_date.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-    erddap_server = ERDDAP(server='https://data.ioos.us/gliders/erddap')
-    erddap_server.requests_kwargs = {'timeout': request_timeout}
-
-    search_params = {
-        'min_time': formatted_start_date,
-        'max_time': formatted_end_date,
-        'min_lon': extent[0],
-        'max_lon': extent[1],
-        'min_lat': extent[2],
-        'max_lat': extent[3],
-    }
-
-    search_url = erddap_server.get_search_url(search_for="gliders", response='csv', **search_params)
-
-    try:
-        search_results = pd.read_csv(search_url)
-    except Exception as error:
-        print(f"Error during initial glider search: {error}")
-        return pd.DataFrame()
-
-    glider_ids = search_results['Dataset ID'].values
-    print(f"Found {len(glider_ids)} Glider Datasets within search window.")
-
-    def fetch_glider_dataset(glider_id):
-        erddap_server.constraints = {}
-        erddap_server.protocol = 'tabledap'
-        erddap_server.variables = requested_variables
-        erddap_server.dataset_id = glider_id
-
-        try:
-            dataset_df = erddap_server.to_pandas(
-                response="csv",
-                index_col="time",
-                parse_dates=True,
-                skiprows=(1,)
-                ).dropna().tz_localize(None)
-            
-            if 'lon' in dataset_df.columns and 'lat' in dataset_df.columns:
-                dataset_df.rename(columns={'lon': 'longitude', 'lat': 'latitude'}, inplace=True)
-            elif 'longitude' not in dataset_df.columns or 'latitude' not in dataset_df.columns:
-                print(f"Missing 'longitude' or 'latitude' columns in dataset for glider {glider_id}")
-                return glider_id, pd.DataFrame()
-            
-            return glider_id, dataset_df
-        except Exception as error:
-            print(f"Error fetching dataset for glider {glider_id}: {error}")
-            return glider_id, pd.DataFrame()
-
-    if enable_parallel:
-        num_cores = multiprocessing.cpu_count() if isinstance(enable_parallel, bool) else enable_parallel
-        parallel_downloads = Parallel(n_jobs=num_cores)(delayed(fetch_glider_dataset)(glider_id) for glider_id in glider_ids)
-        glider_datasets = {glider: df for glider, df in parallel_downloads}
-    else:
-        glider_datasets = {glider: df for glider, df in (fetch_glider_dataset(glider_id) for glider_id in glider_ids)}
-
-    try:
-        glider_dataframes = pd.concat(glider_datasets, names=["glider", "time"]).sort_index()
-    except ValueError:
-        glider_dataframes = pd.DataFrame()
-
-    return glider_dataframes
-
-# PLOT FORMATTING FUNCTIONS
+# FORMATTING FUNCTIONS
 
 ### FUNCTION:
-def format_threshold_legend(ax, mag2, mag3, mag4, mag5):
+def format_colorbar(fig, ax, cbar):
     
     '''
-    Creates and adds a custom legend to the plot indicating threshold zones for current magnitudes.
+    Adjusts the colorbar position to match the height of the map object (ax) it is plotted next to.
 
     Args:
-    - ax (matplotlib.axes.Axes): The axes object to add the legend to.
-    - mag2 (float): Second threshold magnitude.
-    - mag3 (float): Third threshold magnitude.
-    - mag4 (float): Fourth threshold magnitude.
-    - mag5 (float): Fifth threshold magnitude.
+    - fig (matplotlib.figure.Figure): The figure object containing the plot and colorbar.
+    - ax (matplotlib.axes.Axes): The axes object containing the map.
+    - cbar (matplotlib.colorbar.Colorbar): The colorbar object to adjust.
 
     Returns:
     - None
     '''
+    
+    ax_pos = ax.get_position()
+    cbar_ax = cbar.ax
+    cbar_pos = cbar_ax.get_position()
+    
+    cbar_height = ax_pos.height
+    cbar_bottom = ax_pos.y0
+    cbar_left = cbar_pos.x0
+    cbar_width = cbar_pos.width
 
-    patches = [
-        mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
-        mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
-        mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
-        mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')
-    ]
-
-    threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', framealpha=0.75, fontsize='x-small')
-    threshold_legend.set_zorder(1000)
-    for text in threshold_legend.get_texts():
-        text.set_color('black')
+    cbar_ax.set_position([cbar_left, cbar_bottom, cbar_width, cbar_height])
 
 ### FUNCTION:
-def format_titles(ax, fig, config, model_data, title, model=None):
+def format_titles(ax, fig, config, model_data, model_name, title):
     
     '''
-    Sets the main, subtitle, and suptitle for a plot.
+    Sets the main title, subtitle, and suptitle for a plot with correct positioning.
 
     Args:
     - ax (matplotlib.axes.Axes): The axes object to set the main title on.
@@ -534,18 +597,28 @@ def format_titles(ax, fig, config, model_data, title, model=None):
     - None
     '''
 
+    ax_pos = ax.get_position()
+    top = ax_pos.y1
+    bottom = ax_pos.y0
+    
+    title_distance_top = 0.1
+    title_position = top + title_distance_top
+    
+    subtitle_distance_title = 0.05
+    subtitle_position = title_position - subtitle_distance_title
+    
+    suptitle_distance_bottom = 0.1
+    suptitle_position = bottom - suptitle_distance_bottom
+
     title_datetime = format_model_datetime(model_data)
     
-    ax.set_title(title, fontsize=14, fontweight='bold', pad=25)
-    
-    if model is None:
-        subtitle_text = f"{title_datetime} UTC"
-    else:
-        subtitle_text = f"{model} {title_datetime} UTC"
-    fig.text(0.5, 0.915, subtitle_text, fontsize=10, fontweight='bold', ha='center', va='center')
-    
+    fig.text(0.5, title_position, title, fontsize=14, fontweight='bold', ha='center', va='bottom')
+
+    subtitle_text = f"{model_name} {title_datetime} UTC"
+    fig.text(0.5, subtitle_position, subtitle_text, fontsize=10, ha='center', va='bottom')
+
     suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['glider_name']}"
-    fig.suptitle(suptitle_text, fontsize='smaller', fontweight='bold', y=0.01, ha='center', va='bottom', color='gray')
+    fig.text(0.5, suptitle_position, suptitle_text, fontsize='smaller', fontweight='bold', ha='center', va='top', color='gray')
 
 ### FUNCTION:
 def format_model_datetime(model_data):
@@ -694,4 +767,3 @@ def print_runtime(start_time, end_time):
     '''
 
     print(f"Run time: {end_time - start_time}")
-    

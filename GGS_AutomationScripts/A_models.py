@@ -1,7 +1,9 @@
 # =========================
-# X - IMPORTS
+# IMPORTS
 # =========================
 
+import copernicusmarine as cm
+from dateutil import parser
 import numpy as np
 import os
 import pandas as pd
@@ -14,15 +16,6 @@ class RTOFS():
     
     '''
     Class for handling RTOFS data.
-
-    Attributes:
-    - data_origin (xarray.Dataset): Original RTOFS data.
-    - data (xarray.Dataset): Subset or full RTOFS data.
-    - x (np.ndarray): RTOFS x-axis grid.
-    - y (np.ndarray): RTOFS y-axis grid.
-    - grid_lons (np.ndarray): RTOFS longitude grid.
-    - grid_lats (np.ndarray): RTOFS latitude grid.
-    - rtofs_qc (xarray.Dataset): RTOFS data for quality control.
     '''
 
     ### FUNCTION:
@@ -32,7 +25,7 @@ class RTOFS():
         Initialize the RTOFS instance.
 
         Args:
-        - datetime_index (datetime.datetime): The datetime index for data loading.
+        - None
 
         Returns:
         - None
@@ -56,7 +49,7 @@ class RTOFS():
         - datetime_index (str): Index of the datetime to fetch.
 
         Returns:
-        - rtofs_raw (xarray.Dataset): RTOFS data
+        - None
         '''
 
         rtofs_access = "https://tds.marine.rutgers.edu/thredds/dodsC/cool/rtofs/rtofs_us_east_scraped"
@@ -93,13 +86,9 @@ class RTOFS():
 
         Args:
         - config (dict): Glider Guidance System mission configuration.
-        - buffer (float): Buffer (in degrees) to add to the bounding box.
-            - default: 0
         - subset (bool): Subset the data.
             - default: 'True'
-            - if True, the data is subset based on GGS mission extent.
-            - if False, the entire RTOFS grid is used (no subsetting).
-
+        
         Returns:
         - None
         '''
@@ -140,6 +129,10 @@ class RTOFS():
         Args:
         - config (dict): Glider Guidance System mission configuration.
         - directory (str): Glider Guidance System mission directory.
+        - save_data (bool): Save the data file.
+            - default: 'True'
+        - save_qc (bool): Save the quality control file.
+            - default: 'True'
 
         Returns:
         - None
@@ -158,4 +151,127 @@ class RTOFS():
             rtofs_qc_file = f"{config['glider_name']}_RTOFS_QC_{config['max_depth']}m.nc"
             rtofs_qc_path = os.path.join(directory, rtofs_qc_file)
             self.qc.to_netcdf(rtofs_qc_path)
-            print(f"RTOFS qc saved to: {rtofs_qc_path}")
+            print(f"RTOFS QC saved to: {rtofs_qc_path}")
+
+### CLASS:
+class CMEMS:
+    
+    '''
+    Class for handling CMEMS data.
+    '''
+    
+    ### FUNCTION:
+    def __init__(self, username, password) -> None:
+        
+        '''
+        Initialize the CMEMS instance.
+
+        Args:
+        - username (str): CMEMS username.
+        - password (str): CMEMS password.
+
+        Returns:
+        - None
+        '''
+
+        print("\n### MODEL DATA: [CMEMS] ###\n")
+
+        self.username = username
+        self.password = password
+        self.data_origin = None
+
+    ### FUNCTION:
+    def cmems_load(self, config, datetime_index):
+
+        '''
+        Fetch the CMEMS data from the given URL source and set its coordinates.
+
+        Args:
+        - config (dict): Glider Guidance System mission configuration.
+        - datetime_index (str): Index of the datetime to fetch.
+
+        Returns:
+        - None
+        '''
+        
+        datetime_index = parser.parse(datetime_index)
+        formatted_datetime_index = datetime_index.strftime('%Y-%m-%dT%H:%M:%S')
+        start_datetime = end_datetime = formatted_datetime_index
+
+        lats, lons = zip(*config['extent'])
+        min_lon, max_lon = min(lons), max(lons)
+        min_lat, max_lat = min(lats), max(lats)
+
+        self.data_origin = cm.open_dataset(
+            dataset_id="cmems_mod_glo_phy-cur_anfc_0.083deg_PT6H-i",
+            minimum_longitude=min_lon,
+            maximum_longitude=max_lon,
+            minimum_latitude=min_lat,
+            maximum_latitude=max_lat,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            variables=["uo", "vo"],
+            username=self.username,
+            password=self.password
+        )
+
+        self.data_origin.attrs['model_datetime'] = formatted_datetime_index
+
+    ### FUNCTION:
+    def cmems_subset(self, config, subset=True):
+        
+        '''
+        Subset the CMEMS data based on the GGS mission extent.
+
+        Args:
+        - config (dict): Glider Guidance System mission configuration.
+        - subset (bool): Subset the data.
+            - default: 'True'
+        
+        Returns:
+        - None
+        '''
+        
+        max_depth = config["max_depth"]
+        depth_indices = self.data_origin.depth.values
+        target_depth_index = np.searchsorted(depth_indices, max_depth, side='right') - 1
+
+        if subset:
+            self.data_origin = self.data_origin.isel(depth=slice(None, target_depth_index + 1))
+
+            rename_dict = {'uo': 'u', 'vo': 'v', 'latitude': 'lat', 'longitude': 'lon'}
+            existing_vars = set(self.data_origin.variables.keys()) & set(rename_dict.keys())
+            final_rename_dict = {k: rename_dict[k] for k in existing_vars}
+            self.data_origin = self.data_origin.rename(final_rename_dict)
+    
+    def cmems_save(self, config, directory, save_data=True, save_qc=True):
+        
+        '''
+        Save the subset CMEMS data as a NetCDF file.
+
+        Args:
+        - config (dict): Glider Guidance System mission configuration.
+        - directory (str): Glider Guidance System mission directory.
+        - save_data (bool): Save the data file.
+            - default: 'True'
+        - save_qc (bool): Save the quality control file.
+            - default: 'True'
+
+        Returns:
+        - None
+        '''
+        
+        self.data = self.data_origin.copy()
+        self.qc = self.data_origin.copy()
+
+        if save_data:
+            cmems_data_file = f"{config['glider_name']}_CMEMS_Data_{config['max_depth']}m.nc"
+            cmems_data_path = os.path.join(directory, cmems_data_file)
+            self.data.to_netcdf(cmems_data_path)
+            print(f"CMEMS Data saved to: {cmems_data_path}")
+        
+        if save_qc:
+            cmems_qc_file = f"{config['glider_name']}_CMEMS_QC_{config['max_depth']}m.nc"
+            cmems_qc_path = os.path.join(directory, cmems_qc_file)
+            self.qc.to_netcdf(cmems_qc_path)
+            print(f"CMEMS QC saved to: {cmems_qc_path}")

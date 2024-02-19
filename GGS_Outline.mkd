@@ -1,0 +1,58 @@
+# **GGS Project Development Outline**
+
+## **GGS Program Development** {X = Operational, ! = Priority, ~ = Paused}
+
+### *Core Features*
+- [~] Develop a system approach to acquire RTOFS data from the global binary files
+- [!] Expand GGS to include the Copernicus CMEMS ocean model as a secondary modeling product
+  - Additionally, develop agreement comparison plots between RTOFS and CMEMS
+    - Look into the python packages 'metpy' and/or 'metplotpy' for NOAA functions designed for model comparisons
+
+### *Program Features*
+- [~] Create a new plot function which creates a vertical profile along the {config['GPS_coords']} waypoint list of the glider
+  - Use input arguments to allow variation in which leg or legs to create the profile along
+- [~] Develop the advection/displacement model which can provide predictive displacement positions for the glider along the {config['GPS_coords']} list
+- [!] Develop a plot function which compares glider measured depth-averaged u and v currents to the GGS modeled depth-averaged u and v currents at the matching latitude and longitude
+  - Use as a baseline for point data exctaction from the glider and the GGS depth-averaged currents to model advection/displacement
+
+### *External Features*
+
+### *OTHER*
+
+# **GGS Deliverable Development** {X = Operational, ! = Priority, ~ = Paused}
+
+### *GGS Abstract*
+- [] Begin writing and outlining the skeleton structure of the Glider Guidance System abstract
+  - MTS abstracts due in April
+
+### *GGS Logic Diagram*
+- [] Develop a flow diagram which displays the logic flow path within the Glider Guidance System program to effectively communicate how it works
+
+---
+
+# **###GGS PYTHON PACKAGES###**
+
+### FUTURE PACKAGES
+- metpy
+- metplotpy
+
+### env_ggs0 --- base
+- xarray
+- scipy
+- netcdf4
+- numpy
+- pandas
+- cartopy
+- matplotlib
+- cmocean
+- dask
+- erddapy
+- joblib -> conda-forge
+- copernicusmarine -> pip
+
+### env_ggs1 --- glider tracking
+- requests
+
+### env_ggs2 --- cmems
+- copernicusmarine
+- ipywidgets
