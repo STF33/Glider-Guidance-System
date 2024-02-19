@@ -10,9 +10,9 @@ GGS_AutomationScripts/data/
 GGS_Scripts/__pycache__/
 GGS_Scripts/data/
 
-GGS_TEST/__pycache__/
-GGS_TEST/data/
-GGS_TEST/
+X_Development/__pycache__/
+X_Development/data/
+X_Development/
 
 GGS_Outline.mkd
 !-GGS.code-workspace
