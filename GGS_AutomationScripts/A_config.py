@@ -14,7 +14,6 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
     
     '''
     Configure mission from a hardcoded configuration.
-    Intended for testing only.
     
     Args:
     - date (datetime): Date of mission start.
@@ -33,7 +32,9 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
         "glider_name": "Yucatan",
         "execution_date": execution_date,
         "max_depth": 1000,
-        "extent": [(15, -93), (30, -77)], # Yucatan
+        "extent": [(15, -93), (30, -77)], # Yucatan Large
+        # "extent": [(20, -88), (22, -85)], # Yucatan Small
+        # "extent": [(30, -80), (50, -50)], # Sentinel Leg 1
         "GPS_coords": [(39.40, -74.20), (39.30, -71.20)],
         "bathymetry_path": bathymetry_path
         }
@@ -49,10 +50,10 @@ def GGS_config_output(config, path="default"):
     Args:
     - config (dict): Glider Guidance System mission configuration.
     - path (str): Path for saving the mission configuration. 
-        - default: 'default'
+        - default: "default"
 
     Returns:
-    - directory (str): Glider Guidance System mission directory.
+    - root_directory (str): Root directory for saving the mission configuration.
     '''
     
     output_str = "\n\n### Glider Guidance System (GGS) Configuration ###\n\n"

@@ -10,6 +10,7 @@ from datetime import datetime as datetime
 from dateutil import parser
 from erddapy import ERDDAP
 from joblib import Parallel, delayed
+import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.colors as mcolors
@@ -17,10 +18,42 @@ import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
 import multiprocessing
 import numpy as np
+import os
 import pandas as pd
 import xarray as xr
 
 # =========================
+
+# OPTIMIAL LOGIC FUNCTIONS
+
+### FUNCTION:
+def optimal_workers(power=1.0):
+    
+    '''
+    Calculate the optimal number of workers for parallel processing based on the available CPU cores and a power factor.
+
+    Args:
+    - power (float): The percentage of available resources to use in processing.
+        - default: 1.0
+    
+    Returns:
+    - num_workers (int): The optimal number of workers for parallel processing.
+    '''
+
+    print(f"\n### ALLOCATING RESOURCES ###\n")
+
+    if not 0 <= power <= 1:
+        raise ValueError("Power must be between 0 and 1.")
+    
+    total_cores = os.cpu_count()
+    
+    if total_cores is None:
+        total_cores = 4
+    
+    num_workers = max(1, math.floor(total_cores * power))
+    print(f"Number of workers: {num_workers}")
+
+    return num_workers
 
 # DATA ACQUISITION FUNCTIONS
 
@@ -50,6 +83,9 @@ def acquire_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.ti
     Returns:
     - glider_dataframes (pandas.DataFrame): The concatenated glider datasets.
     '''
+
+    print(f"\n### ACQUIRING GLIDER DATASETS ###\n")
+    start_time = print_starttime()
 
     if extent is None:
         extent = [-180, 180, -90, 90]
@@ -158,6 +194,9 @@ def acquire_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.ti
         print(f"Error during DataFrame concatenation: {e}")
         glider_dataframes = pd.DataFrame()
         
+    end_time = print_endtime()
+    print_runtime(start_time, end_time)
+
     return glider_dataframes
 
 # CALCULATE FUNCTIONS
@@ -166,7 +205,7 @@ def acquire_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.ti
 def calculate_gridpoint(model_data, target_lat, target_lon):
     
     '''
-    Calculate the nearest XY gridpoint in a model dataset to the input latitude and longitude.
+    Calculate the nearest XY gridpoint in a model dataset to the input latitude and longitude, accommodating both 1D and 2D lat/lon arrays.
 
     Args:
     - model_data (xarray.Dataset): The model dataset.
@@ -177,15 +216,25 @@ def calculate_gridpoint(model_data, target_lat, target_lon):
     - (y_index, x_index) (tuple): The indices of the nearest point in the dataset.
     - (lat_index, lon_index) (tuple): The coordinates of the nearest point in the dataset.
     '''
-
-    lat_diff = model_data['lat'] - float(target_lat)
-    lon_diff = model_data['lon'] - float(target_lon)
-    distance_square = lat_diff**2 + lon_diff**2
-
-    y_index, x_index = np.unravel_index(distance_square.argmin(), distance_square.shape)
-
-    lat_index = model_data['lat'].isel(y=y_index, x=x_index).values
-    lon_index = model_data['lon'].isel(y=y_index, x=x_index).values
+    
+    if 'lat' in model_data.dims and 'lon' in model_data.dims:
+        lat = model_data['lat'].values
+        lon = model_data['lon'].values
+        lon_grid, lat_grid = np.meshgrid(lon, lat)
+        squared_dist = (lat_grid - target_lat)**2 + (lon_grid - target_lon)**2
+    else:
+        lat_diff = model_data['lat'] - target_lat
+        lon_diff = model_data['lon'] - target_lon
+        squared_dist = lat_diff**2 + lon_diff**2
+    
+    y_index, x_index = np.unravel_index(squared_dist.argmin(), squared_dist.shape)
+    
+    if 'lat' in model_data.dims and 'lon' in model_data.dims:
+        lat_index = lat[y_index]
+        lon_index = lon[x_index]
+    else:
+        lat_index = model_data['lat'].isel(y=y_index, x=x_index).values
+        lon_index = model_data['lon'].isel(y=y_index, x=x_index).values
 
     return (y_index, x_index), (lat_index, lon_index)
 
@@ -492,6 +541,9 @@ def plot_profile_thresholds(ax, data, threshold, color):
     - data (array): Data array for the plot.
     - threshold (float): Threshold value for shading.
     - color (str): Color for the shaded region.
+
+    Returns:
+    - None
     '''
 
     depth_values = np.arange(len(data))
@@ -554,13 +606,12 @@ def plot_add_gliders(ax, glider_data_frame, legend=True):
 # FORMATTING FUNCTIONS
 
 ### FUNCTION:
-def format_colorbar(fig, ax, cbar):
+def format_colorbar(ax, cbar):
     
     '''
     Adjusts the colorbar position to match the height of the map object (ax) it is plotted next to.
 
     Args:
-    - fig (matplotlib.figure.Figure): The figure object containing the plot and colorbar.
     - ax (matplotlib.axes.Axes): The axes object containing the map.
     - cbar (matplotlib.colorbar.Colorbar): The colorbar object to adjust.
 
@@ -580,7 +631,7 @@ def format_colorbar(fig, ax, cbar):
     cbar_ax.set_position([cbar_left, cbar_bottom, cbar_width, cbar_height])
 
 ### FUNCTION:
-def format_titles(ax, fig, config, model_data, model_name, title):
+def format_figure_titles(ax, fig, config, datetime_index, model_name, title):
     
     '''
     Sets the main title, subtitle, and suptitle for a plot with correct positioning.
@@ -589,9 +640,9 @@ def format_titles(ax, fig, config, model_data, model_name, title):
     - ax (matplotlib.axes.Axes): The axes object to set the main title on.
     - fig (matplotlib.figure.Figure): The figure object to set subtitles and suptitles on.
     - config (dict): Configuration dictionary containing plot settings and metadata.
-    - model_data (xarray.Dataset): Dataset used in the plot, to derive the datetime title.
+    - datetime_index (str): Datetime index used to derive the subtitle.
+    - model_name (str): Model name used to derive the subtitle.
     - title (str): Custom title text for the main title of the plot.
-    - model (str): Model source identifier, used to prefix the subtitle.
 
     Returns:
     - None
@@ -610,7 +661,7 @@ def format_titles(ax, fig, config, model_data, model_name, title):
     suptitle_distance_bottom = 0.1
     suptitle_position = bottom - suptitle_distance_bottom
 
-    title_datetime = format_model_datetime(model_data)
+    title_datetime = format_title_datetime(datetime_index)
     
     fig.text(0.5, title_position, title, fontsize=14, fontweight='bold', ha='center', va='bottom')
 
@@ -621,67 +672,98 @@ def format_titles(ax, fig, config, model_data, model_name, title):
     fig.text(0.5, suptitle_position, suptitle_text, fontsize='smaller', fontweight='bold', ha='center', va='top', color='gray')
 
 ### FUNCTION:
-def format_model_datetime(model_data):
+def format_subplot_titles(fig, config, datetime, title):
     
     '''
-    Format a datetime string from any recognized format to 'YYYY-MM-DD HH:MM'.
+    Sets the main title, subtitle, and suptitle for a figure.
 
     Args:
-    - model_data (xarray.core.dataset.Dataset): Model data.
+    - fig (matplotlib.figure.Figure): The figure object to set subtitles and suptitles on.
+    - config (dict): Configuration dictionary containing plot settings and metadata.
+    - datetime (str): Datetime index used to derive the subtitle.
+    - title (str): Custom title text for the main title of the plot.
 
     Returns:
-    - str: The datetime formatted as 'YYYY-MM-DD HH:MM'.
+    - None
+    '''
+
+    fig.suptitle(title, fontsize=26, fontweight='bold', ha='center', y=0.95)
+    
+    title_datetime = format_title_datetime(datetime)
+    subtitle_text = f"{title_datetime} UTC"
+    fig.text(0.5, 0.92, subtitle_text, fontsize=22, ha='center', va='top')
+    
+    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['glider_name']}"
+    fig.text(0.5, 0.05, suptitle_text, fontsize=20, ha='center', va='top', color='gray')
+
+### FUNCTION:
+def format_subplot_headers(axes, fig, subplot_titles):
+
+    '''
+    Adds subplot headers as bolded titles above each subplot row figure.
+
+    Args:
+    - axes (numpy.ndarray): Array of axes objects to add headers to.
+    - fig (matplotlib.figure.Figure): Figure object to add text to.
+    - subplot_titles (list): List of strings to use as header titles.
+
+    Returns:
+    - None
+    '''
+
+    if axes.ndim == 1:
+        axes = np.array([axes])
+
+    for ax, model_name in zip(axes[:, 0], subplot_titles):
+        bbox = ax.get_position()
+        text_x = bbox.x0
+        text_y = bbox.y1 + 0.02
+        
+        fig.text(text_x, text_y, model_name, fontsize=14, fontweight='bold', ha='left')
+
+### FUNCTION:
+def format_title_datetime(datetime):
+    
+    '''
+    Format a datetime string from any recognized format to '%Y-%m-%d %H:%M'.
+
+    Args:
+    - datetime (str): The datetime string to format.
+    
+    Returns:
+    - str: The datetime formatted as '%Y-%m-%d %H:%M'.
     '''
     
-    model_datetime = model_data.attrs.get('model_datetime', 'unknown_datetime')
 
-    if model_datetime != 'unknown_datetime':
+    if datetime:
         try:
-            datetime_obj = parser.parse(model_datetime)
-            formatted_datetime = datetime_obj.strftime("%Y-%m-%d %H:%M")
+            datetime_obj = parser.parse(datetime)
+            formatted_datetime = datetime_obj.strftime('%Y-%m-%d %H:%M')
         except ValueError:
-            formatted_datetime = 'invalid_datetime'
-    else:
-        formatted_datetime = 'unknown_datetime'
-
-    return formatted_datetime
-
-### FUNCTION:
-def format_string_datetime(input_datetime):
-    
-    '''
-    Format a datetime string from 'YYYY-MM-DDTHH:MM:SSZ' to 'YYYYMMDDTHH'.
-
-    Args:
-    - input_datetime (str): The datetime string to format.
-
-    Returns:
-    - str: The formatted datetime string.
-    '''
-    
-    datetime_obj = datetime.strptime(input_datetime, "%Y-%m-%dT%H:%M:%SZ")
-    formatted_datetime = datetime_obj.strftime("%Y%m%dT%H")
+            formatted_datetime = 'unknown_datetime'
     
     return formatted_datetime
 
 ### FUNCTION:
-def format_save_datetime(model_data):
+def format_save_datetime(datetime):
     
     '''
-    Convert a model datetime attribute to a string in the format '%Y%m%dT%HZ'.
+    Format a datetime string from any recognized format to '%Y%m%dT%HZ'.
 
     Args:
-    - model_datetime (str): The model datetime attribute, expected in a format
+    - datetime (str): The datetime string to format.
 
     Returns:
     - str: The formatted datetime string in the '%Y%m%dT%HZ' format.
     '''
 
-    model_datetime = model_data.attrs.get('model_datetime')
-    datetime_obj = parser.parse(model_datetime)
-
-    formatted_datetime = datetime_obj.strftime('%Y%m%dT%HZ')
-
+    if datetime:
+        try:
+            datetime_obj = parser.parse(datetime)
+            formatted_datetime = datetime_obj.strftime('%Y%m%dT%HZ')
+        except ValueError:
+            formatted_datetime = 'unknown_datetime'
+        
     return formatted_datetime
 
 # CONVERSION FUNCTIONS
@@ -760,7 +842,8 @@ def print_runtime(start_time, end_time):
     Print the runtime of the program.
 
     Args:
-    - None
+    - start_time (datetime.datetime): The start time of the program.
+    - end_time (datetime.datetime): The end time of the program.
 
     Returns:
     - None
