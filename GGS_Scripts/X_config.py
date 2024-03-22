@@ -27,16 +27,31 @@ def GGS_config_static(date=dt.datetime.now(timezone.utc)):
 
     current_directory = os.path.dirname(__file__)
     bathymetry_path = os.path.join(current_directory, "data", "bathymetry", "GEBCO_2023_sub_ice_topo.nc")
-
+    eez_path = os.path.join(current_directory, "data", "eez", "eez_boundaries_v12.shp")
+    
     config = {
-        "glider_name": "Yucatan",
+        "glider_name": "SENTINEL2",
         "execution_date": execution_date,
         "max_depth": 1000,
-        "extent": [(15, -93), (30, -77)], # Yucatan Large
-        # "extent": [(20, -88), (22, -85)], # Yucatan Small
-        # "extent": [(30, -80), (50, -50)], # Sentinel Leg 1
-        "GPS_coords": [(39.40, -74.20), (39.30, -71.20)],
-        "bathymetry_path": bathymetry_path
+        
+        # UGOS (East)
+        # "extent": [(15, -90), (30, -78)],
+        # "GPS_coords": [(0, 0), (0, 0)],
+
+        # Sentinel 1
+        # "extent": [(10, -78), (44, -10)],
+        # "GPS_coords": [(41.675, -70.522), (15.067, -23.650)],
+
+        # Sentinel 2
+        "extent": [(20, -30), (-40, 55)],
+        "GPS_coords": [(15.067, -23.650), (-33.907, 18.564)],
+
+        # GLOBAL
+        # "extent": [(-80, -180), (90, 180)],
+        # "GPS_coords": [(0, 0), (0, 0)],
+
+        "bathymetry_path": bathymetry_path,
+        "eez_path": eez_path
         }
 
     return config

@@ -1,10 +1,11 @@
 # **GGS Project Development Outline**
 
 ## **GGS Pinned Notes**
-- [!] Externalize the acquisition of gliders in the GGS extent and pass the variables to the plotting functions to avoid redundant acqusition and save time
-- [] RUNTIME TEST
-  - Run 1: 1h 50m
-  - Run 2: 
+- Line Profiler Commands
+  - RUN:
+    - kernprof -l GGS_main.py
+  - SAVE:
+    - python -m line_profiler GGS_main.py.lprof > GGS_profiling_results.txt
 
 ## **GGS Program Development** {X = Operational, ! = Priority, ~ = Paused}
 
@@ -17,8 +18,12 @@
 - [~] Create a new plot function which creates a vertical profile along the {config['GPS_coords']} waypoint list of the glider
   - Use input arguments to allow variation in which leg or legs to create the profile along
 - [~] Develop the advection/displacement model which can provide predictive displacement positions for the glider along the {config['GPS_coords']} list
-- [!] Develop a plot function which compares glider measured depth-averaged u and v currents to the GGS modeled depth-averaged u and v currents at the matching latitude and longitude
+- [~] Develop a plot function which compares glider measured depth-averaged u and v currents to the GGS modeled depth-averaged u and v currents at the matching latitude and longitude
   - Use as a baseline for point data exctaction from the glider and the GGS depth-averaged currents to model advection/displacement
+- [!] Develop an optional function in GGS to convert the depth-average data to a shapefile for importing in into Google Earth or a GIS software
+- [!] Develop a third plot function which highlights favorable currents that point towards a direction of interest (bearing, 0 to 360 degrees)
+  - Likely worth overlaying onto the threshold plot
+  - Additionally expand to have highlighted zones ~180 degrees off course
 
 ### *External Features*
 

@@ -13,67 +13,67 @@ from X_functions import format_save_datetime, print_starttime, print_endtime, pr
 
 ### FUNCTION:
 def interpolation_model(u, v, depths, max_bins, config_bins):
-    
+
     '''
-    Compute depth-averages across spatial datapoints via 1-meter interpolation.
+    Interpolate model data to depth-averaged and bin-averaged values.
 
     Args:
-    - u (xr.DataArray): DataArray of u values.
-    - v (xr.DataArray): DataArray of v values.
-    - depths (xr.DataArray): DataArray of depth values.
-    - max_bins (int): Maximum number of 1-meter bins needed to handle the model data depth range.
-    - config_bins (int): Maximum number of 1-meter bins in range of the glider's maximum depth.
+    - u (np.array): Zonal velocity.
+    - v (np.array): Meridional velocity.
+    - depths (np.array): Depth values.
+    - max_bins (int): Maximum number of bins.
+    - config_bins (int): Number of bins based on the configuration.
 
     Returns:
-    - u_bin_avg (np.array): Array of u bin averages.
-    - v_bin_avg (np.array): Array of v bin averages.
-    - mag_bin_avg (np.array): Array of magnitude bin averages.
-    - dir_bin_avg (np.array): Array of direction bin averages.
-    - u_depth_avg (float): Depth-averaged u value.
-    - v_depth_avg (float): Depth-averaged v value.
-    - mag_depth_avg (float): Depth-averaged magnitude value.
-    - dir_depth_avg (float): Depth-averaged direction value.
+    - u_bin_avg (np.array): Zonal velocity bin-averaged.
+    - v_bin_avg (np.array): Meridional velocity bin-averaged.
+    - mag_bin_avg (np.array): Magnitude bin-averaged.
+    - dir_bin_avg (np.array): Direction bin-averaged.
+    - u_depth_avg (float): Zonal velocity depth-averaged.
+    - v_depth_avg (float): Meridional velocity depth-averaged.
+    - mag_depth_avg (float): Magnitude depth-averaged.
+    - dir_depth_avg (float): Direction depth-averaged.
     '''
 
-    # Initialize bin output arrays
+    # Initialize arrays with NaNs
     bins = int(np.ceil(max_bins))
     u_bin_avg = np.full(bins, np.nan)
     v_bin_avg = np.full(bins, np.nan)
     mag_bin_avg = np.full(bins, np.nan)
     dir_bin_avg = np.full(bins, np.nan)
-
+    
     # Check for valid data
     valid_mask = ~np.isnan(u) & ~np.isnan(v)
     if np.any(valid_mask):
         valid_depths = depths[valid_mask]
-        max_valid_depth = valid_depths.max()
-        target_bins = min(config_bins, int(np.ceil(max_valid_depth)) + 1)
+        u_valid, v_valid = u[valid_mask], v[valid_mask]
+
+        # Determine the range of bins to interpolate based on valid depths
+        valid_bins = int(np.ceil(valid_depths.max())) + 1
+        target_bins = np.arange(min(valid_bins, config_bins))
 
         # Create interpolation functions using valid data
-        u_interp = interp1d(valid_depths, u[valid_mask], bounds_error=False, fill_value=(u[valid_mask][0], u[valid_mask][-1]))
-        v_interp = interp1d(valid_depths, v[valid_mask], bounds_error=False, fill_value=(v[valid_mask][0], v[valid_mask][-1]))
+        u_interp = interp1d(valid_depths, u_valid, bounds_error=False, fill_value='extrapolate')
+        v_interp = interp1d(valid_depths, v_valid, bounds_error=False, fill_value='extrapolate')
 
-        # Interpolating and averaging over each bin in the configured depth range
-        for bin_idx in range(target_bins):
-            if bin_idx < max_valid_depth:
-                u_bin_avg[bin_idx] = u_interp(bin_idx)
-                v_bin_avg[bin_idx] = v_interp(bin_idx)
+        # Perform vectorized interpolation
+        u_bin_avg[target_bins] = u_interp(target_bins)
+        v_bin_avg[target_bins] = v_interp(target_bins)
+        mag_bin_avg[target_bins] = np.sqrt(u_bin_avg[target_bins]**2 + v_bin_avg[target_bins]**2)
+        dir_bin_avg[target_bins] = (np.degrees(np.arctan2(v_bin_avg[target_bins], u_bin_avg[target_bins])) + 360) % 360
 
-                mag_bin_avg[bin_idx] = np.sqrt(u_bin_avg[bin_idx]**2 + v_bin_avg[bin_idx]**2)
-                dir_bin_avg[bin_idx] = (np.degrees(np.arctan2(v_bin_avg[bin_idx], u_bin_avg[bin_idx])) + 360) % 360
-
-        # Compute depth-averaged values for the configured depth range
-        u_depth_avg = np.nansum(u_bin_avg[:target_bins]) / target_bins
-        v_depth_avg = np.nansum(v_bin_avg[:target_bins]) / target_bins
-        mag_depth_avg = np.nansum(mag_bin_avg[:target_bins]) / target_bins
-        dir_depth_avg = np.nansum(dir_bin_avg[:target_bins]) / target_bins
+        # Compute depth-averaged values for valid target bins
+        valid = ~np.isnan(u_bin_avg[target_bins])
+        counts_valid = valid.sum()
+        u_depth_avg = np.nansum(u_bin_avg[target_bins][valid]) / counts_valid
+        v_depth_avg = np.nansum(v_bin_avg[target_bins][valid]) / counts_valid
+        mag_depth_avg = np.nansum(mag_bin_avg[target_bins][valid]) / counts_valid
+        dir_depth_avg = np.nansum(dir_bin_avg[target_bins][valid]) / counts_valid
     else:
-        # If no valid data, use the full range of bins and set depth averages to NaN
         u_depth_avg = np.nan
         v_depth_avg = np.nan
         mag_depth_avg = np.nan
         dir_depth_avg = np.nan
-
     return (u_bin_avg, v_bin_avg, mag_bin_avg, dir_bin_avg, u_depth_avg, v_depth_avg, mag_depth_avg, dir_depth_avg)
 
 ### FUNCTION:
@@ -272,6 +272,7 @@ def interpolate_cmems(config, directory, model_data, chunk=False, save_depth_ave
     
     return model_depth_average, model_bin_average
 
+### FUNCTION:
 def interpolate_gofs(config, directory, model_data, chunk=False, save_depth_average=True, save_bin_average=False):
     
     '''

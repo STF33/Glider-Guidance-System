@@ -10,7 +10,7 @@ from matplotlib.patches import Circle
 import numpy as np
 import os
 
-from X_functions import calculate_gridpoint, plot_formatted_ticks, plot_contour_cbar, plot_threshold_legend, plot_bathymetry, plot_profile_thresholds, plot_add_gliders, format_colorbar, format_figure_titles, format_subplot_titles, format_subplot_headers, format_save_datetime, print_starttime, print_endtime, print_runtime
+from X_functions import calculate_gridpoint, plot_formatted_ticks, plot_contour_cbar, plot_threshold_legend, plot_bathymetry, plot_profile_thresholds, plot_add_gliders, plot_add_eez, plot_advantage_zones, plot_glider_route, format_colorbar, format_figure_titles, format_subplot_titles, format_subplot_headers, format_save_datetime, print_starttime, print_endtime, print_runtime
 
 # =========================
 
@@ -294,7 +294,7 @@ def GGS_plot_profiles(config, directory, datetime_index, model_datasets, latitud
 
     # SAVE & CLOSE
     file_datetime = format_save_datetime(datetime_index)
-    fig_filename = f"GGS_Profiles_{config['max_depth']}m_{file_datetime}.png"
+    fig_filename = f"DepthAverageProfiles_{config['max_depth']}m_{file_datetime}.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
@@ -304,7 +304,7 @@ def GGS_plot_profiles(config, directory, datetime_index, model_datasets, latitud
     print_runtime(start_time, end_time)
 
 ### FUNCTION:
-def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latitude_qc=None, longitude_qc=None, density=2, gliders=None, show_route=False, show_qc=False, manual_extent=None):
+def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latitude_qc=None, longitude_qc=None, density=2, gliders=None, show_route=False, show_qc=False, show_eez=False, manual_extent=None):
     
     '''
     Plot the depth-averaged current fields from three datasets side by side.
@@ -320,6 +320,7 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
     - gliders (optional): DataFrame containing glider data for plotting.
     - show_route (bool): Flag to show the glider route.
     - show_qc (bool): Flag to show the QC sample point.
+    - show_eez (bool): Flag to show the Exclusive Economic Zone (EEZ).
     - manual_extent (list or None): Manual specification of plot extent.
 
     Returns:
@@ -338,7 +339,7 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
         return
 
     # PLOTTING FUNCTION
-    def plot_magnitude(ax, config, model_depth_average, latitude_qc, longitude_qc, density, gliders, show_route, show_qc, manual_extent):
+    def plot_magnitude(ax, config, model_depth_average, latitude_qc, longitude_qc, density, gliders, show_route, show_qc, show_eez, manual_extent):
         
         # DATA EXTRACTION
         longitude = model_depth_average.lon.values.squeeze()
@@ -357,12 +358,12 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
             data_extent_lat = [float(latitude.min()), float(latitude.max())]
             map_extent = data_extent_lon + data_extent_lat
         ax.set_extent(map_extent, crs=ccrs.PlateCarree())
-        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
+        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
 
         # PLOT ELEMENTS
         levels, ticks, extend = plot_contour_cbar(mag_depth_avg, max_levels=10, extend_max=True)
         contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10, extend=extend)
-        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, density=density, linewidth=0.5, color='black', transform=ccrs.PlateCarree(), zorder=10)
+        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
 
         # GLIDERS
         if gliders is not None:
@@ -370,20 +371,12 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
             glider_legend = ax.get_legend()
             if glider_legend:
                 glider_legend.get_frame().set_alpha(0.5)
+                glider_legend.get_frame().set_facecolor('white')
                 ax.add_artist(glider_legend)
         
         # ROUTE
         if show_route:
-            lats, lons = zip(*config["GPS_coords"])
-            ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=91)
-            ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=92)
-            
-            start_coords = config["GPS_coords"][0]
-            end_coords = config["GPS_coords"][-1]
-            ax.scatter(*start_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
-            for GPS_coord in config["GPS_coords"][1:-1]:
-                ax.scatter(*GPS_coord[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
-            ax.scatter(*end_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
+            plot_glider_route(ax, config)
         
         # QUALITY CONTROL
         if show_qc:
@@ -393,13 +386,17 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
             circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
             ax.add_patch(circle)
         
+        # EEZ
+        if show_eez:
+            plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90)
+        
         # FEATURES
         ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90)
         ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", linewidth=0.25, zorder=90)
         ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90)
         ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90)
-        
-        plot_bathymetry(ax, config, model_depth_average, isobath1=-100, isobath2=-1000, show_legend=False)
+
+        plot_bathymetry(ax, config, model_depth_average, isobath1=-100, isobath2=-1000, downsample=True, show_legend=False)
         bathymetry_legend = ax.get_legend()
         if bathymetry_legend:
             bathymetry_legend.get_frame().set_alpha(0.5)
@@ -413,15 +410,15 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
         cbar.set_ticklabels([f"{tick:.1f}" for tick in ticks])
 
     # PLOTTING
-    fig, axs = plt.subplots(1, num_datasets, subplot_kw={'projection': ccrs.PlateCarree()}, figsize=(10*num_datasets, 10))
+    fig, axs = plt.subplots(1, num_datasets, subplot_kw={'projection': ccrs.Mercator()}, figsize=(10*num_datasets, 10))
     if num_datasets == 1:
         axs = [axs]
     
     model_names = []
     for ax, (model_data, depth_average_data, bin_average_data) in zip(axs, valid_datasets):
-        model_name = model_data.attrs['model_name']
+        model_name = depth_average_data.attrs['model_name']
         model_names.append(model_name)
-        plot_magnitude(ax, config, depth_average_data, latitude_qc, longitude_qc, density, gliders, show_route, show_qc, manual_extent)
+        plot_magnitude(ax, config, depth_average_data, latitude_qc, longitude_qc, density, gliders, show_route, show_qc, show_eez, manual_extent)
         ax.set_title(f"{model_name}", fontsize=14, fontweight='bold', pad=20)
 
     title_text = f"Depth Averaged Currents - Depth Range: {config['max_depth']}m"
@@ -430,7 +427,7 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
 
     # SAVE & CLOSE
     file_datetime = format_save_datetime(datetime_index)
-    fig_filename = f"GGS_Magnitude_Comparison_{config['max_depth']}m_{file_datetime}.png"
+    fig_filename = f"DepthAverageMagnitude_{config['max_depth']}m_{file_datetime}.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
@@ -440,7 +437,7 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
     print_runtime(start_time, end_time)
 
 ### FUNCTION:
-def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitude_qc=None, longitude_qc=None, density=2, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, gliders=None, show_route=False, show_qc=False, manual_extent=None):
+def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitude_qc=None, longitude_qc=None, density=2, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, gliders=None, show_route=False, show_qc=False, show_eez=False, manual_extent=None):
     
     '''
     Plot the depth-averaged current fields from three datasets side by side.
@@ -461,6 +458,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
     - gliders (optional): DataFrame containing glider data for plotting.
     - show_route (bool): Flag to show the glider route.
     - show_qc (bool): Flag to show the QC sample point.
+    - show_eez (bool): Flag to show the Exclusive Economic Zone (EEZ).
     - manual_extent (list or None): Manual specification of plot extent.
 
     Returns:
@@ -479,7 +477,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
         return
 
     # PLOTTING FUNCTION
-    def plot_threshold(ax, config, model_depth_average, latitude_qc, longitude_qc, density, mag1, mag2, mag3, mag4, mag5, gliders, show_route, show_qc, manual_extent):
+    def plot_threshold(ax, config, model_depth_average, latitude_qc, longitude_qc, density, mag1, mag2, mag3, mag4, mag5, gliders, show_route, show_qc, show_eez, manual_extent):
         
         # DATA EXTRACTION
         longitude = model_depth_average.lon.values.squeeze()
@@ -498,18 +496,19 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
             data_extent_lat = [float(latitude.min()), float(latitude.max())]
             map_extent = data_extent_lon + data_extent_lat
         ax.set_extent(map_extent, crs=ccrs.PlateCarree())
-        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
+        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
 
         # PLOT ELEMENTS
         levels = [mag1, mag2, mag3, mag4, mag5, np.nanmax(mag_depth_avg)]
         colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
         contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10)
-        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='dimgrey', zorder=10)
+        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
         streamplot.lines.set_alpha(1.0)
         plot_threshold_legend(ax, mag2, mag3, mag4, mag5)
         threshold_legend = ax.get_legend()
         if threshold_legend:
-            threshold_legend.get_frame().set_alpha(0.5)
+            threshold_legend.get_frame().set_alpha(0.75)
+            threshold_legend.get_frame().set_facecolor('white')
             ax.add_artist(threshold_legend)
 
         # GLIDERS
@@ -518,21 +517,13 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
             glider_legend = ax.get_legend()
             if glider_legend:
                 glider_legend.get_frame().set_alpha(0.5)
+                glider_legend.get_frame().set_facecolor('white')
                 ax.add_artist(glider_legend)
 
         # ROUTE
         if show_route:
-            lats, lons = zip(*config["GPS_coords"])
-            ax.plot(lons, lats, 'w-', transform=ccrs.PlateCarree(), linewidth=2.5, zorder=91)
-            ax.plot(lons, lats, 'k', transform=ccrs.PlateCarree(), linewidth=1.0, linestyle='--', alpha=0.6, zorder=92)
-            
-            start_coords = config["GPS_coords"][0]
-            end_coords = config["GPS_coords"][-1]
-            ax.scatter(*start_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
-            for GPS_coord in config["GPS_coords"][1:-1]:
-                ax.scatter(*GPS_coord[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
-            ax.scatter(*end_coords[::-1], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=93)
-
+            plot_glider_route(ax, config)
+        
         # QUALITY CONTROL
         if show_qc:
             (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_depth_average, latitude_qc, longitude_qc)
@@ -540,6 +531,10 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
             qc_lat = model_depth_average['lat'].isel(x=x_index, y=y_index).values
             circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
             ax.add_patch(circle)
+
+        # EEZ
+        if show_eez:
+            plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90)
         
         # FEATURES
         ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90)
@@ -547,22 +542,22 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
         ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90)
         ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90)
 
-        plot_bathymetry(ax, config, model_depth_average, isobath1=-100, isobath2=-1000, show_legend=False)
+        plot_bathymetry(ax, config, model_depth_average, isobath1=-100, isobath2=-1000, downsample=True, show_legend=False)
         bathymetry_legend = ax.get_legend()
         if bathymetry_legend:
             bathymetry_legend.get_frame().set_alpha(0.5)
             ax.add_artist(bathymetry_legend)
         
     # PLOT SETUP
-    fig, axs = plt.subplots(1, num_datasets, subplot_kw={'projection': ccrs.PlateCarree()}, figsize=(10*num_datasets, 10))
+    fig, axs = plt.subplots(1, num_datasets, subplot_kw={'projection': ccrs.Mercator()}, figsize=(10*num_datasets, 10))
     if num_datasets == 1:
         axs = [axs]
 
     model_names = []
     for ax, (model_data, depth_average_data, bin_average_data) in zip(axs, valid_datasets):
-        model_name = model_data.attrs['model_name']
+        model_name = depth_average_data.attrs['model_name']
         model_names.append(model_name)
-        plot_threshold(ax, config, depth_average_data, latitude_qc, longitude_qc, density, mag1, mag2, mag3, mag4, mag5, gliders, show_route, show_qc, manual_extent)
+        plot_threshold(ax, config, depth_average_data, latitude_qc, longitude_qc, density, mag1, mag2, mag3, mag4, mag5, gliders, show_route, show_qc, show_eez, manual_extent)
         ax.set_title(f"{model_name}", fontsize=14, fontweight='bold', pad=20)
     
     title_text = f"Depth Averaged Current Threshold Zones - Depth Range: {config['max_depth']}m"
@@ -571,7 +566,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
 
     # SAVE & CLOSE
     file_datetime = format_save_datetime(datetime_index)
-    fig_filename = f"GGS_Threshold_Comparison_{config['max_depth']}m_{file_datetime}.png"
+    fig_filename = f"DepthAverageThreshold_{config['max_depth']}m_{file_datetime}.png"
     fig_path = os.path.join(directory, fig_filename)
     fig.savefig(fig_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
@@ -579,3 +574,145 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
     # LOGGING
     end_time = print_endtime()
     print_runtime(start_time, end_time)
+
+### FUNCTION:
+def GGS_plot_advantage(config, directory, datetime_index, model_datasets, latitude_qc=None, longitude_qc=None, density=2, tolerance=15, mag1=0.0, mag2=0.2, mag3=0.3, mag4=0.4, mag5=0.5, gliders=None, show_route=False, show_qc=False, show_eez=False, manual_extent=None):
+    
+    '''
+    Plot the depth-averaged current fields from three datasets side by side.
+
+    Args:
+    - config (dict): Glider Guidance System mission configuration.
+    - directory (str): Directory to save the plot.
+    - datetime_index (int): Index of the datetime for the plot title.
+    - model_datasets (tuple): Tuple containing the model datasets.
+    - latitude_qc (float): Latitude for QC plotting.
+    - longitude_qc (float): Longitude for QC plotting.
+    - density (int): Density of the streamplot.
+    - tolerance (float): Tolerance for the bearing.
+    - mag1 (float): Threshold for the first magnitude level.
+    - mag2 (float): Threshold for the second magnitude level.
+    - mag3 (float): Threshold for the third magnitude level.
+    - mag4 (float): Threshold for the fourth magnitude level.
+    - mag5 (float): Threshold for the fifth magnitude level.
+    - gliders (optional): DataFrame containing glider data for plotting.
+    - show_route (bool): Flag to show the glider route.
+    - show_qc (bool): Flag to show the QC sample point.
+    - show_eez (bool): Flag to show the Exclusive Economic Zone (EEZ).
+    - manual_extent (list or None): Manual specification of plot extent.
+
+    Returns:
+    - None
+    '''
+
+    # INITIALIZATION
+    print(f"\n### CREATING ADVANTAGE PLOT ###\n")
+    start_time = print_starttime()
+
+    # DATASET EXTRACTION
+    valid_datasets = [datasets for datasets in model_datasets if datasets is not None]
+    num_datasets = len(valid_datasets)
+    if num_datasets == 0:
+        print("No datasets provided for plotting.")
+        return
+
+    # PLOTTING FUNCTION
+    def plot_advantage(ax, config, model_depth_average, latitude_qc, longitude_qc, density, tolerance, mag1, mag2, mag3, mag4, mag5, gliders, show_route, show_qc, show_eez, manual_extent):
+        
+        # DATA EXTRACTION
+        longitude = model_depth_average.lon.values.squeeze()
+        latitude = model_depth_average.lat.values.squeeze()
+        u_depth_avg = model_depth_average['u_depth_avg'].values.squeeze()
+        v_depth_avg = model_depth_average['v_depth_avg'].values.squeeze()
+        mag_depth_avg = model_depth_average['mag_depth_avg'].values.squeeze()
+        
+        # EXTENT SETUP
+        if manual_extent == "config":
+            map_extent = [config['extent'][0][1], config['extent'][1][1], config['extent'][0][0], config['extent'][1][0]]
+        elif isinstance(manual_extent, list) and len(manual_extent) == 4:
+            map_extent = manual_extent
+        else:
+            data_extent_lon = [float(longitude.min()), float(longitude.max())]
+            data_extent_lat = [float(latitude.min()), float(latitude.max())]
+            map_extent = data_extent_lon + data_extent_lat
+        ax.set_extent(map_extent, crs=ccrs.PlateCarree())
+        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
+
+        # PLOT ELEMENTS
+        levels = [mag1, mag2, mag3, mag4, mag5, np.nanmax(mag_depth_avg)]
+        colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
+        contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10)
+        plot_advantage_zones(ax, config, model_depth_average, tolerance)
+        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
+        streamplot.lines.set_alpha(1.0)
+        plot_threshold_legend(ax, mag2, mag3, mag4, mag5)
+        threshold_legend = ax.get_legend()
+        if threshold_legend:
+            threshold_legend.get_frame().set_alpha(0.75)
+            threshold_legend.get_frame().set_facecolor('white')
+            ax.add_artist(threshold_legend)
+
+        # GLIDERS
+        if gliders is not None:
+            plot_add_gliders(ax, gliders, legend=True)
+            glider_legend = ax.get_legend()
+            if glider_legend:
+                glider_legend.get_frame().set_alpha(0.5)
+                glider_legend.get_frame().set_facecolor('white')
+                ax.add_artist(glider_legend)
+
+        # ROUTE
+        if show_route:
+            plot_glider_route(ax, config)
+        
+        # QUALITY CONTROL
+        if show_qc:
+            (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_depth_average, latitude_qc, longitude_qc)
+            qc_lon = model_depth_average['lon'].isel(x=x_index, y=y_index).values
+            qc_lat = model_depth_average['lat'].isel(x=x_index, y=y_index).values
+            circle = Circle((qc_lon, qc_lat), radius=0.25, edgecolor='purple', facecolor='none', linewidth=2, transform=ccrs.PlateCarree(), zorder=95)
+            ax.add_patch(circle)
+
+        # EEZ
+        if show_eez:
+            plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90)
+        
+        # FEATURES
+        ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90)
+        ax.add_feature(cfeature.RIVERS, edgecolor="steelblue", linewidth=0.25, zorder=90)
+        ax.add_feature(cfeature.LAKES, edgecolor="black", facecolor="lightsteelblue", linewidth=0.25, zorder=90)
+        ax.add_feature(cfeature.BORDERS, edgecolor="black", linewidth=0.25, zorder=90)
+
+        plot_bathymetry(ax, config, model_depth_average, isobath1=-100, isobath2=-1000, downsample=True, show_legend=False)
+        bathymetry_legend = ax.get_legend()
+        if bathymetry_legend:
+            bathymetry_legend.get_frame().set_alpha(0.5)
+            ax.add_artist(bathymetry_legend)
+        
+    # PLOT SETUP
+    fig, axs = plt.subplots(1, num_datasets, subplot_kw={'projection': ccrs.Mercator()}, figsize=(10*num_datasets, 10))
+    if num_datasets == 1:
+        axs = [axs]
+
+    model_names = []
+    for ax, (model_data, depth_average_data, bin_average_data) in zip(axs, valid_datasets):
+        model_name = depth_average_data.attrs['model_name']
+        model_names.append(model_name)
+        plot_advantage(ax, config, depth_average_data, latitude_qc, longitude_qc, density, tolerance, mag1, mag2, mag3, mag4, mag5, gliders, show_route, show_qc, show_eez, manual_extent)
+        ax.set_title(f"{model_name}", fontsize=14, fontweight='bold', pad=20)
+    
+    title_text = f"Depth Averaged Current Advantage Zones - Depth Range: {config['max_depth']}m"
+    model_names_combined = " vs. ".join(model_names)
+    format_figure_titles(axs[0], fig, config, datetime_index, model_name=model_names_combined, title=title_text)
+
+    # SAVE & CLOSE
+    file_datetime = format_save_datetime(datetime_index)
+    fig_filename = f"DepthAverageAdvantage_{config['max_depth']}m_{file_datetime}.png"
+    fig_path = os.path.join(directory, fig_filename)
+    fig.savefig(fig_path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
+    # LOGGING
+    end_time = print_endtime()
+    print_runtime(start_time, end_time)
+    

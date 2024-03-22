@@ -3,6 +3,7 @@
 # =========================
 
 import cartopy.crs as ccrs
+from cartopy.io.shapereader import Reader
 import cartopy.feature as cfeature
 import dask.array
 import datetime as dt
@@ -202,6 +203,34 @@ def acquire_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.ti
 # CALCULATE FUNCTIONS
 
 ### FUNCTION:
+def calculate_bearing(lat1, lon1, lat2, lon2):
+    
+    '''
+    Calculate the compass bearing between two latitude and longitude coordinates.
+
+    Args:
+    - lat1 (float): Latitude of the first point.
+    - lon1 (float): Longitude of the first point.
+    - lat2 (float): Latitude of the second point.
+    - lon2 (float): Longitude of the second point.
+
+    Returns:
+    - compass_bearing (float): The compass bearing between the two points.
+    '''
+
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+
+    delta_lon = lon2 - lon1
+    x = np.sin(delta_lon) * np.cos(lat2)
+    y = np.cos(lat1) * np.sin(lat2) - (np.sin(lat1) * np.cos(lat2) * np.cos(delta_lon))
+    initial_bearing = np.arctan2(x, y)
+
+    initial_bearing = np.degrees(initial_bearing)
+    compass_bearing = (initial_bearing + 360) % 360
+
+    return compass_bearing
+
+### FUNCTION:
 def calculate_gridpoint(model_data, target_lat, target_lon):
     
     '''
@@ -351,7 +380,7 @@ def calculate_ticks(extent, direction):
 # PLOT FUNCTIONS
 
 ### FUNCTION:
-def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fontsize=10, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
+def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.Mercator(), fontsize=16, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True):
     
     '''
     Calculate and add formatted tick marks to the map based on longitude and latitude extents.
@@ -361,7 +390,7 @@ def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fo
     - extent_lon (list): Longitude bounds of the map, [min_longitude, max_longitude].
     - extent_lat (list): Latitude bounds of the map, [min_latitude, max_latitude].
     - proj (cartopy.crs class, optional): Define a projected coordinate system for ticks.
-        - default: ccrs.PlateCarree()
+        - default: ccrs.Mercator()
     - fontsize (int, optional): Font size of tick labels.
         - default: 10
     - label_left (bool, optional): Label the left side of the map.
@@ -385,7 +414,7 @@ def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fo
     minor_lon_ticks, major_lon_ticks, major_lon_labels = calculate_ticks(overall_extent, 'longitude')
     ax.set_xticks(minor_lon_ticks, minor=True, crs=proj)
     ax.set_xticks(major_lon_ticks, crs=proj)
-    ax.set_xticklabels(major_lon_labels, fontsize=fontsize)
+    ax.set_xticklabels(major_lon_labels, fontsize=fontsize, rotation=45, ha='right')
 
     minor_lat_ticks, major_lat_ticks, major_lat_labels = calculate_ticks(overall_extent, 'latitude')
     ax.set_yticks(minor_lat_ticks, minor=True, crs=proj)
@@ -397,7 +426,7 @@ def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.PlateCarree(), fo
     ax.tick_params(which='minor', direction='out', bottom=True, top=True, left=True, right=True, width=1)
 
     if gridlines:
-        gl = ax.gridlines(draw_labels=False, linewidth=.25, color='black', alpha=0.1, linestyle='--', crs=proj, zorder=1000) # zorder = [1000]
+        gl = ax.gridlines(draw_labels=False, linewidth=0.25, color='black', alpha=0.25, linestyle='--', crs=proj, zorder=1000)
         gl.xlocator = mticker.FixedLocator(minor_lon_ticks)
         gl.ylocator = mticker.FixedLocator(minor_lat_ticks)
 
@@ -471,13 +500,13 @@ def plot_threshold_legend(ax, mag2, mag3, mag4, mag5):
         mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')
     ]
 
-    threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', fontsize='x-small')
+    threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', fontsize='medium')
     threshold_legend.set_zorder(10000)
     for text in threshold_legend.get_texts():
         text.set_color('black')
 
 ### FUNCTION:
-def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_legend=False):
+def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, downsample=False, show_legend=False):
     
     '''
     Add bathymetry to a plot.
@@ -490,6 +519,8 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_
         - default: -100
     - isobath2 (int): Second isobath level.
         - default: -1000
+    - downsample (bool): Downsample the bathymetry data.
+        - default: False
     - show_legend (bool): Show legend.
         - default: False
 
@@ -498,9 +529,14 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_
     '''
 
     bathymetry_path = config["bathymetry_path"]
-    bathy_data = xr.open_dataset(bathymetry_path)
+    bathy_data = xr.open_dataset(bathymetry_path, chunks={'lat': 1000, 'lon': 1000})
 
     subset_bathy = bathy_data.sel(lat=slice(model_data.lat.min(), model_data.lat.max()), lon=slice(model_data.lon.min(), model_data.lon.max()))
+    
+    if downsample:
+        subset_bathy = subset_bathy.coarsen(lat=25, lon=25, boundary='trim').mean()
+    
+    subset_bathy = subset_bathy.compute()
 
     isobath_levels = sorted([isobath1, isobath2])
     depth_intervals = [-np.inf] + isobath_levels + [0]
@@ -510,22 +546,20 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, show_
     cornflowerblue = mcolors.to_rgba('cornflowerblue')
     water = cfeature.COLORS['water']
     lightsteelblue = mcolors.to_rgba('lightsteelblue')
-
     colors = [cornflowerblue, water, lightsteelblue]
     
-    ax.contour(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation, levels=isobath_levels, colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50)
-
+    ax.contour(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation, levels=isobath_levels, colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
+    
     for i in range(len(depth_intervals) - 1):
-        ax.contourf(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation,
-                    levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]])
-
+        ax.contourf(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation, levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]], transform=ccrs.PlateCarree())
+    
     if show_legend:
         isobath1 = -isobath1
         isobath2 = -isobath2
         legend_colors = [lightsteelblue, water, cornflowerblue]
         legend_labels = [f'0m - {isobath1}m', f'{isobath1}m - {isobath2}m', f'> {isobath2}m']
         patches = [plt.plot([], [], marker="o", ms=10, ls="", mec=None, color=color, label=label)[0] for color, label in zip(legend_colors, legend_labels)]
-        bathymetry_legend = ax.legend(handles=patches, loc='upper left', facecolor='white', edgecolor='black', fontsize='x-small', markerscale=0.75)
+        bathymetry_legend = ax.legend(handles=patches, loc='upper left', facecolor='white', edgecolor='black', fontsize='small', markerscale=0.75)
         bathymetry_legend.set_zorder(10000)
         for text in bathymetry_legend.get_texts():
             text.set_color('black')
@@ -598,10 +632,101 @@ def plot_add_gliders(ax, glider_data_frame, legend=True):
         legend_handles.append(custom_handle)
 
     if legend:
-        glider_legend = ax.legend(handles=legend_handles, title="Gliders", loc='lower right', facecolor='white', edgecolor='black', fontsize='x-small', markerscale=0.75)
+        glider_legend = ax.legend(handles=legend_handles, title="Gliders", loc='lower right', facecolor='white', edgecolor='black', fontsize='small', markerscale=0.75)
         glider_legend.set_zorder(10000)
         for text in glider_legend.get_texts():
             text.set_color('black')
+
+### FUNCTION:
+def plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90):
+    
+    '''
+    Adds Exclusive Economic Zones (EEZ) to a cartopy map.
+
+    Args:
+    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the EEZ to.
+    - config (dict): Glider Guidance System mission configuration.
+    - color (str): Color of the EEZ border.
+        - default: 'dimgrey'
+    - linewidth (int): Width of the EEZ border.
+        - default: 3
+    - zorder (int): Z-order of the EEZ border.
+        - default: 90
+    
+    Returns:
+    - None
+    '''
+
+    eez_path = config["eez_path"]
+
+    eez_feature = cfeature.ShapelyFeature(
+        Reader(eez_path).geometries(),
+        ccrs.PlateCarree(),
+        edgecolor=color,
+        facecolor='none',
+        linewidth=linewidth,
+        linestyle='-',
+        alpha=0.75
+    )
+    
+    ax.add_feature(eez_feature, zorder=zorder)
+
+### FUNCTION:
+def plot_advantage_zones(ax, config, depth_average_data, tolerance):
+    
+    '''
+    Adds advantage zones to a cartopy map.
+
+    Args:
+    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the advantage zones to.
+    - config (dict): Glider Guidance System mission configuration.
+    - depth_average_data (xarray.core.dataset.Dataset): Depth-averaged model data.
+    - tolerance (float): Tolerance for the advantage zones.
+
+    Returns:
+    - None
+    '''
+
+    start_lat, start_lon = config['GPS_coords'][0]
+    end_lat, end_lon = config['GPS_coords'][-1]
+    direct_bearing = calculate_bearing(start_lat, start_lon, end_lat, end_lon)
+    
+    bearing_lower = (direct_bearing - tolerance) % 360
+    bearing_upper = (direct_bearing + tolerance) % 360
+
+    longitude = depth_average_data.lon.values
+    latitude = depth_average_data.lat.values
+
+    dir_depth_avg = depth_average_data['dir_depth_avg'].values[0, :, :]
+
+    if bearing_lower < bearing_upper:
+        mask = (dir_depth_avg >= bearing_lower) & (dir_depth_avg <= bearing_upper)
+    else:
+        mask = (dir_depth_avg >= bearing_lower) | (dir_depth_avg <= bearing_upper)
+    
+    acceptable_bearing = np.full_like(dir_depth_avg, np.nan)
+    acceptable_bearing[mask] = dir_depth_avg[mask]
+
+    ax.contourf(longitude, latitude, acceptable_bearing, levels=[bearing_lower, bearing_upper, 360], colors=['purple'], alpha=0.5, transform=ccrs.PlateCarree(), zorder=10)
+
+### FUNCTION:
+def plot_glider_route(ax, config):
+
+    '''
+    Adds the glider route to a cartopy map.
+
+    Args:
+    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the glider route to.
+    - config (dict): Glider Guidance System mission configuration.
+
+    Returns:
+    - None
+    '''
+
+    lats, lons = zip(*config["GPS_coords"])
+
+    ax.scatter(lons[0], lats[0], color='green', s=100, transform=ccrs.PlateCarree(), zorder=95, label='Start')
+    ax.scatter(lons[-1], lats[-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=95, label='End')
 
 # FORMATTING FUNCTIONS
 
@@ -652,7 +777,7 @@ def format_figure_titles(ax, fig, config, datetime_index, model_name, title):
     top = ax_pos.y1
     bottom = ax_pos.y0
     
-    title_distance_top = 0.1
+    title_distance_top = 0.15
     title_position = top + title_distance_top
     
     subtitle_distance_title = 0.05
@@ -663,13 +788,13 @@ def format_figure_titles(ax, fig, config, datetime_index, model_name, title):
 
     title_datetime = format_title_datetime(datetime_index)
     
-    fig.text(0.5, title_position, title, fontsize=14, fontweight='bold', ha='center', va='bottom')
+    fig.text(0.5, title_position, title, fontsize=20, fontweight='bold', ha='center', va='bottom')
 
     subtitle_text = f"{model_name} {title_datetime} UTC"
-    fig.text(0.5, subtitle_position, subtitle_text, fontsize=10, ha='center', va='bottom')
+    fig.text(0.5, subtitle_position, subtitle_text, fontsize=18, ha='center', va='bottom')
 
     suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['glider_name']}"
-    fig.text(0.5, suptitle_position, suptitle_text, fontsize='smaller', fontweight='bold', ha='center', va='top', color='gray')
+    fig.text(0.5, suptitle_position, suptitle_text, fontsize=16, fontweight='bold', ha='center', va='top', color='gray')
 
 ### FUNCTION:
 def format_subplot_titles(fig, config, datetime, title):
