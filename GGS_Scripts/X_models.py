@@ -128,13 +128,13 @@ class RTOFS():
         self.qc = self.data_origin.copy()
 
         if save_data:
-            rtofs_data_file = f"{config['glider_name']}_RTOFS_Data_{config['max_depth']}m.nc"
+            rtofs_data_file = f"RTOFS_Data_{config['max_depth']}m.nc"
             rtofs_data_path = os.path.join(directory, rtofs_data_file)
             self.data.to_netcdf(rtofs_data_path)
             print(f"RTOFS Data saved to: {rtofs_data_path}")
         
         if save_qc:
-            rtofs_qc_file = f"{config['glider_name']}_RTOFS_QC_{config['max_depth']}m.nc"
+            rtofs_qc_file = f"RTOFS_QC_{config['max_depth']}m.nc"
             rtofs_qc_path = os.path.join(directory, rtofs_qc_file)
             self.qc.to_netcdf(rtofs_qc_path)
             print(f"RTOFS QC saved to: {rtofs_qc_path}")
@@ -241,13 +241,13 @@ class CMEMS:
         self.qc = self.data_origin.copy()
 
         if save_data:
-            cmems_data_file = f"{config['glider_name']}_CMEMS_Data_{config['max_depth']}m.nc"
+            cmems_data_file = f"CMEMS_Data_{config['max_depth']}m.nc"
             cmems_data_path = os.path.join(directory, cmems_data_file)
             self.data.to_netcdf(cmems_data_path)
             print(f"CMEMS Data saved to: {cmems_data_path}")
         
         if save_qc:
-            cmems_qc_file = f"{config['glider_name']}_CMEMS_QC_{config['max_depth']}m.nc"
+            cmems_qc_file = f"CMEMS_QC_{config['max_depth']}m.nc"
             cmems_qc_path = os.path.join(directory, cmems_qc_file)
             self.qc.to_netcdf(cmems_qc_path)
             print(f"CMEMS QC saved to: {cmems_qc_path}")
@@ -363,13 +363,13 @@ class GOFS:
         self.qc = self.data_origin.copy()
         
         if save_data:
-            gofs_data_file = f"{config['glider_name']}_GOFS_Data_{config['max_depth']}m.nc"
+            gofs_data_file = f"GOFS_Data_{config['max_depth']}m.nc"
             gofs_data_path = os.path.join(directory, gofs_data_file)
             self.data.to_netcdf(gofs_data_path)
             print(f"GOFS Data saved to: {gofs_data_path}")
         
         if save_qc:
-            gofs_qc_file = f"{config['glider_name']}_GOFS_QC_{config['max_depth']}m.nc"
+            gofs_qc_file = f"GOFS_QC_{config['max_depth']}m.nc"
             gofs_qc_path = os.path.join(directory, gofs_qc_file)
             self.qc.to_netcdf(gofs_qc_path)
             print(f"GOFS QC saved to: {gofs_qc_path}")

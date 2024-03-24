@@ -15,7 +15,6 @@ from concurrent.futures import ProcessPoolExecutor
 # =========================
 
 ### PARALELLIZE DATETIME PROCESSING:
-# @profile
 def GGS_process_date(datetime_index, config_flag, root_directory_flag, enable_rtofs_flag, enable_cmems_flag, enable_gofs_flag, subset_extent_flag, subset_depth_flag, chunk_flag, latitude_qc_flag, longitude_qc_flag, glider_data_flag):
     
     '''
@@ -46,7 +45,7 @@ def GGS_process_date(datetime_index, config_flag, root_directory_flag, enable_rt
     os.makedirs(sub_directory_data, exist_ok=True)
     
     check_datetime = pd.to_datetime(datetime_index).strftime('%Y%m%dT%HZ')
-    check_datafile = os.path.join(sub_directory_data, f"{config_flag['glider_name']}_DepthAverageData_{check_datetime}.nc")
+    check_datafile = os.path.join(sub_directory_data, f"{config_flag['mission_name']}_DepthAverageData_{check_datetime}.nc")
 
     if os.path.exists(check_datafile):
         print(f'{check_datafile} already exists. Skipping processing for datetime index: {datetime_index}')
@@ -104,8 +103,7 @@ def GGS_process_date(datetime_index, config_flag, root_directory_flag, enable_rt
     GGS_plot_profiles(config_flag, sub_directory_plots, datetime_index, model_datasets, latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag, threshold=0.5)
 
 ### MAIN:
-# @profile
-def main(power=1, path="local", target_datetime=dt.datetime.now(dt.timezone.utc), single_datetime=False, enable_rtofs=True, enable_cmems=True, enable_gofs=True, subset_extent=True, subset_depth=True, chunk=True, latitude_qc='0', longitude_qc='0', gliders=False):
+def main(power=1, path="local", config=None, single_datetime=False, enable_rtofs=True, enable_cmems=True, enable_gofs=True, subset_extent=True, subset_depth=True, chunk=True, latitude_qc='0', longitude_qc='0', gliders=False):
     
     '''
     GGS main function.
@@ -143,8 +141,9 @@ def main(power=1, path="local", target_datetime=dt.datetime.now(dt.timezone.utc)
     '''
 
     # CONFIGURATION
-    config = GGS_config_static(date=target_datetime)
-    
+    config = GGS_config_import(config)
+    target_datetime = config['target_date']
+
     # TARGET DIRECTORY
     if path == "local":
         root_directory = GGS_config_output(config, path="default")
@@ -188,7 +187,7 @@ def main(power=1, path="local", target_datetime=dt.datetime.now(dt.timezone.utc)
 
 ### EXECUTE MAIN:
 if __name__ == "__main__":
-    main(power=1.0, path="local", target_datetime=dt.datetime.now(dt.timezone.utc), single_datetime=True, enable_rtofs=False, enable_cmems=True, enable_gofs=False, subset_extent=True, subset_depth=True, chunk=True, latitude_qc='0', longitude_qc='0', gliders=False)
+    main(power=1.0, path="local", config="UGOS", single_datetime=True, enable_rtofs=False, enable_cmems=False, enable_gofs=True, subset_extent=True, subset_depth=True, chunk=True, latitude_qc='0', longitude_qc='0', gliders=True)
 
 # =========================
 # ///// END OF SCRIPT \\\\\

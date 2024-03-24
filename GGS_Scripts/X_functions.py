@@ -5,6 +5,7 @@
 import cartopy.crs as ccrs
 from cartopy.io.shapereader import Reader
 import cartopy.feature as cfeature
+import cmocean.cm as cmo
 import dask.array
 import datetime as dt
 from datetime import datetime as datetime
@@ -431,81 +432,6 @@ def plot_formatted_ticks(ax, extent_lon, extent_lat, proj=ccrs.Mercator(), fonts
         gl.ylocator = mticker.FixedLocator(minor_lat_ticks)
 
 ### FUNCTION:
-def plot_contour_cbar(magnitude, max_levels=10, extend_max=True):
-    
-    '''
-    Calculate levels for a matplotlib colorbar based on the magnitude. Optionally extend the maximum color level.
-
-    Args:
-    - magnitude (array-like or xarray.DataArray): The magnitude data.
-    - max_levels (int): Maximum number of levels.
-        - default: 10
-    - extend_max (bool): Extend the maximum color level to indicate values exceeding the set levels.
-        - default: True
-
-    Returns:
-    - levels (array-like): The level values for contour plot.
-    - ticks (array-like): The tick values for the colorbar, aligned with levels.
-    - extend (str): String indicating if the colorbar should be extended. 'max', 'neither', or 'both'.
-    '''
-
-    if isinstance(magnitude, xr.DataArray):
-        if isinstance(magnitude.data, dask.array.Array):
-            magnitude = magnitude.compute()
-        magnitude = magnitude.values
-
-    valid_magnitude = magnitude[~np.isnan(magnitude)]
-    if valid_magnitude.size == 0:
-        return [], []
-
-    min_val = np.min(valid_magnitude)
-    max_val = np.max(valid_magnitude)
-    magnitude_range = max_val - min_val
-
-    interval_options = [0.1, 0.2, 0.5, 1.0]
-    best_interval = min(interval_options, key=lambda x: abs(max_levels - np.ceil(magnitude_range / x)))
-
-    levels = np.arange(min_val, max_val, best_interval)
-
-    if extend_max and max_val > levels[-1]:
-        extend = 'max'
-    else:
-        extend = 'neither'
-
-    ticks = levels
-
-    return levels, ticks, extend
-
-### FUNCTION:
-def plot_threshold_legend(ax, mag2, mag3, mag4, mag5):
-    
-    '''
-    Creates and adds a custom legend to the plot indicating threshold zones for current magnitudes.
-
-    Args:
-    - ax (matplotlib.axes.Axes): The axes object to add the legend to.
-    - mag2 (float): Second threshold magnitude.
-    - mag3 (float): Third threshold magnitude.
-    - mag4 (float): Fourth threshold magnitude.
-    - mag5 (float): Fifth threshold magnitude.
-
-    Returns:
-    - None
-    '''
-
-    patches = [
-        mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
-        mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
-        mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
-        mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')
-    ]
-
-    threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', fontsize='medium')
-    threshold_legend.set_zorder(10000)
-    for text in threshold_legend.get_texts():
-        text.set_color('black')
-
-### FUNCTION:
 def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, downsample=False, show_legend=False):
     
     '''
@@ -602,6 +528,151 @@ def plot_profile_thresholds(ax, data, threshold, color):
     ax.plot([], [], color=color, alpha=0.5, linewidth=10, label=f'Above Threshold = [{threshold}]')
 
 ### FUNCTION:
+def plot_streamlines(ax, longitude, latitude, u_depth_avg, v_depth_avg, density=2):
+    
+    '''
+    Adds streamlines to the plot.
+    
+    Args:
+    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add streamlines to.
+    - longitude (array-like): Longitude values.
+    - latitude (array-like): Latitude values.
+    - u_depth_avg (array-like): U-component of depth-averaged currents.
+    - v_depth_avg (array-like): V-component of depth-averaged currents.
+    - density (int): Density of the streamlines.
+        - default: 2
+
+    Returns:
+    - None
+    '''
+
+    streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
+    streamplot.lines.set_alpha(1.0)
+
+### FUNCTION:
+def plot_magnitude_contour(ax, fig, longitude, latitude, mag_depth_avg, max_levels=10, extend_max=True):
+    
+    '''
+    Plots a magnitude contour and adds a formatted color bar to the plot.
+
+    Args:
+    - ax (matplotlib.axes.Axes): The axes object to add the contour to.
+    - fig (matplotlib.figure.Figure): The figure object for the plot.
+    - longitude (array-like): Longitude values.
+    - latitude (array-like): Latitude values.
+    - mag_depth_avg (array-like or xarray.DataArray): Magnitude of depth-averaged current values.
+    - max_levels (int): Maximum number of levels for contour.
+        - default: 10
+    - extend_max (bool): Whether to extend the maximum color level.
+        - default: True
+
+    Returns:
+    - None
+    '''
+
+    levels, ticks, extend = format_contour_cbar(mag_depth_avg, max_levels=max_levels, extend_max=extend_max)
+    
+    contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10, extend=extend)
+    
+    cbar = fig.colorbar(contourf, orientation='vertical', extend=extend, ax=ax)
+    cbar.set_label('Depth Averaged Current Magnitude (m/s)', labelpad=10)
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels([f"{tick:.1f}" for tick in ticks])
+    format_cbar_position(ax, cbar)
+
+### FUNCTION:
+def plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag3, mag4, mag5, threshold_legend=True):
+    
+    '''
+    Adds threshold zones to the map.
+
+    Args:
+    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the threshold zones to.
+    - longitude (array-like): Longitude values.
+    - latitude (array-like): Latitude values.
+    - mag_depth_avg (array-like): Depth-averaged magnitude data.
+    - mag1 (float): First threshold magnitude.
+    - mag2 (float): Second threshold magnitude.
+    - mag3 (float): Third threshold magnitude.
+    - mag4 (float): Fourth threshold magnitude.
+    - mag5 (float): Fifth threshold magnitude.
+    - threshold_legend (bool): Show legend.
+        - default: True
+    
+    Returns:
+    - None
+    '''
+
+    levels = [mag1, mag2, mag3, mag4, mag5, np.nanmax(mag_depth_avg)]
+    colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
+    
+    threshold_contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10)
+
+    if threshold_legend:
+        patches = [
+            mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
+            mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
+            mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
+            mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')
+            ]
+        threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', fontsize='medium')
+        threshold_legend.set_zorder(10000)
+        for text in threshold_legend.get_texts():
+            text.set_color('black')
+        ax.add_artist(threshold_legend)
+
+### FUNCTION:
+def plot_advantage_zones(ax, config, longitude, latitude, dir_depth_avg, tolerance, advantage_legend=True):
+    
+    '''
+    Adds advantage zones to the map.
+
+    Args:
+    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the advantage zones to.
+    - config (dict): Glider Guidance System mission configuration.
+    - depth_average_data (xarray.core.dataset.Dataset): Depth-averaged model data.
+    - tolerance (float): Tolerance for the advantage zones.
+    - advantage_legend (bool): Show legend.
+        - default: True
+
+    Returns:
+    - None
+    '''
+
+    start_lat, start_lon = config['GPS_coords'][0]
+    end_lat, end_lon = config['GPS_coords'][-1]
+
+    if (start_lat, start_lon) == (0, 0) and (end_lat, end_lon) == (0, 0):
+        print("GPS route coordinates are undefined. Skipping advantage zone plotting.")
+        return
+
+    direct_bearing = calculate_bearing(start_lat, start_lon, end_lat, end_lon)
+    
+    bearing_lower = (direct_bearing - tolerance) % 360
+    bearing_upper = (direct_bearing + tolerance) % 360
+
+    if bearing_lower < bearing_upper:
+        mask = (dir_depth_avg >= bearing_lower) & (dir_depth_avg <= bearing_upper)
+    else:
+        mask = (dir_depth_avg >= bearing_lower) | (dir_depth_avg <= bearing_upper)
+    
+    acceptable_bearing = np.full_like(dir_depth_avg, np.nan)
+    acceptable_bearing[mask] = dir_depth_avg[mask]
+
+    advantage_contourf = ax.contourf(longitude, latitude, acceptable_bearing, levels=[bearing_lower, bearing_upper, 360], colors=['purple'], alpha=0.5, transform=ccrs.PlateCarree(), zorder=10)
+
+    if advantage_legend:
+        bearing_label_lower = round((direct_bearing - tolerance) % 360)
+        bearing_label_upper = round((direct_bearing + tolerance) % 360)
+        bearing_label = f"Advantage Zone: {bearing_label_lower}° to {bearing_label_upper}°"
+        patches = [mpatches.Patch(color='purple', label=bearing_label)]
+        advantage_legend = ax.legend(handles=patches, loc='upper left', facecolor='white', edgecolor='black', fontsize='medium')
+        advantage_legend.set_zorder(10000)
+        for text in advantage_legend.get_texts():
+            text.set_color('black')
+        ax.add_artist(advantage_legend)
+
+### FUNCTION:
 def plot_add_gliders(ax, glider_data_frame, legend=True):
     
     '''
@@ -672,44 +743,6 @@ def plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90):
     ax.add_feature(eez_feature, zorder=zorder)
 
 ### FUNCTION:
-def plot_advantage_zones(ax, config, depth_average_data, tolerance):
-    
-    '''
-    Adds advantage zones to a cartopy map.
-
-    Args:
-    - ax (cartopy.mpl.geoaxes.GeoAxesSubplot): The cartopy map to add the advantage zones to.
-    - config (dict): Glider Guidance System mission configuration.
-    - depth_average_data (xarray.core.dataset.Dataset): Depth-averaged model data.
-    - tolerance (float): Tolerance for the advantage zones.
-
-    Returns:
-    - None
-    '''
-
-    start_lat, start_lon = config['GPS_coords'][0]
-    end_lat, end_lon = config['GPS_coords'][-1]
-    direct_bearing = calculate_bearing(start_lat, start_lon, end_lat, end_lon)
-    
-    bearing_lower = (direct_bearing - tolerance) % 360
-    bearing_upper = (direct_bearing + tolerance) % 360
-
-    longitude = depth_average_data.lon.values
-    latitude = depth_average_data.lat.values
-
-    dir_depth_avg = depth_average_data['dir_depth_avg'].values[0, :, :]
-
-    if bearing_lower < bearing_upper:
-        mask = (dir_depth_avg >= bearing_lower) & (dir_depth_avg <= bearing_upper)
-    else:
-        mask = (dir_depth_avg >= bearing_lower) | (dir_depth_avg <= bearing_upper)
-    
-    acceptable_bearing = np.full_like(dir_depth_avg, np.nan)
-    acceptable_bearing[mask] = dir_depth_avg[mask]
-
-    ax.contourf(longitude, latitude, acceptable_bearing, levels=[bearing_lower, bearing_upper, 360], colors=['purple'], alpha=0.5, transform=ccrs.PlateCarree(), zorder=10)
-
-### FUNCTION:
 def plot_glider_route(ax, config):
 
     '''
@@ -731,7 +764,53 @@ def plot_glider_route(ax, config):
 # FORMATTING FUNCTIONS
 
 ### FUNCTION:
-def format_colorbar(ax, cbar):
+def format_contour_cbar(magnitude, max_levels=10, extend_max=True):
+    
+    '''
+    Calculate levels for a matplotlib colorbar based on the magnitude. Optionally extend the maximum color level.
+
+    Args:
+    - magnitude (array-like or xarray.DataArray): The magnitude data.
+    - max_levels (int): Maximum number of levels.
+        - default: 10
+    - extend_max (bool): Extend the maximum color level to indicate values exceeding the set levels.
+        - default: True
+
+    Returns:
+    - levels (array-like): The level values for contour plot.
+    - ticks (array-like): The tick values for the colorbar, aligned with levels.
+    - extend (str): String indicating if the colorbar should be extended. 'max', 'neither', or 'both'.
+    '''
+
+    if isinstance(magnitude, xr.DataArray):
+        if isinstance(magnitude.data, dask.array.Array):
+            magnitude = magnitude.compute()
+        magnitude = magnitude.values
+
+    valid_magnitude = magnitude[~np.isnan(magnitude)]
+    if valid_magnitude.size == 0:
+        return [], []
+
+    min_val = np.min(valid_magnitude)
+    max_val = np.max(valid_magnitude)
+    magnitude_range = max_val - min_val
+
+    interval_options = [0.1, 0.2, 0.5, 1.0]
+    best_interval = min(interval_options, key=lambda x: abs(max_levels - np.ceil(magnitude_range / x)))
+
+    levels = np.arange(min_val, max_val, best_interval)
+
+    if extend_max and max_val > levels[-1]:
+        extend = 'max'
+    else:
+        extend = 'neither'
+
+    ticks = levels
+
+    return levels, ticks, extend
+
+### FUNCTION:
+def format_cbar_position(ax, cbar):
     
     '''
     Adjusts the colorbar position to match the height of the map object (ax) it is plotted next to.
@@ -793,7 +872,7 @@ def format_figure_titles(ax, fig, config, datetime_index, model_name, title):
     subtitle_text = f"{model_name} {title_datetime} UTC"
     fig.text(0.5, subtitle_position, subtitle_text, fontsize=18, ha='center', va='bottom')
 
-    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['glider_name']}"
+    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['mission_name']}"
     fig.text(0.5, suptitle_position, suptitle_text, fontsize=16, fontweight='bold', ha='center', va='top', color='gray')
 
 ### FUNCTION:
@@ -818,7 +897,7 @@ def format_subplot_titles(fig, config, datetime, title):
     subtitle_text = f"{title_datetime} UTC"
     fig.text(0.5, 0.92, subtitle_text, fontsize=22, ha='center', va='top')
     
-    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['glider_name']}"
+    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['mission_name']}"
     fig.text(0.5, 0.05, suptitle_text, fontsize=20, ha='center', va='top', color='gray')
 
 ### FUNCTION:

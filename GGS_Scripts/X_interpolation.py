@@ -158,11 +158,11 @@ def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_ave
     if save_depth_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_depth_average.to_netcdf(os.path.join(directory, f"{config['glider_name']}_RTOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_depth_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_RTOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_bin_average.to_netcdf(os.path.join(directory, f"{config['glider_name']}_RTOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_bin_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_RTOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)
@@ -261,11 +261,11 @@ def interpolate_cmems(config, directory, model_data, chunk=False, save_depth_ave
     if save_depth_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_depth_average.to_netcdf(os.path.join(directory, f"{config['glider_name']}_CMEMS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_depth_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_CMEMS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_bin_average.to_netcdf(os.path.join(directory, f"{config['glider_name']}_CMEMS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_bin_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_CMEMS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)
@@ -354,11 +354,11 @@ def interpolate_gofs(config, directory, model_data, chunk=False, save_depth_aver
     if save_depth_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_depth_average.to_netcdf(os.path.join(directory, f"{config['glider_name']}_GOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_depth_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_GOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_bin_average.to_netcdf(os.path.join(directory, f"{config['glider_name']}_GOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_bin_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_GOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)

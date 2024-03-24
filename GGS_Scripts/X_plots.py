@@ -10,7 +10,7 @@ from matplotlib.patches import Circle
 import numpy as np
 import os
 
-from X_functions import calculate_gridpoint, plot_formatted_ticks, plot_contour_cbar, plot_threshold_legend, plot_bathymetry, plot_profile_thresholds, plot_add_gliders, plot_add_eez, plot_advantage_zones, plot_glider_route, format_colorbar, format_figure_titles, format_subplot_titles, format_subplot_headers, format_save_datetime, print_starttime, print_endtime, print_runtime
+from X_functions import calculate_gridpoint, plot_formatted_ticks, plot_bathymetry, plot_profile_thresholds, plot_add_gliders, plot_add_eez, plot_streamlines, plot_magnitude_contour, plot_threshold_zones, plot_advantage_zones, plot_glider_route, format_figure_titles, format_subplot_titles, format_subplot_headers, format_save_datetime, print_starttime, print_endtime, print_runtime
 
 # =========================
 
@@ -361,9 +361,8 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
         plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
 
         # PLOT ELEMENTS
-        levels, ticks, extend = plot_contour_cbar(mag_depth_avg, max_levels=10, extend_max=True)
-        contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, cmap=cmo.speed, transform=ccrs.PlateCarree(), zorder=10, extend=extend)
-        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
+        plot_magnitude_contour(ax, fig, longitude, latitude, mag_depth_avg, max_levels=10, extend_max=True)
+        plot_streamlines(ax, longitude, latitude, u_depth_avg, v_depth_avg, density=density)
 
         # GLIDERS
         if gliders is not None:
@@ -401,13 +400,6 @@ def GGS_plot_magnitudes(config, directory, datetime_index, model_datasets, latit
         if bathymetry_legend:
             bathymetry_legend.get_frame().set_alpha(0.5)
             ax.add_artist(bathymetry_legend)
-
-        # COLORBAR
-        cbar = fig.colorbar(contourf, orientation='vertical', extend=extend)
-        format_colorbar(ax, cbar)
-        cbar.set_label('Depth Averaged Current Magnitude (m/s)', labelpad=10)
-        cbar.set_ticks(ticks)
-        cbar.set_ticklabels([f"{tick:.1f}" for tick in ticks])
 
     # PLOTTING
     fig, axs = plt.subplots(1, num_datasets, subplot_kw={'projection': ccrs.Mercator()}, figsize=(10*num_datasets, 10))
@@ -499,17 +491,8 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
         plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
 
         # PLOT ELEMENTS
-        levels = [mag1, mag2, mag3, mag4, mag5, np.nanmax(mag_depth_avg)]
-        colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
-        contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10)
-        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
-        streamplot.lines.set_alpha(1.0)
-        plot_threshold_legend(ax, mag2, mag3, mag4, mag5)
-        threshold_legend = ax.get_legend()
-        if threshold_legend:
-            threshold_legend.get_frame().set_alpha(0.75)
-            threshold_legend.get_frame().set_facecolor('white')
-            ax.add_artist(threshold_legend)
+        plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag3, mag4, mag5, threshold_legend=True)
+        plot_streamlines(ax, longitude, latitude, u_depth_avg, v_depth_avg, density=density)
 
         # GLIDERS
         if gliders is not None:
@@ -625,6 +608,7 @@ def GGS_plot_advantage(config, directory, datetime_index, model_datasets, latitu
         u_depth_avg = model_depth_average['u_depth_avg'].values.squeeze()
         v_depth_avg = model_depth_average['v_depth_avg'].values.squeeze()
         mag_depth_avg = model_depth_average['mag_depth_avg'].values.squeeze()
+        dir_depth_avg = model_depth_average['dir_depth_avg'].values[0, :, :].squeeze()
         
         # EXTENT SETUP
         if manual_extent == "config":
@@ -636,21 +620,12 @@ def GGS_plot_advantage(config, directory, datetime_index, model_datasets, latitu
             data_extent_lat = [float(latitude.min()), float(latitude.max())]
             map_extent = data_extent_lon + data_extent_lat
         ax.set_extent(map_extent, crs=ccrs.PlateCarree())
-        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=True, label_bottom=True, label_top=False, gridlines=True)
+        plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
 
         # PLOT ELEMENTS
-        levels = [mag1, mag2, mag3, mag4, mag5, np.nanmax(mag_depth_avg)]
-        colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
-        contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10)
-        plot_advantage_zones(ax, config, model_depth_average, tolerance)
-        streamplot = ax.streamplot(longitude, latitude, u_depth_avg, v_depth_avg, transform=ccrs.PlateCarree(), density=density, linewidth=0.5, color='black', zorder=10)
-        streamplot.lines.set_alpha(1.0)
-        plot_threshold_legend(ax, mag2, mag3, mag4, mag5)
-        threshold_legend = ax.get_legend()
-        if threshold_legend:
-            threshold_legend.get_frame().set_alpha(0.75)
-            threshold_legend.get_frame().set_facecolor('white')
-            ax.add_artist(threshold_legend)
+        plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag3, mag4, mag5, threshold_legend=True)
+        plot_advantage_zones(ax, config, longitude, latitude, dir_depth_avg, tolerance, advantage_legend=True)
+        plot_streamlines(ax, longitude, latitude, u_depth_avg, v_depth_avg, density=density)
 
         # GLIDERS
         if gliders is not None:
