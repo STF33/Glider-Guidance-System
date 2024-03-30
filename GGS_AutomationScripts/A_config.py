@@ -3,106 +3,110 @@
 # =========================
 
 import datetime as dt
-from datetime import timezone
+from dateutil import parser
+import json
 import os
-import pandas as pd
+from A_functions import acquire_gliders
 
 # =========================
 
 ### FUNCTION:
-def GGS_config_static(date=dt.datetime.now(timezone.utc)):
+def GGS_config_import(config_name):
     
     '''
-    Configure mission from a hardcoded configuration.
+    Import a Glider Guidance System mission configuration from a JSON file.
     
     Args:
-    - date (datetime): Date of mission start.
-        - default: dt.datetime.now(timezone.utc)
-
+    - config_name (str): Name of the configuration file to import.
+    
     Returns:
     - config (dict): Glider Guidance System mission configuration.
     '''
 
-    execution_date = date
+    print(f"\n### IMPORTING GGS CONFIGURATION: {config_name} ###\n")
 
     current_directory = os.path.dirname(__file__)
-    bathymetry_path = os.path.join(current_directory, "data", "bathymetry", "GEBCO_2023_sub_ice_topo.nc")
-    eez_path = os.path.join(current_directory, "data", "eez", "eez_boundaries_v12.shp")
+    config_path = os.path.join(current_directory, "config", f"{config_name}.json")
+
+    try:
+        with open(config_path, 'r') as file:
+            config = json.load(file)
+            
+            mission_config = config['MISSION']
+            mission_config['target_date'] = dt.datetime.now(dt.timezone.utc) if mission_config['target_date'] is None else dt.datetime.strptime(mission_config['target_date'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=dt.timezone.utc)
+            mission_config['GPS_coords'] = None if mission_config['GPS_coords'] is None else mission_config['GPS_coords']
+            mission_config['extent'] = tuple(map(tuple, mission_config['extent']))
+            
+            plot_config = config['PLOT']
+            plot_config['manual_extent'] = None if plot_config['manual_extent'] is None else tuple(map(tuple, plot_config['manual_extent']))
+
+            data_config = config['DATA']
+            data_config['bathymetry_path'] = os.path.join(current_directory, data_config['bathymetry_path'])
+            data_config['eez_path'] = os.path.join(current_directory, data_config['eez_path'])
     
-    config = {
-        "glider_name": "SENTINEL2",
-        "execution_date": execution_date,
-        "max_depth": 1000,
-        
-        # UGOS (East)
-        # "extent": [(15, -90), (30, -78)],
-        # "GPS_coords": [(0, 0), (0, 0)],
+    except Exception as e:
+        print(f"Error during config import: {e}")
+        return None
 
-        # Sentinel 1
-        # "extent": [(10, -78), (44, -10)],
-        # "GPS_coords": [(41.675, -70.522), (15.067, -23.650)],
+    glider_id = config['MISSION'].get('glider_id')
+    if glider_id and glider_id != "0":
+        print(f"Locating glider: {glider_id}")
+        try:
+            glider_df = acquire_gliders(
+                extent=None,
+                target_date=dt.datetime.now(dt.timezone.utc),
+                date_delta=dt.timedelta(days=1),
+                requested_variables=["time", "longitude", "latitude", "profile_id", "depth"],
+                print_vars=False,
+                target=glider_id,
+                request_timeout=5,
+                enable_parallel=False
+            )
+            if not glider_df.empty:
+                last_lon = glider_df['longitude'].iloc[-1]
+                last_lat = glider_df['latitude'].iloc[-1]
+                buffer = 5
+                config['MISSION']['extent'] = [[last_lat - buffer, last_lon - buffer], [last_lat + buffer, last_lon + buffer]]
+        except Exception as e:
+            print(f"Error updating extent based on glider ID {glider_id}: {e}")
 
-        # Sentinel 2
-        "extent": [(20, -30), (-40, 55)],
-        "GPS_coords": [(15.067, -23.650), (-33.907, 18.564)],
-
-        # GLOBAL
-        # "extent": [(-80, -180), (90, 180)],
-        # "GPS_coords": [(0, 0), (0, 0)],
-
-        "bathymetry_path": bathymetry_path,
-        "eez_path": eez_path
-        }
+    print("Configuration import success!")
 
     return config
 
 ### FUNCTION:
-def GGS_config_output(config, path="default"):
+def GGS_config_process(config, path="default"):
     
     '''
-    Output and save the configured Glider Guidance System mission.
-    
+    Output the configured Glider Guidance System configuration.
+
     Args:
     - config (dict): Glider Guidance System mission configuration.
-    - path (str): Path for saving the mission configuration. 
-        - default: "default"
+    - path (str): Path for saving the mission configuration. 'default' saves to the user's Downloads directory.
 
     Returns:
-    - root_directory (str): Root directory for saving the mission configuration.
+    - root_directory (str): The directory where the configuration was saved.
     '''
+
+    print("\n### PROCESSING GGS CONFIGURATION ###\n")
+
+    mission_name = config['MISSION'].get('mission_name', 'UnknownMission')
     
-    output_str = "\n\n### Glider Guidance System (GGS) Configuration ###\n\n"
-
-    for key, value in config.items():
-        if key == "GPS_coords":
-            output_str += "\nGPS_coords:\n"
-            for i, coord in enumerate(value, 1):
-                output_str += "  GPS_coord {}: {}\n".format(i, coord)
-        elif key == "extent":
-            output_str += "\nExtent:\n"
-            for i, coord in enumerate(value, 1):
-                output_str += "  Boundary {}: {}\n".format(i, coord)
-        elif key in ["glider_name", "execution_date"]:
-            output_str += "{}: {}\n\n".format(key.capitalize().replace('_', ' '), value)
-        elif key == "max_depth":
-            output_str += "Max Depth: {}\n".format(value)
-
-    formatted_date = config['execution_date'].strftime("%Y%m%d")
-
     if path == "default":
-        root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{config['glider_name']}")
+        root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{mission_name}")
     else:
-        root_directory = os.path.join(path, f"GGS_{config['glider_name']}")
-
+        root_directory = os.path.join(path, f"GGS_{mission_name}")
+    
     os.makedirs(root_directory, exist_ok=True)
 
-    config_pickle = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.pkl")
-    pd.to_pickle(config, config_pickle)
+    output_str = "Configuration:\n"
 
-    config_text = os.path.join(root_directory, f"GGS_{config['glider_name']}_config_{formatted_date}.txt")
-    with open(config_text, 'w') as file:
-        file.write(output_str)
+    for section, settings in config.items():
+        output_str += f"\n--> {section}\n"
+        for key, value in settings.items():
+            formatted_value = str(value) if not isinstance(value, dt.datetime) else value.strftime('%Y-%m-%dT%H:%M:%S%z')
+            output_str += f"{key}: {formatted_value}\n"
 
     print(output_str)
-
+    
     return root_directory

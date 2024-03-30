@@ -40,7 +40,7 @@ class RTOFS():
         self.grid_lats = None
 
     ### FUNCTION:
-    def rtofs_load(self, config, datetime_index, subset_extent=True, subset_depth=True):
+    def rtofs_load(self, config, datetime_index):
         
         '''
         Fetch the RTOFS ocean model data and standardize it.
@@ -48,10 +48,6 @@ class RTOFS():
         Args:
         - config (dict): Glider Guidance System mission configuration.
         - datetime_index (str): Index of the datetime to fetch.
-        - subset_extent (bool): Subset the data based on the mission extent.
-            - default: 'True'
-        - subset_depth (bool): Subset the data based on the mission depth.
-            - default: 'True'
 
         Returns:
         - None
@@ -61,53 +57,48 @@ class RTOFS():
 
         try:
             rtofs_raw = xr.open_dataset(rtofs_access)
-            if rtofs_raw:
-                datetime = pd.Timestamp(datetime_index).tz_localize(None)
-                time_values = rtofs_raw.time.values
-                time_index = np.argmin(np.abs(time_values - np.datetime64(datetime)))
-                rtofs_raw = rtofs_raw.isel(time=time_index)
+            datetime = pd.Timestamp(datetime_index).tz_localize(None)
+            time_values = rtofs_raw.time.values
+            time_index = np.argmin(np.abs(time_values - np.datetime64(datetime)))
+            rtofs_raw = rtofs_raw.isel(time=time_index)
 
-                self.data_origin = rtofs_raw
-                self.x = self.data_origin.x.values
-                self.y = self.data_origin.y.values
-                self.grid_lons = self.data_origin.lon.values[0,:]
-                self.grid_lats = self.data_origin.lat.values[:,0]
-                
-                self.data_origin.attrs['model_datetime'] = str(rtofs_raw.time.values)
-                self.data_origin.attrs['model_name'] = 'RTOFS'
+            self.data_origin = rtofs_raw
+            self.x = self.data_origin.x.values
+            self.y = self.data_origin.y.values
+            self.grid_lons = self.data_origin.lon.values[0,:]
+            self.grid_lats = self.data_origin.lat.values[:,0]
+            
+            self.data_origin.attrs['model_datetime'] = str(rtofs_raw.time.values)
+            self.data_origin.attrs['model_name'] = 'RTOFS'
 
-                if subset_extent and config:
-                    lats, lons = zip(*config['extent'])
-                    min_lon, max_lon = min(lons), max(lons)
-                    min_lat, max_lat = min(lats), max(lats)
+            lats, lons = zip(*config['MISSION']['extent'])
+            min_lon, max_lon = min(lons), max(lons)
+            min_lat, max_lat = min(lats), max(lats)
 
-                    lons_idx = np.interp([min_lon, max_lon], self.grid_lons, self.x)
-                    lats_idx = np.interp([min_lat, max_lat], self.grid_lats, self.y)
+            lons_idx = np.interp([min_lon, max_lon], self.grid_lons, self.x)
+            lats_idx = np.interp([min_lat, max_lat], self.grid_lats, self.y)
 
-                    extent = [
-                        np.floor(lons_idx[0]).astype(int),
-                        np.ceil(lons_idx[1]).astype(int),
-                        np.floor(lats_idx[0]).astype(int),
-                        np.ceil(lats_idx[1]).astype(int)
-                    ]
+            extent = [
+                np.floor(lons_idx[0]).astype(int),
+                np.ceil(lons_idx[1]).astype(int),
+                np.floor(lats_idx[0]).astype(int),
+                np.ceil(lats_idx[1]).astype(int)
+            ]
 
-                    self.data_origin = self.data_origin.isel(
-                        x=slice(extent[0], extent[1]),
-                        y=slice(extent[2], extent[3])
-                    )
+            self.data_origin = self.data_origin.isel(
+                x=slice(extent[0], extent[1]),
+                y=slice(extent[2], extent[3])
+            )
 
-                if subset_depth and config:
-                    max_depth = config["max_depth"]
-                    depth_indices = self.data_origin.depth.values
-                    target_depth_index = depth_indices[depth_indices >= max_depth][0]
-                    self.data_origin = self.data_origin.sel(depth=slice(0, target_depth_index))
-            else:
-                print("Failed to load RTOFS data. Dataset is None.")
+            max_depth = config['MISSION']['max_depth']
+            depth_indices = self.data_origin.depth.values
+            target_depth_index = depth_indices[depth_indices >= max_depth][0]
+            self.data_origin = self.data_origin.sel(depth=slice(0, target_depth_index))
         except Exception as e:
             print(f"Error fetching RTOFS data: {e}")
     
     ### FUNCTION:
-    def rtofs_save(self, config, directory, save_data=True, save_qc=True):
+    def rtofs_save(self, config, directory, save_data=True):
         
         '''
         Save the subset RTOFS data as a NetCDF file.
@@ -116,8 +107,6 @@ class RTOFS():
         - config (dict): Glider Guidance System mission configuration.
         - directory (str): Glider Guidance System mission directory.
         - save_data (bool): Save the data file.
-            - default: 'True'
-        - save_qc (bool): Save the quality control file.
             - default: 'True'
 
         Returns:
@@ -128,16 +117,10 @@ class RTOFS():
         self.qc = self.data_origin.copy()
 
         if save_data:
-            rtofs_data_file = f"RTOFS_Data_{config['max_depth']}m.nc"
+            rtofs_data_file = f"RTOFS_Data_{config['MISSION']['max_depth']}m.nc"
             rtofs_data_path = os.path.join(directory, rtofs_data_file)
             self.data.to_netcdf(rtofs_data_path)
             print(f"RTOFS Data saved to: {rtofs_data_path}")
-        
-        if save_qc:
-            rtofs_qc_file = f"RTOFS_QC_{config['max_depth']}m.nc"
-            rtofs_qc_path = os.path.join(directory, rtofs_qc_file)
-            self.qc.to_netcdf(rtofs_qc_path)
-            print(f"RTOFS QC saved to: {rtofs_qc_path}")
 
 ### CLASS:
 class CMEMS:
@@ -167,7 +150,7 @@ class CMEMS:
         self.data_origin = None
 
     ### FUNCTION:
-    def cmems_load(self, config, datetime_index, subset_extent=True, subset_depth=True):
+    def cmems_load(self, config, datetime_index):
         
         '''
         Fetch the CMEMS ocean model data and standardize it.
@@ -175,10 +158,6 @@ class CMEMS:
         Args:
         - config (dict): Glider Guidance System mission configuration.
         - datetime_index (str): Index of the datetime to fetch.
-        - subset_extent (bool): Subset the data based on the mission extent.
-            - default: 'True'
-        - subset_depth (bool): Subset the data based on the mission depth.
-            - default: 'True'
 
         Returns:
         - None
@@ -188,16 +167,16 @@ class CMEMS:
         formatted_datetime_index = datetime_index.strftime('%Y-%m-%dT%H:%M:%S')
         start_datetime = end_datetime = formatted_datetime_index
 
-        lats, lons = zip(*config['extent'])
+        lats, lons = zip(*config['MISSION']['extent'])
         min_lon, max_lon = min(lons), max(lons)
         min_lat, max_lat = min(lats), max(lats)
 
         self.data_origin = cm.open_dataset(
             dataset_id="cmems_mod_glo_phy-cur_anfc_0.083deg_PT6H-i",
-            minimum_longitude=min_lon if subset_extent else None,
-            maximum_longitude=max_lon if subset_extent else None,
-            minimum_latitude=min_lat if subset_extent else None,
-            maximum_latitude=max_lat if subset_extent else None,
+            minimum_longitude=min_lon,
+            maximum_longitude=max_lon,
+            minimum_latitude=min_lat,
+            maximum_latitude=max_lat,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
             variables=["uo", "vo"],
@@ -208,11 +187,10 @@ class CMEMS:
         self.data_origin.attrs['model_datetime'] = datetime_index.strftime('%Y-%m-%dT%H:%M:%S')
         self.data_origin.attrs['model_name'] = 'CMEMS'
 
-        if subset_depth and 'depth' in self.data_origin.coords:
-            max_depth = config["max_depth"]
-            depth_indices = self.data_origin.depth.values
-            target_depth_index = np.searchsorted(depth_indices, max_depth, side='right') - 1
-            self.data_origin = self.data_origin.isel(depth=slice(None, target_depth_index + 1))
+        max_depth = config['MISSION']['max_depth']
+        depth_indices = self.data_origin.depth.values
+        target_depth_index = np.searchsorted(depth_indices, max_depth, side='right') - 1
+        self.data_origin = self.data_origin.isel(depth=slice(None, target_depth_index + 1))
         
         rename_dict = {'uo': 'u', 'vo': 'v', 'latitude': 'lat', 'longitude': 'lon'}
         existing_vars = set(self.data_origin.variables.keys()) & set(rename_dict.keys())
@@ -220,7 +198,7 @@ class CMEMS:
         self.data_origin = self.data_origin.rename(final_rename_dict)
 
     ### FUNCTION:
-    def cmems_save(self, config, directory, save_data=True, save_qc=True):
+    def cmems_save(self, config, directory, save_data=True):
         
         '''
         Save the subset CMEMS data as a NetCDF file.
@@ -229,8 +207,6 @@ class CMEMS:
         - config (dict): Glider Guidance System mission configuration.
         - directory (str): Glider Guidance System mission directory.
         - save_data (bool): Save the data file.
-            - default: 'True'
-        - save_qc (bool): Save the quality control file.
             - default: 'True'
 
         Returns:
@@ -241,16 +217,10 @@ class CMEMS:
         self.qc = self.data_origin.copy()
 
         if save_data:
-            cmems_data_file = f"CMEMS_Data_{config['max_depth']}m.nc"
+            cmems_data_file = f"CMEMS_Data_{config['MISSION']['max_depth']}m.nc"
             cmems_data_path = os.path.join(directory, cmems_data_file)
             self.data.to_netcdf(cmems_data_path)
             print(f"CMEMS Data saved to: {cmems_data_path}")
-        
-        if save_qc:
-            cmems_qc_file = f"CMEMS_QC_{config['max_depth']}m.nc"
-            cmems_qc_path = os.path.join(directory, cmems_qc_file)
-            self.qc.to_netcdf(cmems_qc_path)
-            print(f"CMEMS QC saved to: {cmems_qc_path}")
 
 ### CLASS:
 class GOFS:
@@ -277,7 +247,7 @@ class GOFS:
         self.data_origin = None
 
     ### FUNCTION:
-    def gofs_load(self, config, datetime_index, subset_extent=True, subset_depth=True):
+    def gofs_load(self, config, datetime_index):
         
         '''
         Fetch the GOFS ocean model data and standardize it.
@@ -285,10 +255,6 @@ class GOFS:
         Args:
         - config (dict): Glider Guidance System mission configuration.
         - datetime_index (str): Index of the datetime to fetch.
-        - subset_extent (bool): Subset the data based on the mission extent.
-            - default: 'True'
-        - subset_depth (bool): Subset the data based on the mission depth.
-            - default: 'True'
 
         Returns:
         - None
@@ -301,48 +267,42 @@ class GOFS:
 
         try:
             gofs_raw = xr.open_dataset(gofs_access, drop_variables="tau")
-            if gofs_raw:
-                gofs_raw = gofs_raw.sel(time=datetime_index, method='nearest')
+            gofs_raw = gofs_raw.sel(time=datetime_index, method='nearest')
 
-                gofs_raw['lon'] = ((gofs_raw['lon'] + 180) % 360) - 180
-                gofs_raw = gofs_raw.sortby(gofs_raw['lon'])
+            gofs_raw['lon'] = ((gofs_raw['lon'] + 180) % 360) - 180
+            gofs_raw = gofs_raw.sortby(gofs_raw['lon'])
 
-                self.data_origin = gofs_raw
+            self.data_origin = gofs_raw
 
-                self.data_origin.attrs['model_datetime'] = datetime_index.strftime('%Y-%m-%dT%H:%M:%S')
-                self.data_origin.attrs['model_name'] = 'GOFS'
+            self.data_origin.attrs['model_datetime'] = datetime_index.strftime('%Y-%m-%dT%H:%M:%S')
+            self.data_origin.attrs['model_name'] = 'GOFS'
 
-                if subset_extent:
-                    lats, lons = zip(*config['extent'])
-                    min_lon, max_lon = min(lons), max(lons)
-                    min_lat, max_lat = min(lats), max(lats)
+            lats, lons = zip(*config['MISSION']['extent'])
+            min_lon, max_lon = min(lons), max(lons)
+            min_lat, max_lat = min(lats), max(lats)
 
-                    self.data_origin = self.data_origin.sel(lat=slice(min_lat, max_lat), lon=slice(min_lon, max_lon))
+            self.data_origin = self.data_origin.sel(lat=slice(min_lat, max_lat), lon=slice(min_lon, max_lon))
 
-                if subset_depth and 'depth' in self.data_origin.coords:
-                    max_depth = config["max_depth"]
-                    depth_indices = self.data_origin.depth.values
-                    target_depth_index = np.searchsorted(depth_indices, max_depth, side='right') - 1
-                    
-                    self.data_origin = self.data_origin.isel(depth=slice(None, target_depth_index + 1))
+            max_depth = config['MISSION']['max_depth']
+            depth_indices = self.data_origin.depth.values
+            target_depth_index = np.searchsorted(depth_indices, max_depth, side='right') - 1
+            
+            self.data_origin = self.data_origin.isel(depth=slice(None, target_depth_index + 1))
 
-                rename_dict = {
-                    "surf_el": "sea_surface_height",
-                    "water_temp": "temperature",
-                    "water_u": "u",
-                    "water_v": "v"
-                }
-                existing_vars = set(self.data_origin.variables.keys()) & set(rename_dict.keys())
-                final_rename_dict = {k: rename_dict[k] for k in existing_vars}
-                self.data_origin = self.data_origin.rename(final_rename_dict)
-
-            else:
-                print("Failed to load GOFS data. Dataset is None.")
+            rename_dict = {
+                "surf_el": "sea_surface_height",
+                "water_temp": "temperature",
+                "water_u": "u",
+                "water_v": "v"
+            }
+            existing_vars = set(self.data_origin.variables.keys()) & set(rename_dict.keys())
+            final_rename_dict = {k: rename_dict[k] for k in existing_vars}
+            self.data_origin = self.data_origin.rename(final_rename_dict)
         except Exception as e:
             print(f"Error fetching GOFS data: {e}")
 
     ### FUNCTION:
-    def gofs_save(self, config, directory, save_data=True, save_qc=True):
+    def gofs_save(self, config, directory, save_data=True):
 
         '''
         Save the subset GOFS data as a NetCDF file.
@@ -351,8 +311,6 @@ class GOFS:
         - config (dict): Glider Guidance System mission configuration.
         - directory (str): Glider Guidance System mission directory.
         - save_data (bool): Save the data file.
-            - default: 'True'
-        - save_qc (bool): Save the quality control file.
             - default: 'True'
         
         Returns:
@@ -363,13 +321,7 @@ class GOFS:
         self.qc = self.data_origin.copy()
         
         if save_data:
-            gofs_data_file = f"GOFS_Data_{config['max_depth']}m.nc"
+            gofs_data_file = f"GOFS_Data_{config['MISSION']['max_depth']}m.nc"
             gofs_data_path = os.path.join(directory, gofs_data_file)
             self.data.to_netcdf(gofs_data_path)
             print(f"GOFS Data saved to: {gofs_data_path}")
-        
-        if save_qc:
-            gofs_qc_file = f"GOFS_QC_{config['max_depth']}m.nc"
-            gofs_qc_path = os.path.join(directory, gofs_qc_file)
-            self.qc.to_netcdf(gofs_qc_path)
-            print(f"GOFS QC saved to: {gofs_qc_path}")

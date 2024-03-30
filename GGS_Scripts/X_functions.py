@@ -11,6 +11,7 @@ import datetime as dt
 from datetime import datetime as datetime
 from dateutil import parser
 from erddapy import ERDDAP
+import glob
 from joblib import Parallel, delayed
 import math
 import matplotlib.pyplot as plt
@@ -119,7 +120,7 @@ def acquire_gliders(extent=None, target_date=dt.datetime.now(), date_delta=dt.ti
         return pd.DataFrame()
 
     glider_ids = search_results['Dataset ID'].values
-    print(f"Found {len(glider_ids)} Glider Datasets within search window.")
+    print(f"Found {len(glider_ids)} Glider Datasets within search window: {formatted_start_date} to {formatted_end_date}")
     print("Glider Indexes found:", ", ".join(glider_ids))
 
     target_glider_ids = []
@@ -454,30 +455,28 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, downs
     - none
     '''
 
-    bathymetry_path = config["bathymetry_path"]
+    bathymetry_path = config['DATA']['bathymetry_path']
     bathy_data = xr.open_dataset(bathymetry_path, chunks={'lat': 1000, 'lon': 1000})
-
-    subset_bathy = bathy_data.sel(lat=slice(model_data.lat.min(), model_data.lat.max()), lon=slice(model_data.lon.min(), model_data.lon.max()))
-    
+    bathy_data = bathy_data.sel(lat=slice(model_data.lat.min(), model_data.lat.max()), lon=slice(model_data.lon.min(), model_data.lon.max()))
     if downsample:
-        subset_bathy = subset_bathy.coarsen(lat=25, lon=25, boundary='trim').mean()
+        bathy_data = bathy_data.coarsen(lat=25, lon=25, boundary='trim').mean()
     
-    subset_bathy = subset_bathy.compute()
+    bathy_data = bathy_data.compute()
 
     isobath_levels = sorted([isobath1, isobath2])
     depth_intervals = [-np.inf] + isobath_levels + [0]
 
-    subset_bathy['elevation'] = subset_bathy['elevation'].fillna(0).where(~np.isinf(subset_bathy['elevation']), 0)
+    bathy_data['elevation'] = bathy_data['elevation'].fillna(0).where(~np.isinf(bathy_data['elevation']), 0)
 
     cornflowerblue = mcolors.to_rgba('cornflowerblue')
     water = cfeature.COLORS['water']
     lightsteelblue = mcolors.to_rgba('lightsteelblue')
     colors = [cornflowerblue, water, lightsteelblue]
-    
-    ax.contour(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation, levels=isobath_levels, colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
-    
+
+    ax.contour(bathy_data.lon, bathy_data.lat, bathy_data.elevation, levels=isobath_levels, colors='dimgrey', linestyles='dashed', linewidths=0.25, zorder=50, transform=ccrs.PlateCarree())
+
     for i in range(len(depth_intervals) - 1):
-        ax.contourf(subset_bathy.lon, subset_bathy.lat, subset_bathy.elevation, levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]], transform=ccrs.PlateCarree())
+        ax.contourf(bathy_data.lon, bathy_data.lat, bathy_data.elevation, levels=[depth_intervals[i], depth_intervals[i + 1]], colors=[colors[i]], transform=ccrs.PlateCarree())
     
     if show_legend:
         isobath1 = -isobath1
@@ -489,43 +488,6 @@ def plot_bathymetry(ax, config, model_data, isobath1=-100, isobath2=-1000, downs
         bathymetry_legend.set_zorder(10000)
         for text in bathymetry_legend.get_texts():
             text.set_color('black')
-
-### FUNCTION:
-def plot_profile_thresholds(ax, data, threshold, color):
-    
-    '''
-    Apply shading to regions where data exceeds the threshold and update the legend.
-    
-    Args:
-    - ax (matplotlib.axes.Axes): The axes object to apply shading to.
-    - data (array): Data array for the plot.
-    - threshold (float): Threshold value for shading.
-    - color (str): Color for the shaded region.
-
-    Returns:
-    - None
-    '''
-
-    depth_values = np.arange(len(data))
-    regions = []
-    start = None
-
-    for i, value in enumerate(data):
-        if value > threshold:
-            if start is None:
-                start = i
-        else:
-            if start is not None:
-                regions.append((start, i))
-                start = None
-
-    if start is not None:
-        regions.append((start, len(data)))
-
-    for start, end in regions:
-        ax.fill_betweenx(depth_values[start:end], ax.get_xlim()[0], ax.get_xlim()[1], color=color, alpha=0.25)
-
-    ax.plot([], [], color=color, alpha=0.5, linewidth=10, label=f'Above Threshold = [{threshold}]')
 
 ### FUNCTION:
 def plot_streamlines(ax, longitude, latitude, u_depth_avg, v_depth_avg, density=2):
@@ -603,18 +565,39 @@ def plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag
     - None
     '''
 
-    levels = [mag1, mag2, mag3, mag4, mag5, np.nanmax(mag_depth_avg)]
-    colors = ['none', 'yellow', 'orange', 'orangered', 'maroon']
-    
-    threshold_contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors, extend='both', transform=ccrs.PlateCarree(), zorder=10)
+    max_mag = np.nanmax(mag_depth_avg)
+    max_label = f'{max_mag:.2f}'
 
-    if threshold_legend:
-        patches = [
-            mpatches.Patch(facecolor='yellow', label=f'{mag2} - {mag3} m/s'),
-            mpatches.Patch(facecolor='orange', label=f'{mag3} - {mag4} m/s'),
-            mpatches.Patch(facecolor='orangered', label=f'{mag4} - {mag5} m/s'),
-            mpatches.Patch(facecolor='maroon', label=f'> {mag5} m/s')
-            ]
+    if max_mag <= mag1:
+        pass
+    elif mag1 < max_mag <= mag2:
+        pass
+    elif mag2 < max_mag <= mag3:
+        levels = [mag1, mag2, mag3]
+        colors = ['none', 'yellow']
+        labels = [None, f'{mag2} - {max_label} m/s']
+    elif mag3 < max_mag <= mag4:
+        levels = [mag1, mag2, mag3, mag4]
+        colors = ['none', 'yellow', 'orange']
+        labels = [None, f'{mag2} - {mag3} m/s', f'{mag3} - {max_label} m/s']
+    elif mag4 < max_mag <= mag5:
+        levels = [mag1, mag2, mag3, mag4, mag5]
+        colors = ['none', 'yellow', 'orange', 'orangered']
+        labels = [None, f'{mag2} - {mag3} m/s', f'{mag3} - {mag4} m/s', f'{mag4} - {max_label} m/s']
+    else:
+        levels = [mag1, mag2, mag3, mag4, mag5, max_mag]
+        colors = ['none', 'yellow', 'orange', 'orangered', 'maroon', 'maroon']
+        labels = [None, f'{mag2} - {mag3} m/s', f'{mag3} - {mag4} m/s', f'{mag4} - {mag5} m/s', f'{mag5} - {max_label} m/s']
+
+    if levels:
+        threshold_contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors[:len(levels)-1], extend='both', transform=ccrs.PlateCarree(), zorder=10)
+    
+    patches = []
+    for color, label in zip(colors, labels):
+        if label:
+            patches.append(mpatches.Patch(color=color, label=label))
+
+    if threshold_legend and labels:
         threshold_legend = ax.legend(handles=patches, loc='upper right', facecolor='white', edgecolor='black', fontsize='medium')
         threshold_legend.set_zorder(10000)
         for text in threshold_legend.get_texts():
@@ -639,12 +622,13 @@ def plot_advantage_zones(ax, config, longitude, latitude, dir_depth_avg, toleran
     - None
     '''
 
-    start_lat, start_lon = config['GPS_coords'][0]
-    end_lat, end_lon = config['GPS_coords'][-1]
-
-    if (start_lat, start_lon) == (0, 0) and (end_lat, end_lon) == (0, 0):
-        print("GPS route coordinates are undefined. Skipping advantage zone plotting.")
+    GPS_coords = config['MISSION']['GPS_coords']
+    if not GPS_coords or len(GPS_coords) < 2:
+        print("Insufficient GPS route coordinates provided. Skipping advantage zone plotting.")
         return
+
+    start_lat, start_lon = GPS_coords[0]
+    end_lat, end_lon = GPS_coords[-1]
 
     direct_bearing = calculate_bearing(start_lat, start_lon, end_lat, end_lon)
     
@@ -671,6 +655,259 @@ def plot_advantage_zones(ax, config, longitude, latitude, dir_depth_avg, toleran
         for text in advantage_legend.get_texts():
             text.set_color('black')
         ax.add_artist(advantage_legend)
+
+### FUNCTION:
+def plot_profile_thresholds(ax, data, threshold, color):
+    
+    '''
+    Apply shading to regions where data exceeds the threshold and update the legend.
+    
+    Args:
+    - ax (matplotlib.axes.Axes): The axes object to apply shading to.
+    - data (array): Data array for the plot.
+    - threshold (float): Threshold value for shading.
+    - color (str): Color for the shaded region.
+
+    Returns:
+    - None
+    '''
+
+    depth_values = np.arange(len(data))
+    regions = []
+    start = None
+
+    for i, value in enumerate(data):
+        if value > threshold:
+            if start is None:
+                start = i
+        else:
+            if start is not None:
+                regions.append((start, i))
+                start = None
+
+    if start is not None:
+        regions.append((start, len(data)))
+
+    for start, end in regions:
+        ax.fill_betweenx(depth_values[start:end], ax.get_xlim()[0], ax.get_xlim()[1], color=color, alpha=0.25)
+
+    ax.plot([], [], color=color, alpha=0.5, linewidth=10, label=f'Above Threshold = [{threshold}]')
+
+### FUNCTION:
+def profile_rtofs(axs, dataset, latitude_qc, longitude_qc, threshold):
+    
+    rtofs_model_data, rtofs_depth_average, rtofs_bin_average = dataset
+
+    (y_rtofs_model, x_rtofs_model), _ = calculate_gridpoint(rtofs_model_data, latitude_qc, longitude_qc)
+    (y_rtofs_avg, x_rtofs_avg), _ = calculate_gridpoint(rtofs_depth_average, latitude_qc, longitude_qc)
+    (y_rtofs_bin, x_rtofs_bin), _ = calculate_gridpoint(rtofs_bin_average, latitude_qc, longitude_qc)
+    
+    rtofs_model_u = rtofs_model_data['u'].isel(y=y_rtofs_model, x=x_rtofs_model).values
+    rtofs_avg_u = rtofs_depth_average['u_depth_avg'].isel(y=y_rtofs_avg, x=x_rtofs_avg).values
+    rtofs_avg_u = rtofs_avg_u.item()
+    rtofs_bin_u = rtofs_bin_average['u_bin_avg'].isel(y=y_rtofs_bin, x=x_rtofs_bin).values
+    rtofs_bin_u1d = rtofs_bin_u[0]
+
+    rtofs_model_v = rtofs_model_data['v'].isel(y=y_rtofs_model, x=x_rtofs_model).values
+    rtofs_avg_v = rtofs_depth_average['v_depth_avg'].isel(y=y_rtofs_avg, x=x_rtofs_avg).values
+    rtofs_avg_v = rtofs_avg_v.item()
+    rtofs_bin_v = rtofs_bin_average['v_bin_avg'].isel(y=y_rtofs_bin, x=x_rtofs_bin).values
+    rtofs_bin_v1d = rtofs_bin_v[0]
+
+    rtofs_avg_mag = rtofs_depth_average['mag_depth_avg'].isel(y=y_rtofs_avg, x=x_rtofs_avg).values
+    rtofs_avg_mag = rtofs_avg_mag.item()
+    rtofs_bin_mag = rtofs_bin_average['mag_bin_avg'].isel(y=y_rtofs_bin, x=x_rtofs_bin).values
+    rtofs_bin_mag1d = rtofs_bin_mag[0]
+
+    rtofs_bin_dir = rtofs_bin_average['dir_bin_avg'].isel(y=y_rtofs_bin, x=x_rtofs_bin).values
+    rtofs_bin_dir = np.mod(rtofs_bin_dir + 180, 360) - 180
+
+    rtofs_max_depth = rtofs_model_data.depth.max().item()
+    rtofs_max_bins = rtofs_max_depth + 1
+    rtofs_bin_depths = np.arange(rtofs_max_bins)
+
+    ax = axs[0]
+    ax.scatter(rtofs_model_u, rtofs_model_data.depth, marker='x', color='black', s=100, label='Model Datapoint', alpha=1.0, zorder=3)
+    ax.scatter(rtofs_bin_u, rtofs_bin_depths, label='1m Interpolation', color='cyan', alpha=1.0, zorder=2)
+    ax.axvline(x=rtofs_avg_u, label=f'Depth Average = [{rtofs_avg_u:.2f}]', color='darkcyan', linestyle='--', linewidth=2, zorder=1)
+    ax.set_xlabel('u Velocity (m/s)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[1]
+    ax.scatter(rtofs_model_v, rtofs_model_data.depth, label='Model Datapoint', marker='x', color='black', s=100, alpha=1.0, zorder=3)
+    ax.scatter(rtofs_bin_v, rtofs_bin_depths, label='1m Interpolation', color='orange', alpha=1.0, zorder=2)
+    ax.axvline(x=rtofs_avg_v, label=f'Depth Avgerage = [{rtofs_avg_v:.2f}]', color='darkorange', linestyle='--', linewidth=2, zorder=1)
+    ax.set_xlabel('v Velocity (m/s)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[2]
+    ax.scatter(rtofs_bin_mag, rtofs_bin_depths, label='1m Interpolation', color='green', alpha=1.0, zorder=2)
+    ax.set_xlabel('Current Magnitude (m/s)', fontsize=12, fontweight='bold')
+    ax.axvline(x=rtofs_avg_mag, label=f'Depth Avgerage = [{rtofs_avg_mag:.2f}]', color='darkgreen', linestyle='--', linewidth=2, zorder=1)
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[3]
+    ax.scatter(rtofs_bin_dir, rtofs_bin_depths, label='1m Interpolation', color='purple', alpha=1.0, zorder=2)
+    ax.set_xlabel('Current Direction (degrees)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    shading_colors = ['cyan', 'orange', 'green']
+    for i, (data_1d, color) in enumerate(zip([rtofs_bin_u1d, rtofs_bin_v1d, rtofs_bin_mag1d], shading_colors)):
+        plot_profile_thresholds(axs[i], data_1d, threshold, color)
+
+    axs[0].set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
+    for ax in axs:
+        ax.invert_yaxis()
+        ax.tick_params(axis='x', labelrotation=45)
+        ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+        handles, labels = ax.get_legend_handles_labels()
+        if labels:
+            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0)
+
+### FUNCTION:
+def profile_cmems(axs, dataset, latitude_qc, longitude_qc, threshold):
+    
+    cmems_model_data, cmems_depth_average, cmems_bin_average = dataset
+        
+    (y_cmems_model, x_cmems_model), _ = calculate_gridpoint(cmems_model_data, latitude_qc, longitude_qc)
+    (y_cmems_avg, x_cmems_avg), _ = calculate_gridpoint(cmems_depth_average, latitude_qc, longitude_qc)
+    (y_cmems_bin, x_cmems_bin), _ = calculate_gridpoint(cmems_bin_average, latitude_qc, longitude_qc)
+
+    cmems_model_u = cmems_model_data['u'].isel(lat=y_cmems_model, lon=x_cmems_model).values
+    cmems_avg_u = cmems_depth_average['u_depth_avg'].isel(lat=y_cmems_avg, lon=x_cmems_avg).values
+    cmems_avg_u = cmems_avg_u.item()
+    cmems_bin_u = cmems_bin_average['u_bin_avg'].isel(lat=y_cmems_bin, lon=x_cmems_bin).values
+    cmems_bin_u1d = cmems_bin_u[0]
+
+    cmems_model_v = cmems_model_data['v'].isel(lat=y_cmems_model, lon=x_cmems_model).values
+    cmems_avg_v = cmems_depth_average['v_depth_avg'].isel(lat=y_cmems_avg, lon=x_cmems_avg).values
+    cmems_avg_v = cmems_avg_v.item()
+    cmems_bin_v = cmems_bin_average['v_bin_avg'].isel(lat=y_cmems_bin, lon=x_cmems_bin).values
+    cmems_bin_v1d = cmems_bin_v[0]
+
+    cmems_avg_mag = cmems_depth_average['mag_depth_avg'].isel(lat=y_cmems_avg, lon=x_cmems_avg).values
+    cmems_avg_mag = cmems_avg_mag.item()
+    cmems_bin_mag = cmems_bin_average['mag_bin_avg'].isel(lat=y_cmems_bin, lon=x_cmems_bin).values
+    cmems_bin_mag1d = cmems_bin_mag[0]
+
+    cmems_bin_dir = cmems_bin_average['dir_bin_avg'].isel(lat=y_cmems_bin, lon=x_cmems_bin).values
+    cmems_bin_dir = np.mod(cmems_bin_dir + 180, 360) - 180
+
+    cmems_max_depth = cmems_model_data.depth.max().item()
+    cmems_max_bins = cmems_max_depth + 1
+    cmems_bin_depths = np.arange(cmems_max_bins)
+
+    ax = axs[0]
+    ax.scatter(cmems_model_u, cmems_model_data.depth, marker='x', color='black', s=100, label='Model Datapoint', alpha=1.0, zorder=3)
+    ax.scatter(cmems_bin_u, cmems_bin_depths, label='1m Interpolation', color='cyan', alpha=1.0, zorder=2)
+    ax.axvline(x=cmems_avg_u, label=f'Depth Average = [{cmems_avg_u:.2f}]', color='darkcyan', linestyle='--', linewidth=2, zorder=1)
+    ax.set_xlabel('u Velocity (m/s)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[1]
+    ax.scatter(cmems_model_v, cmems_model_data.depth, label='Model Datapoint', marker='x', color='black', s=100, alpha=1.0, zorder=3)
+    ax.scatter(cmems_bin_v, cmems_bin_depths, label='1m Interpolation', color='orange', alpha=1.0, zorder=2)
+    ax.axvline(x=cmems_avg_v, label=f'Depth Avgerage = [{cmems_avg_v:.2f}]', color='darkorange', linestyle='--', linewidth=2, zorder=1)
+    ax.set_xlabel('v Velocity (m/s)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+    
+    ax = axs[2]
+    ax.scatter(cmems_bin_mag, cmems_bin_depths, label='1m Interpolation', color='green', alpha=1.0, zorder=2)
+    ax.set_xlabel('Current Magnitude (m/s)', fontsize=12, fontweight='bold')
+    ax.axvline(x=cmems_avg_mag, label=f'Depth Avgerage = [{cmems_avg_mag:.2f}]', color='darkgreen', linestyle='--', linewidth=2, zorder=1)
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[3]
+    ax.scatter(cmems_bin_dir, cmems_bin_depths, label='1m Interpolation', color='purple', alpha=1.0, zorder=2)
+    ax.set_xlabel('Current Direction (degrees)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    shading_colors = ['cyan', 'orange', 'lawngreen']
+    for i, (data_1d, color) in enumerate(zip([cmems_bin_u1d, cmems_bin_v1d, cmems_bin_mag1d], shading_colors)):
+        plot_profile_thresholds(axs[i], data_1d, threshold, color)
+
+    axs[0].set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
+    for ax in axs:
+        ax.invert_yaxis()
+        ax.tick_params(axis='x', labelrotation=45)
+        ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+        handles, labels = ax.get_legend_handles_labels()
+        if labels:
+            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0)
+
+### FUNCTION:
+def profile_gofs(axs, dataset, latitude_qc, longitude_qc, threshold):
+    
+    gofs_model_data, gofs_depth_average, gofs_bin_average = dataset
+        
+    (y_gofs_model, x_gofs_model), _ = calculate_gridpoint(gofs_model_data, latitude_qc, longitude_qc)
+    (y_gofs_avg, x_gofs_avg), _ = calculate_gridpoint(gofs_depth_average, latitude_qc, longitude_qc)
+    (y_gofs_bin, x_gofs_bin), _ = calculate_gridpoint(gofs_bin_average, latitude_qc, longitude_qc)
+
+    gofs_model_u = gofs_model_data['u'].isel(lat=y_gofs_model, lon=x_gofs_model).values
+    gofs_avg_u = gofs_depth_average['u_depth_avg'].isel(lat=y_gofs_avg, lon=x_gofs_avg).values
+    gofs_avg_u = gofs_avg_u.item()
+    gofs_bin_u = gofs_bin_average['u_bin_avg'].isel(lat=y_gofs_bin, lon=x_gofs_bin).values
+    gofs_bin_u1d = gofs_bin_u[0]
+
+    gofs_model_v = gofs_model_data['v'].isel(lat=y_gofs_model, lon=x_gofs_model).values
+    gofs_avg_v = gofs_depth_average['v_depth_avg'].isel(lat=y_gofs_avg, lon=x_gofs_avg).values
+    gofs_avg_v = gofs_avg_v.item()
+    gofs_bin_v = gofs_bin_average['v_bin_avg'].isel(lat=y_gofs_bin, lon=x_gofs_bin).values
+    gofs_bin_v1d = gofs_bin_v[0]
+
+    gofs_avg_mag = gofs_depth_average['mag_depth_avg'].isel(lat=y_gofs_avg, lon=x_gofs_avg).values
+    gofs_avg_mag = gofs_avg_mag.item()
+    gofs_bin_mag = gofs_bin_average['mag_bin_avg'].isel(lat=y_gofs_bin, lon=x_gofs_bin).values
+    gofs_bin_mag1d = gofs_bin_mag[0]
+
+    gofs_bin_dir = gofs_bin_average['dir_bin_avg'].isel(lat=y_gofs_bin, lon=x_gofs_bin).values
+    gofs_bin_dir = np.mod(gofs_bin_dir + 180, 360) - 180
+
+    gofs_max_depth = gofs_model_data.depth.max().item()
+    gofs_max_bins = gofs_max_depth + 1
+    gofs_bin_depths = np.arange(gofs_max_bins)
+
+    ax = axs[0]
+    ax.scatter(gofs_model_u, gofs_model_data.depth, marker='x', color='black', s=100, label='Model Datapoint', alpha=1.0, zorder=3)
+    ax.scatter(gofs_bin_u, gofs_bin_depths, label='1m Interpolation', color='cyan', alpha=1.0, zorder=2)
+    ax.axvline(x=gofs_avg_u, label=f'Depth Average = [{gofs_avg_u:.2f}]', color='darkcyan', linestyle='--', linewidth=2, zorder=1)
+    ax.set_xlabel('u Velocity (m/s)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[1]
+    ax.scatter(gofs_model_v, gofs_model_data.depth, label='Model Datapoint', marker='x', color='black', s=100, alpha=1.0, zorder=3)
+    ax.scatter(gofs_bin_v, gofs_bin_depths, label='1m Interpolation', color='orange', alpha=1.0, zorder=2)
+    ax.axvline(x=gofs_avg_v, label=f'Depth Avgerage = [{gofs_avg_v:.2f}]', color='darkorange', linestyle='--', linewidth=2, zorder=1)
+    ax.set_xlabel('v Velocity (m/s)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    ax = axs[2]
+    ax.scatter(gofs_bin_mag, gofs_bin_depths, label='1m Interpolation', color='green', alpha=1.0, zorder=2)
+    ax.set_xlabel('Current Magnitude (m/s)', fontsize=12, fontweight='bold')
+    ax.axvline(x=gofs_avg_mag, label=f'Depth Avgerage = [{gofs_avg_mag:.2f}]', color='darkgreen', linestyle='--', linewidth=2, zorder=1)
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+    
+    ax = axs[3]
+    ax.scatter(gofs_bin_dir, gofs_bin_depths, label='1m Interpolation', color='purple', alpha=1.0, zorder=2)
+    ax.set_xlabel('Current Direction (degrees)', fontsize=12, fontweight='bold')
+    ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+
+    shading_colors = ['cyan', 'orange', 'lawngreen']
+    for i, (data_1d, color) in enumerate(zip([gofs_bin_u1d, gofs_bin_v1d, gofs_bin_mag1d], shading_colors)):
+        plot_profile_thresholds(axs[i], data_1d, threshold, color)
+
+    axs[0].set_ylabel('Depth (m)', fontsize=12, fontweight='bold')
+    for ax in axs:
+        ax.invert_yaxis()
+        ax.tick_params(axis='x', labelrotation=45)
+        ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
+        handles, labels = ax.get_legend_handles_labels()
+        if labels:
+            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0)
 
 ### FUNCTION:
 def plot_add_gliders(ax, glider_data_frame, legend=True):
@@ -728,7 +965,7 @@ def plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90):
     - None
     '''
 
-    eez_path = config["eez_path"]
+    eez_path = config['DATA']['eez_path']
 
     eez_feature = cfeature.ShapelyFeature(
         Reader(eez_path).geometries(),
@@ -756,7 +993,7 @@ def plot_glider_route(ax, config):
     - None
     '''
 
-    lats, lons = zip(*config["GPS_coords"])
+    lats, lons = zip(*config['MISSION']['GPS_coords'])
 
     ax.scatter(lons[0], lats[0], color='green', s=100, transform=ccrs.PlateCarree(), zorder=95, label='Start')
     ax.scatter(lons[-1], lats[-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=95, label='End')
@@ -872,7 +1109,7 @@ def format_figure_titles(ax, fig, config, datetime_index, model_name, title):
     subtitle_text = f"{model_name} {title_datetime} UTC"
     fig.text(0.5, subtitle_position, subtitle_text, fontsize=18, ha='center', va='bottom')
 
-    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['mission_name']}"
+    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['MISSION']['mission_name']}"
     fig.text(0.5, suptitle_position, suptitle_text, fontsize=16, fontweight='bold', ha='center', va='top', color='gray')
 
 ### FUNCTION:
@@ -895,10 +1132,10 @@ def format_subplot_titles(fig, config, datetime, title):
     
     title_datetime = format_title_datetime(datetime)
     subtitle_text = f"{title_datetime} UTC"
-    fig.text(0.5, 0.92, subtitle_text, fontsize=22, ha='center', va='top')
+    fig.text(0.5, 0.95, subtitle_text, fontsize=22, ha='center', va='top')
     
-    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['mission_name']}"
-    fig.text(0.5, 0.05, suptitle_text, fontsize=20, ha='center', va='top', color='gray')
+    suptitle_text = f"Generated by the Glider Guidance System (GGS) - {config['MISSION']['mission_name']}"
+    fig.text(0.5, 0.025, suptitle_text, fontsize=20, ha='center', va='top', color='gray')
 
 ### FUNCTION:
 def format_subplot_headers(axes, fig, subplot_titles):
@@ -920,10 +1157,10 @@ def format_subplot_headers(axes, fig, subplot_titles):
 
     for ax, model_name in zip(axes[:, 0], subplot_titles):
         bbox = ax.get_position()
-        text_x = bbox.x0
-        text_y = bbox.y1 + 0.02
+        text_x = (bbox.x0 + bbox.x1) / 2
+        text_y = bbox.y1 + bbox.height * 0.025
         
-        fig.text(text_x, text_y, model_name, fontsize=14, fontweight='bold', ha='left')
+        fig.text(text_x, text_y, model_name, fontsize=16, fontweight='bold', ha='center', va='bottom')
 
 ### FUNCTION:
 def format_title_datetime(datetime):

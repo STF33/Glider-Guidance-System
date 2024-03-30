@@ -5,6 +5,7 @@ __ARCHIVE__/
 0-Resources/
 
 GGS_AutomationScripts/__pycache__/
+GGS_AutomationScripts/config/
 GGS_AutomationScripts/data/
 
 GGS_Scripts/__pycache__/

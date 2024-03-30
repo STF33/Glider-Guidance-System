@@ -99,7 +99,7 @@ def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_ave
     - model_bin_average (xarray.Dataset): Bin average data.
     '''
 
-    print("\n### INTERPOLATING MODEL DATA ###\n")
+    print("\n### INTERPOLATING RTOFS MODEL DATA ###\n")
     start_time = print_starttime()
 
     # Chunk the data
@@ -110,7 +110,7 @@ def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_ave
     model_data = model_data.load()
 
     # Get the maximum depth
-    config_depth = config['max_depth']
+    config_depth = config['MISSION']['max_depth']
     config_bins = config_depth + 1
     max_depth = model_data.depth.max().item()
     max_bins = max_depth + 1
@@ -158,11 +158,11 @@ def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_ave
     if save_depth_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_depth_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_RTOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_depth_average.to_netcdf(os.path.join(directory, f"{config['MISSION'].get('mission_name', 'UnknownMission')}_RTOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_bin_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_RTOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_bin_average.to_netcdf(os.path.join(directory, f"{config['MISSION'].get('mission_name', 'UnknownMission')}_RTOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)
@@ -192,7 +192,7 @@ def interpolate_cmems(config, directory, model_data, chunk=False, save_depth_ave
     - model_bin_average (xarray.Dataset): Bin average data.
     '''
 
-    print("\n### INTERPOLATING MODEL DATA ###\n")
+    print("\n### INTERPOLATING CMEMS MODEL DATA ###\n")
     start_time = print_starttime()
 
     # Chunk the data
@@ -203,7 +203,7 @@ def interpolate_cmems(config, directory, model_data, chunk=False, save_depth_ave
     model_data = model_data.load()
 
     # Get the maximum depth
-    config_depth = config['max_depth']
+    config_depth = config['MISSION']['max_depth']
     config_bins = config_depth + 1
     max_depth = model_data.depth.max().item()
     max_bins = max_depth + 1
@@ -261,11 +261,11 @@ def interpolate_cmems(config, directory, model_data, chunk=False, save_depth_ave
     if save_depth_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_depth_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_CMEMS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_depth_average.to_netcdf(os.path.join(directory, f"{config['MISSION'].get('mission_name', 'UnknownMission')}_CMEMS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_bin_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_CMEMS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_bin_average.to_netcdf(os.path.join(directory, f"{config['MISSION'].get('mission_name', 'UnknownMission')}_CMEMS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)
@@ -306,7 +306,7 @@ def interpolate_gofs(config, directory, model_data, chunk=False, save_depth_aver
     model_data.load()
 
     # Get the maximum depth
-    config_depth = config['max_depth']
+    config_depth = config['MISSION']['max_depth']
     config_bins = config_depth + 1
     max_depth = model_data.depth.max().item()
     max_bins = max_depth + 1
@@ -354,11 +354,11 @@ def interpolate_gofs(config, directory, model_data, chunk=False, save_depth_aver
     if save_depth_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_depth_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_GOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_depth_average.to_netcdf(os.path.join(directory, f"{config['MISSION'].get('mission_name', 'UnknownMission')}_GOFS_DepthAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     if save_bin_average:
         model_datetime = model_data.attrs['model_datetime']
         file_datetime = format_save_datetime(model_datetime)
-        model_bin_average.to_netcdf(os.path.join(directory, f"{config['mission_name']}_GOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
+        model_bin_average.to_netcdf(os.path.join(directory, f"{config['MISSION'].get('mission_name', 'UnknownMission')}_GOFS_BinAverage_{file_datetime}.nc"), unlimited_dims=['time'])
     
     end_time = print_endtime()
     print_runtime(start_time, end_time)
