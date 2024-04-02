@@ -3,6 +3,7 @@ __ARCHIVE__/
 0-Deliverables/
 0-Demo/
 0-Resources/
+0-Thesis/
 
 GGS_AutomationScripts/__pycache__/
 GGS_AutomationScripts/config/
@@ -11,6 +12,7 @@ GGS_AutomationScripts/data/
 GGS_Scripts/__pycache__/
 GGS_Scripts/config/
 GGS_Scripts/data/
+GGS_Scripts/GGS_test.ipynb
 
 X_Development/__pycache__/
 X_Development/data/

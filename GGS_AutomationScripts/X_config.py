@@ -6,7 +6,7 @@ import datetime as dt
 from dateutil import parser
 import json
 import os
-from A_functions import acquire_gliders
+from X_functions import acquire_gliders
 
 # =========================
 

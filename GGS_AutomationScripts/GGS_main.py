@@ -2,11 +2,11 @@
 # IMPORTS
 # =========================
 
-from A_functions import *
-from A_config import *
-from A_models import *
-from A_interpolation import *
-from A_plots import *
+from X_functions import *
+from X_config import *
+from X_models import *
+from X_interpolation import *
+from X_plots import *
 
 from concurrent.futures import ProcessPoolExecutor
 
@@ -14,7 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 # MAIN
 # =========================
 
-### REPROCESSING:
+### REPROCESSOR:
 def GGS_reprocessor(task):
 
     '''
@@ -78,44 +78,52 @@ def GGS_reprocessor(task):
     else:
         print(f"Datetime {datetime_index} unprocessed, proceeding with task.")
 
-    GGS_plot_magnitudes(config_flag,
-                        sub_directory_plots,
-                        datetime_index,
-                        model_datasets,
-                        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                        density=density_flag,
-                        gliders=glider_data_flag,
-                        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-                        manual_extent=manual_extent_flag)
-    GGS_plot_threshold(config_flag,
-                       sub_directory_plots,
-                       datetime_index,
-                       model_datasets,
-                       latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                       density=density_flag,
-                       mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
-                       gliders=glider_data_flag,
-                       show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-                       manual_extent=manual_extent_flag)
-    GGS_plot_advantage(config_flag,
-                       sub_directory_plots,
-                       datetime_index,
-                       model_datasets,
-                       latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                       density=density_flag,
-                       tolerance=tolerance_flag,
-                       mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
-                       gliders=glider_data_flag,
-                       show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-                       manual_extent=manual_extent_flag)
-    GGS_plot_profiles(config_flag,
-                      sub_directory_plots,
-                      datetime_index,
-                      model_datasets,
-                      latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                      threshold=0.5)
+    GGS_plot_magnitude(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        density=density_flag,
+        gliders=glider_data_flag,
+        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+        manual_extent=manual_extent_flag
+    )
+    GGS_plot_threshold(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        density=density_flag,
+        mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
+        gliders=glider_data_flag,
+        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+        manual_extent=manual_extent_flag
+    )
+    GGS_plot_advantage(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        density=density_flag,
+        tolerance=tolerance_flag,
+        mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
+        gliders=glider_data_flag,
+        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+        manual_extent=manual_extent_flag
+    )
+    GGS_plot_profiles(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        threshold=0.5
+    )
 
-### EXECUTABLE:
+### EXECUTIONER:
 def GGS_executioner(task):
     
     '''
@@ -212,45 +220,53 @@ def GGS_executioner(task):
         except Exception as e:
             print(f"Error during GOFS processing: {e}")
     
-    GGS_plot_magnitudes(config_flag,
-                        sub_directory_plots,
-                        datetime_index,
-                        model_datasets,
-                        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                        density=density_flag,
-                        gliders=glider_data_flag,
-                        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-                        manual_extent=manual_extent_flag)
-    GGS_plot_threshold(config_flag,
-                       sub_directory_plots,
-                       datetime_index,
-                       model_datasets,
-                       latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                       density=density_flag,
-                       mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
-                       gliders=glider_data_flag,
-                       show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-                       manual_extent=manual_extent_flag)
-    GGS_plot_advantage(config_flag,
-                       sub_directory_plots,
-                       datetime_index,
-                       model_datasets,
-                       latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                       density=density_flag,
-                       tolerance=tolerance_flag,
-                       mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
-                       gliders=glider_data_flag,
-                       show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-                       manual_extent=manual_extent_flag)
-    GGS_plot_profiles(config_flag,
-                      sub_directory_plots,
-                      datetime_index,
-                      model_datasets,
-                      latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
-                      threshold=0.5)
+    GGS_plot_magnitude(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        density=density_flag,
+        gliders=glider_data_flag,
+        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+        manual_extent=manual_extent_flag
+    )
+    GGS_plot_threshold(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        density=density_flag,
+        mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
+        gliders=glider_data_flag,
+        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+        manual_extent=manual_extent_flag
+    )
+    GGS_plot_advantage(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        density=density_flag,
+        tolerance=tolerance_flag,
+        mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
+        gliders=glider_data_flag,
+        show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+        manual_extent=manual_extent_flag
+    )
+    GGS_plot_profiles(
+        config_flag,
+        sub_directory_plots,
+        datetime_index,
+        model_datasets,
+        latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
+        threshold=0.5
+    )
 
 ### MAIN:
-def main(power=1, path="local", config_name=None):
+def GGS_main(power=1, path="local", config_name=None):
     
     '''
     GGS main function.
@@ -329,4 +345,4 @@ def main(power=1, path="local", config_name=None):
             executor.map(GGS_executioner, tasks)
 
 if __name__ == "__main__":
-    main(power=1, path="local", config_name="ugos")
+    GGS_main(power=1, path="local", config_name="sentinel1")

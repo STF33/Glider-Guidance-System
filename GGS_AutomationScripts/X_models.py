@@ -163,6 +163,23 @@ class CMEMS:
         - None
         '''
         
+        def cmems_fetch(dataset_id, min_lon, max_lon, min_lat, max_lat, start_datetime, end_datetime, variables, username, password):
+            
+            dataset = cm.open_dataset(
+                dataset_id=dataset_id,
+                minimum_longitude=min_lon,
+                maximum_longitude=max_lon,
+                minimum_latitude=min_lat,
+                maximum_latitude=max_lat,
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                variables=variables,
+                username=username,
+                password=password
+            )
+
+            return dataset
+
         datetime_index = parser.parse(datetime_index)
         formatted_datetime_index = datetime_index.strftime('%Y-%m-%dT%H:%M:%S')
         start_datetime = end_datetime = formatted_datetime_index
@@ -171,12 +188,12 @@ class CMEMS:
         min_lon, max_lon = min(lons), max(lons)
         min_lat, max_lat = min(lats), max(lats)
 
-        self.data_origin = cm.open_dataset(
+        self.data_origin = cmems_fetch(
             dataset_id="cmems_mod_glo_phy-cur_anfc_0.083deg_PT6H-i",
-            minimum_longitude=min_lon,
-            maximum_longitude=max_lon,
-            minimum_latitude=min_lat,
-            maximum_latitude=max_lat,
+            min_lon=min_lon,
+            max_lon=max_lon,
+            min_lat=min_lat,
+            max_lat=max_lat,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
             variables=["uo", "vo"],
