@@ -5,10 +5,12 @@
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cmocean.cm as cmo
+import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import numpy as np
 import os
+from shapely.geometry import Point
 
 from X_functions import calculate_gridpoint, plot_formatted_ticks, plot_bathymetry, plot_profile_thresholds, plot_add_gliders, plot_add_eez, plot_streamlines, plot_magnitude_contour, plot_threshold_zones, plot_advantage_zones, profile_rtofs, profile_cmems, profile_gofs, plot_glider_route, format_figure_titles, format_subplot_titles, format_subplot_headers, format_save_datetime, print_starttime, print_endtime, print_runtime
 
@@ -440,3 +442,49 @@ def GGS_plot_advantage(config, directory, datetime_index, model_datasets, latitu
     end_time = print_endtime()
     print_runtime(start_time, end_time)
     
+### FUNCTION:
+def GGS_export_gpkg(directory, datetime_index, model_datasets):
+    
+    '''
+    Process and export data from model datasets to CSV and GeoPackage files.
+
+    Args:
+    - directory (str): Directory to save the files.
+    - datetime_index (str): Datetime index for the model datasets.
+    - model_datasets (tuple): Tuple containing the model datasets.
+
+    Returns:
+    - None
+    '''
+
+    print(f"\n### CREATING GEODATAFRAME FILES ###\n")
+    start_time = print_starttime()
+
+    valid_datasets = [datasets for datasets in model_datasets if datasets is not None]
+    num_datasets = len(valid_datasets)
+    if num_datasets == 0:
+        print("No datasets provided for GeoDataFrame conversion.")
+        end_time = print_endtime()
+        print_runtime(start_time, end_time)
+        return
+
+    file_datetime = format_save_datetime(datetime_index)
+    for model_data, depth_average_data, bin_average_data in valid_datasets:
+        model_name = depth_average_data.attrs['model_name']
+        csv_file = f"{model_name}_depth_average_{file_datetime}.csv"
+        csv_path = os.path.join(directory, csv_file)
+        gpkg_file = f"{model_name}_depth_average_{file_datetime}.gpkg"
+        gpkg_path = os.path.join(directory, gpkg_file)
+
+        dataframe = depth_average_data.to_dataframe().reset_index()
+        dataframe = dataframe[['lat', 'lon', 'mag_depth_avg', 'dir_depth_avg']]
+        dataframe.dropna(subset=['mag_depth_avg', 'dir_depth_avg'], inplace=True)
+        dataframe.to_csv(csv_path, index=False)
+
+        geometry = [Point(xy) for xy in zip(dataframe['lon'], dataframe['lat'])]
+        geodataframe = gpd.GeoDataFrame(dataframe, geometry=geometry)
+        geodataframe.crs = "EPSG:4326"
+        geodataframe.to_file(gpkg_path, driver="GPKG")
+
+    end_time = print_endtime()
+    print_runtime(start_time, end_time)

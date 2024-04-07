@@ -37,8 +37,8 @@ def GGS_config_import(config_name):
             mission_config['GPS_coords'] = None if mission_config['GPS_coords'] is None else mission_config['GPS_coords']
             mission_config['extent'] = tuple(map(tuple, mission_config['extent']))
             
-            plot_config = config['PLOT']
-            plot_config['manual_extent'] = None if plot_config['manual_extent'] is None else tuple(map(tuple, plot_config['manual_extent']))
+            product_config = config['PRODUCT']
+            product_config['manual_extent'] = None if product_config['manual_extent'] is None else tuple(map(tuple, product_config['manual_extent']))
 
             data_config = config['DATA']
             data_config['bathymetry_path'] = os.path.join(current_directory, data_config['bathymetry_path'])
@@ -49,8 +49,13 @@ def GGS_config_import(config_name):
         return None
 
     glider_id = config['MISSION'].get('glider_id')
-    if glider_id and glider_id != "0":
+    if glider_id is not None:
         print(f"Locating glider: {glider_id}")
+        try:
+            glider_buffer = config['MISSION']['glider_buffer']
+        except:
+            glider_buffer = 1
+            print(f"Error using provided 'glider_buffer'. Defaulting buffer to 1 degree.")
         try:
             glider_df = acquire_gliders(
                 extent=None,
@@ -65,7 +70,7 @@ def GGS_config_import(config_name):
             if not glider_df.empty:
                 last_lon = glider_df['longitude'].iloc[-1]
                 last_lat = glider_df['latitude'].iloc[-1]
-                buffer = 5
+                buffer = glider_buffer
                 config['MISSION']['extent'] = [[last_lat - buffer, last_lon - buffer], [last_lat + buffer, last_lon + buffer]]
         except Exception as e:
             print(f"Error updating extent based on glider ID {glider_id}: {e}")
@@ -90,7 +95,11 @@ def GGS_config_process(config, path="default"):
 
     print("\n### PROCESSING GGS CONFIGURATION ###\n")
 
-    mission_name = config['MISSION'].get('mission_name', 'UnknownMission')
+    try:
+        mission_name = config['MISSION']['mission_name']
+    except:
+        mission_name = "UnknownMission"
+        print(f"Error using provided 'mission_name'. Defaulting mission name to 'UnknownMission'.")
     
     if path == "default":
         root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{mission_name}")
