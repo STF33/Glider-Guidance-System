@@ -12,8 +12,10 @@ from datetime import datetime as datetime
 from dateutil import parser
 from erddapy import ERDDAP
 import glob
+import heapq
 from joblib import Parallel, delayed
 import math
+from math import radians, cos, sin, asin, sqrt
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.colors as mcolors
@@ -27,7 +29,7 @@ import xarray as xr
 
 # =========================
 
-# OPTIMIAL LOGIC FUNCTIONS
+# OPERATIONAL FUNCTIONS
 
 ### FUNCTION:
 def optimal_workers(power=1.0):
@@ -57,6 +59,173 @@ def optimal_workers(power=1.0):
     print(f"Number of workers: {num_workers}")
 
     return num_workers
+
+# ALGORITHM FUNCTIONS
+
+### FUNCTION:
+def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
+    
+    '''
+    Calculates the optimal path between waypoints for a mission, considering the impact of ocean currents and distance.
+    
+    This function uses the "A*" algorithm to determine the most efficient path between waypoints specified in the config,
+    taking into account the ocean's depth-averaged current data provided by the "model_dataset".
+
+    Args:
+    - config (dict): A dictionary containing mission config details including waypoints.
+    - model_dataset (xarray.Dataset): An xarray dataset containing depth-averaged ocean current data.
+    - glider_raw_speed (float, optional): The glider's base speed in meters per second
+        - default: 0.5
+
+    Returns:
+    - optimal_mission_path (list of tuples): A list of latitude and longitude tuples representing the optimal route.
+    '''
+    
+    model_name = model_dataset.attrs['model_name']
+    print(f"\n### COMPUTING OPTIMAL PATH [{model_name}] ###\n")
+    start_time = print_starttime()
+
+    def calculate_haversine_distance(longitude1, latitude1, longitude2, latitude2):
+        '''Calculates the great circle distance between two points on the earth using the Haversine formula.'''
+        longitude1, latitude1, longitude2, latitude2 = map(radians, [longitude1, latitude1, longitude2, latitude2])
+        delta_longitude = longitude2 - longitude1
+        delta_latitude = latitude2 - latitude1
+        a = sin(delta_latitude / 2)**2 + cos(latitude1) * cos(latitude2) * sin(delta_longitude / 2)**2
+        distance = 2 * asin(sqrt(a)) * 6371000
+        return distance
+    
+    def calculate_route_analytics(model_dataset, start_index, end_index, glider_raw_speed):
+        '''Calculates time, distance, and adjusted time between two points considering ocean currents.'''
+        start_lat, start_lon = convert_grid2coord(*start_index)
+        end_lat, end_lon = convert_grid2coord(*end_index)
+        direction = np.arctan2(end_lon - start_lon, end_lat - start_lat)
+        u_current = model_dataset['u_depth_avg'].isel(lat=start_index[0], lon=start_index[1]).values
+        v_current = model_dataset['v_depth_avg'].isel(lat=start_index[0], lon=start_index[1]).values
+        current_speed = u_current * np.cos(direction) + v_current * np.sin(direction)
+        net_speed = max(glider_raw_speed + current_speed, 0.1)
+        distance = calculate_haversine_distance(start_lon, start_lat, end_lon, end_lat)
+        time = distance / net_speed
+        return time, distance
+
+    def calculate_direct_path(start_index, end_index, glider_raw_speed):
+        '''Fallback to the direct great circle path if no optimal path is found.'''
+        start_lat, start_lon = convert_grid2coord(*start_index)
+        end_lat, end_lon = convert_grid2coord(*end_index)
+        distance = calculate_haversine_distance(start_lon, start_lat, end_lon, end_lat)
+        time = distance / glider_raw_speed
+        return [(start_lat, start_lon), (end_lat, end_lon)], time, distance
+
+    def convert_coord2grid(latitude, longitude):
+        '''Converts geographical latitude and longitude to the nearest index on the dataset grid.'''
+        latitude_index = np.argmin(np.abs(latitude_array - latitude))
+        longitude_index = np.argmin(np.abs(longitude_array - longitude))
+        return latitude_index, longitude_index
+    
+    def convert_grid2coord(latitude_index, longitude_index):
+        '''Converts dataset grid indices back to geographical latitude and longitude coordinates.'''
+        latitude = latitude_array[latitude_index]
+        longitude = longitude_array[longitude_index]
+        return latitude, longitude
+    
+    def calculate_heuristic_cost(current_index, goal_index):
+        '''Estimates the cost from the current index to the goal using the Haversine formula as a heuristic.'''
+        current_latitude, current_longitude = convert_grid2coord(*current_index)
+        goal_latitude, goal_longitude = convert_grid2coord(*goal_index)
+        heuristic_cost = calculate_haversine_distance(current_longitude, current_latitude, goal_longitude, goal_latitude)
+        return heuristic_cost
+    
+    def calculate_movement_cost(model_dataset, current_index, next_index, speed):
+        '''Calculates the cost of moving from the current index to the next, taking into account the effect of ocean currents.'''
+        current_latitude, current_longitude = convert_grid2coord(*current_index)
+        next_latitude, next_longitude = convert_grid2coord(*next_index)
+        direction_to_next_index = np.arctan2(next_longitude - current_longitude, next_latitude - current_latitude)
+        u_current_component = model_dataset['u_depth_avg'].isel(lat=current_index[0], lon=current_index[1]).values
+        v_current_component = model_dataset['v_depth_avg'].isel(lat=current_index[0], lon=current_index[1]).values
+        glider_velocity_component_u = speed * np.cos(direction_to_next_index)
+        glider_velocity_component_v = speed * np.sin(direction_to_next_index)
+        net_velocity_component_u = glider_velocity_component_u + u_current_component
+        net_velocity_component_v = glider_velocity_component_v + v_current_component
+        net_speed = np.sqrt(net_velocity_component_u**2 + net_velocity_component_v**2)
+        net_speed = max(net_speed, 0.1)
+        distance_to_next_index = calculate_haversine_distance(current_longitude, current_latitude, next_longitude, next_latitude)
+        movement_cost = distance_to_next_index / net_speed
+        return movement_cost
+    
+    def generate_neighbor_nodes(index):
+        '''Generates neighboring index nodes for exploration based on the current index's position.'''
+        latitude_index, longitude_index = index
+        for delta_latitude in [-1, 0, 1]:
+            for delta_longitude in [-1, 0, 1]:
+                if delta_latitude == 0 and delta_longitude == 0:
+                    continue
+                new_latitude_index, new_longitude_index = latitude_index + delta_latitude, longitude_index + delta_longitude
+                if 0 <= new_latitude_index < len(latitude_array) and 0 <= new_longitude_index < len(longitude_array):
+                    yield (new_latitude_index, new_longitude_index)
+    
+    def reconstruct_path(came_from_dictionary, start_index, goal_index):
+        '''Reconstructs the path from the start index to the goal index using the came_from dictionary populated by the A* algorithm.'''
+        current_index = goal_index
+        optimal_path = [current_index]
+        while current_index != start_index:
+            current_index = came_from_dictionary[current_index]
+            optimal_path.append(current_index)
+        optimal_path.reverse()
+        optimal_path_coords = [convert_grid2coord(*index) for index in optimal_path]
+        return optimal_path_coords
+    
+    def algorithm_a_star(model_dataset, start_index, end_index, glider_raw_speed):
+        '''Executes the A* search algorithm to find the most efficient path from the start index to the goal index.'''
+        open_set = [(calculate_heuristic_cost(start_index, end_index), start_index)]
+        came_from = {start_index: None}
+        g_score = {start_index: 0}
+        f_score = {start_index: calculate_heuristic_cost(start_index, end_index)}
+        path_found = False
+        while open_set:
+            _, current = heapq.heappop(open_set)
+            if current == end_index:
+                path_found = True
+                break
+            for neighbor in generate_neighbor_nodes(current):
+                tentative_g_score = g_score[current] + calculate_movement_cost(model_dataset, current, neighbor, glider_raw_speed)
+                if tentative_g_score < g_score.get(neighbor, float('inf')):
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = tentative_g_score + calculate_heuristic_cost(neighbor, end_index)
+                    if neighbor not in [n for _, n in open_set]:
+                        heapq.heappush(open_set, (f_score[neighbor], neighbor))
+        if path_found:
+            path = reconstruct_path(came_from, start_index, end_index)
+            time, distance = calculate_route_analytics(model_dataset, start_index, end_index, glider_raw_speed)
+        else:
+            print(f"Direct path used from {convert_grid2coord(*start_index)} to {convert_grid2coord(*end_index)}.")
+            path, time, distance = calculate_direct_path(start_index, end_index, glider_raw_speed)
+        return path, time, distance
+    
+    mission_waypoints = config['MISSION']['GPS_coords']
+    mission_waypoints = [(float(lat), float(lon)) for lat, lon in mission_waypoints]
+    latitude_array = model_dataset['lat'].values
+    longitude_array = model_dataset['lon'].values
+    
+    optimal_mission_path = []
+    total_time = 0
+    total_distance = 0
+    
+    for i in range(len(mission_waypoints) - 1):
+        start_index = convert_coord2grid(*mission_waypoints[i])
+        end_index = convert_coord2grid(*mission_waypoints[i + 1])
+        segment_path, segment_time, segment_distance = algorithm_a_star(model_dataset, start_index, end_index, glider_raw_speed)
+        optimal_mission_path.extend(segment_path[:-1])
+        total_time += segment_time
+        total_distance += segment_distance
+    optimal_mission_path.append(mission_waypoints[-1])
+    
+    print(f"Total mission time (adjusted): {total_time} seconds")
+    print(f"Total mission distance: {total_distance} meters")
+
+    end_time = print_endtime()
+    print_runtime(start_time, end_time)
+
+    return optimal_mission_path
 
 # DATA ACQUISITION FUNCTIONS
 
@@ -710,6 +879,29 @@ def plot_profile_thresholds(ax, data, threshold, color):
     ax.plot([], [], color=color, alpha=0.5, linewidth=10, label=f'Above Threshold = [{threshold}]')
 
 ### FUNCTION:
+def plot_optimal_path(ax, config, model_depth_average, optimal_path):
+
+    '''
+    Plots the optimal path for the mission between all successive waypoints given in the GPS_coords list.
+
+    Args:
+    - ax (matplotlib.axes.Axes): Matplotlib axes object.
+    - config (dict): Configuration dictionary.
+    - model_depth_average (xarray.Dataset): Depth-averaged ocean current dataset.
+    - optimal_path (list): List of optimal path coordinates.
+
+    Returns:
+    - None
+    '''
+
+    if optimal_path:
+        route_lats, route_lons = zip(*optimal_path)
+        ax.plot(route_lons, route_lats, 'o-', transform=ccrs.PlateCarree(), markersize=5, linewidth=3, color='black', zorder=94)
+    else:
+        print("Invalid GPS waypoint list provided. Skipping optimal path plotting.")
+        return
+
+### FUNCTION:
 def profile_rtofs(axs, dataset, latitude_qc, longitude_qc, threshold):
     
     rtofs_model_data, rtofs_depth_average, rtofs_bin_average = dataset
@@ -997,7 +1189,7 @@ def plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90):
 
 ### FUNCTION:
 def plot_glider_route(ax, config):
-
+    
     '''
     Adds the glider route to a cartopy map.
 
@@ -1009,10 +1201,28 @@ def plot_glider_route(ax, config):
     - None
     '''
 
-    lats, lons = zip(*config['MISSION']['GPS_coords'])
+    if config['MISSION']['GPS_coords'] is not None:
+        GPS_coords = config['MISSION']['GPS_coords']
+        num_waypoints = len(GPS_coords)
 
-    ax.scatter(lons[0], lats[0], color='green', s=100, transform=ccrs.PlateCarree(), zorder=95, label='Start')
-    ax.scatter(lons[-1], lats[-1], color='red', s=100, transform=ccrs.PlateCarree(), zorder=95, label='End')
+        for idx, (lat, lon) in enumerate(GPS_coords):
+            if idx == 0:
+                color = 'green'
+                label = 'Start'
+            elif idx == num_waypoints - 1:
+                color = 'red'
+                label = 'End'
+            else:
+                color = 'purple'
+                label = None
+
+            ax.scatter(lon, lat, color=color, s=100, transform=ccrs.PlateCarree(), zorder=95, label=label)
+
+        if num_waypoints > 2:
+            ax.scatter([], [], color='purple', s=100, transform=ccrs.PlateCarree(), zorder=95, label='Intermediate')
+    else:
+        print("Invalid GPS waypoint list provided. Skipping glider route plotting.")
+        return
 
 # FORMATTING FUNCTIONS
 

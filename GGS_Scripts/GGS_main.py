@@ -53,7 +53,7 @@ def GGS_reprocessor(task):
     create_magnitude_plot_flag = config_flag['PRODUCT']['create_magnitude_plot']
     create_threshold_plot_flag = config_flag['PRODUCT']['create_threshold_plot']
     create_advantage_plot_flag = config_flag['PRODUCT']['create_advantage_plot']
-    create_profiles_plot_flag = config_flag['PRODUCT']['create_profiles_plot']
+    create_profiles_plot_flag = config_flag['PRODUCT']['create_profile_plot']
     create_gpkg_file_flag = config_flag['PRODUCT']['create_gpkg_file']
     latitude_qc_flag = config_flag['PRODUCT']['latitude_qc']
     longitude_qc_flag = config_flag['PRODUCT']['longitude_qc']
@@ -64,10 +64,11 @@ def GGS_reprocessor(task):
     mag4_flag = config_flag['PRODUCT']['mag4']
     mag5_flag = config_flag['PRODUCT']['mag5']
     tolerance_flag = config_flag['PRODUCT']['tolerance']
-    show_route_flag = config_flag['PRODUCT']['show_route']
+    show_waypoints_flag = config_flag['PRODUCT']['show_waypoints']
     show_eez_flag = config_flag['PRODUCT']['show_eez']
     show_qc_flag = config_flag['PRODUCT']['show_qc']
     manual_extent_flag = config_flag['PRODUCT']['manual_extent']
+    compute_optimal_path_flag = config_flag['PRODUCT']['compute_optimal_path']
     
     sub_directory_plots = os.path.join(root_directory_flag, "REPROCESSED", "plots", ''.join(datetime_index[:10].split('-')))
     os.makedirs(sub_directory_plots, exist_ok=True)
@@ -82,6 +83,18 @@ def GGS_reprocessor(task):
     else:
         print(f"Datetime {datetime_index} unprocessed, proceeding with task.")
 
+    if compute_optimal_path_flag:
+        optimal_paths = []
+        try:
+            for model_data in model_datasets:
+                optimal_path = compute_optimal_path(config_flag, model_data[1], 0.5)
+                optimal_paths.append(optimal_path)
+        except Exception as e:
+            optimal_paths.append(None)
+            print(f"Error during optimal path computation for a model: {e}")
+    else:
+        optimal_paths = [None] * len(model_datasets)
+
     if create_magnitude_plot_flag:
         GGS_plot_magnitude(
             config_flag,
@@ -91,8 +104,9 @@ def GGS_reprocessor(task):
             latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
             density=density_flag,
             gliders=glider_data_flag,
-            show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-            manual_extent=manual_extent_flag
+            show_waypoints=show_waypoints_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+            manual_extent=manual_extent_flag,
+            optimal_paths=optimal_paths
         )
     if create_threshold_plot_flag:
         GGS_plot_threshold(
@@ -104,8 +118,9 @@ def GGS_reprocessor(task):
             density=density_flag,
             mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
             gliders=glider_data_flag,
-            show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-            manual_extent=manual_extent_flag
+            show_waypoints=show_waypoints_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+            manual_extent=manual_extent_flag,
+            optimal_paths=optimal_paths
         )
     if create_advantage_plot_flag:
         GGS_plot_advantage(
@@ -118,8 +133,9 @@ def GGS_reprocessor(task):
             tolerance=tolerance_flag,
             mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
             gliders=glider_data_flag,
-            show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-            manual_extent=manual_extent_flag
+            show_waypoints=show_waypoints_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+            manual_extent=manual_extent_flag,
+            optimal_paths=optimal_paths
         )
     if create_profiles_plot_flag:
         GGS_plot_profiles(
@@ -177,10 +193,11 @@ def GGS_executioner(task):
     mag4_flag = config_flag['PRODUCT']['mag4']
     mag5_flag = config_flag['PRODUCT']['mag5']
     tolerance_flag = config_flag['PRODUCT']['tolerance']
-    show_route_flag = config_flag['PRODUCT']['show_route']
+    show_waypoints_flag = config_flag['PRODUCT']['show_waypoints']
     show_eez_flag = config_flag['PRODUCT']['show_eez']
     show_qc_flag = config_flag['PRODUCT']['show_qc']
     manual_extent_flag = config_flag['PRODUCT']['manual_extent']
+    compute_optimal_path_flag = config_flag['PRODUCT']['compute_optimal_path']
     
     sub_directory_plots = os.path.join(root_directory_flag, "plots", ''.join(datetime_index[:10].split('-')))
     os.makedirs(sub_directory_plots, exist_ok=True)
@@ -202,9 +219,7 @@ def GGS_executioner(task):
             rtofs.rtofs_load(config_flag, datetime_index)
             rtofs.rtofs_save(config_flag, sub_directory_data, save_data=save_model_data_flag)
             rtofs_model_data = rtofs.data
-            
             rtofs_depth_average, rtofs_bin_average = interpolate_rtofs(config_flag, sub_directory_data, rtofs_model_data, chunk=chunk_flag, save_depth_average=save_depth_average_flag, save_bin_average=save_bin_average_flag)
-
             rtofs_datasets = (rtofs_model_data, rtofs_depth_average, rtofs_bin_average)
             model_datasets.append(rtofs_datasets)
         except Exception as e:
@@ -215,9 +230,7 @@ def GGS_executioner(task):
             cmems.cmems_load(config_flag, datetime_index)
             cmems.cmems_save(config_flag, sub_directory_data, save_data=save_model_data_flag)
             cmems_model_data = cmems.data
-            
             cmems_depth_average, cmems_bin_average = interpolate_cmems(config_flag, sub_directory_data, cmems_model_data, chunk=chunk_flag, save_depth_average=save_depth_average_flag, save_bin_average=save_bin_average_flag)
-            
             cmems_datasets = (cmems_model_data, cmems_depth_average, cmems_bin_average)
             model_datasets.append(cmems_datasets)
         except Exception as e:
@@ -228,14 +241,24 @@ def GGS_executioner(task):
             gofs.gofs_load(config_flag, datetime_index)
             gofs.gofs_save(config_flag, sub_directory_data, save_data=save_model_data_flag)
             gofs_model_data = gofs.data
-
             gofs_depth_average, gofs_bin_average = interpolate_gofs(config_flag, sub_directory_data, gofs_model_data, chunk=chunk_flag, save_depth_average=save_depth_average_flag, save_bin_average=save_bin_average_flag)
-
             gofs_datasets = (gofs_model_data, gofs_depth_average, gofs_bin_average)
             model_datasets.append(gofs_datasets)
         except Exception as e:
             print(f"Error during GOFS processing: {e}")
     
+    if compute_optimal_path_flag:
+        optimal_paths = []
+        try:
+            for model_data in model_datasets:
+                optimal_path = compute_optimal_path(config_flag, model_data[1], 0.5)
+                optimal_paths.append(optimal_path)
+        except Exception as e:
+            optimal_paths.append(None)
+            print(f"Error during optimal path computation for a model: {e}")
+    else:
+        optimal_paths = [None] * len(model_datasets)
+
     if create_magnitude_plot_flag:
         GGS_plot_magnitude(
             config_flag,
@@ -245,8 +268,9 @@ def GGS_executioner(task):
             latitude_qc=latitude_qc_flag, longitude_qc=longitude_qc_flag,
             density=density_flag,
             gliders=glider_data_flag,
-            show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-            manual_extent=manual_extent_flag
+            show_waypoints=show_waypoints_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+            manual_extent=manual_extent_flag,
+            optimal_paths=optimal_paths
         )
     if create_threshold_plot_flag:
         GGS_plot_threshold(
@@ -258,8 +282,9 @@ def GGS_executioner(task):
             density=density_flag,
             mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
             gliders=glider_data_flag,
-            show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-            manual_extent=manual_extent_flag
+            show_waypoints=show_waypoints_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+            manual_extent=manual_extent_flag,
+            optimal_paths=optimal_paths
         )
     if create_advantage_plot_flag:
         GGS_plot_advantage(
@@ -272,8 +297,9 @@ def GGS_executioner(task):
             tolerance=tolerance_flag,
             mag1=mag1_flag, mag2=mag2_flag, mag3=mag3_flag, mag4=mag4_flag, mag5=mag5_flag,
             gliders=glider_data_flag,
-            show_route=show_route_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
-            manual_extent=manual_extent_flag
+            show_waypoints=show_waypoints_flag, show_eez=show_eez_flag, show_qc=show_qc_flag,
+            manual_extent=manual_extent_flag,
+            optimal_paths=optimal_paths
         )
     if create_profiles_plot_flag:
         GGS_plot_profiles(
@@ -348,7 +374,7 @@ def GGS_main(power=1, path="local", config_name=None):
         )
     
     if config['ADVANCED']['reprocess']:
-        print(f"\n### !!! ALERT: REPROCESSING MODE ENABLED !!! ###\n")
+        print(f"\n### !!!WARNING!!!: REPROCESSING MODE ENABLED ###\n")
         task = {
             'config_flag': config,
             'root_directory_flag': root_directory,
@@ -371,4 +397,4 @@ def GGS_main(power=1, path="local", config_name=None):
             executor.map(GGS_executioner, tasks)
 
 if __name__ == "__main__":
-    GGS_main(power=1, path="local", config_name="sentinel1")
+    GGS_main(power=1, path="local", config_name="sentinel2")
