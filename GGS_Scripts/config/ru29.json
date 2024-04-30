@@ -1,21 +1,21 @@
 {
     "MISSION": {
-      "mission_name": "Sentinel Leg 5",
+      "mission_name": "RU29",
 
       "target_date": null,
       "max_depth": 1000,
-      "extent": [[-60, -180], [-30, -53]],
-      "GPS_coords": [[-41.273, 174.767], [-51.734, -58.721]],
+      "extent": [[12, -71], [19 ,-66]],
+      "GPS_coords": [[17.757, -67.659], [17.750, -69.000], [17.000, -69.000], [16.000, -69.000], [15.000, -69.000], [14.000, -69.000], [13.000, -69.000], [14.000, -69.000], [15.000, -69.000], [16.000, -69.000], [17.000, -69.000], [17.750, -69.000]],
 
       "glider_id": null,
-      "glider_buffer": null
+      "glider_buffer": 3
     },
     "MODEL": {
       "single_datetime": true,
 
       "enable_rtofs": false,
       "enable_cmems": true,
-      "enable_gofs": true,
+      "enable_gofs": false,
       
       "chunk": true,
 
@@ -25,13 +25,13 @@
     },
     "PRODUCT": {
       "create_magnitude_plot": false,
-      "create_threshold_plot": false,
-      "create_advantage_plot": true,
+      "create_threshold_plot": true,
+      "create_advantage_plot": false,
       "create_profile_plot": false,
-      "create_gpkg_file": true,
+      "create_gpkg_file": false,
 
-      "latitude_qc": 0,
-      "longitude_qc": 0,
+      "latitude_qc": 17.757,
+      "longitude_qc": -67.659,
       "density": 3,
       "mag1": 0.0,
       "mag2": 0.2,
@@ -39,13 +39,13 @@
       "mag4": 0.4,
       "mag5": 0.5,
       "tolerance": 15,
-      "show_gliders": false,
+      "show_gliders": true,
       "show_waypoints": true,
       "show_eez": true,
       "show_qc": false,
       "manual_extent": null,
 
-      "compute_optimal_path": false
+      "compute_optimal_path": true
     },
     "DATA": {
       "bathymetry_path": "data/bathymetry/GEBCO_2023_sub_ice_topo.nc",

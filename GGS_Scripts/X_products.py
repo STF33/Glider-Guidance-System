@@ -66,7 +66,7 @@ def GGS_plot_profiles(config, directory, datetime_index, model_datasets, latitud
         'CMEMS': profile_cmems,
         'GOFS': profile_gofs
     }
-
+    
     for i, dataset in enumerate(valid_datasets):
         model_name = dataset[1].attrs.get('model_name')
         profile_func = profile_functions.get(model_name)
@@ -503,7 +503,7 @@ def GGS_export_gpkg(directory, datetime_index, model_datasets):
 
         geometry = [Point(xy) for xy in zip(dataframe['lon'], dataframe['lat'])]
         geodataframe = gpd.GeoDataFrame(dataframe, geometry=geometry)
-        geodataframe.crs = "EPSG:4326"
+        geodataframe.crs = "EPSG:3857"
         geodataframe.to_file(gpkg_path, driver="GPKG")
 
     end_time = print_endtime()

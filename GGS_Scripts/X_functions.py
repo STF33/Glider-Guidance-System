@@ -6,6 +6,7 @@ import cartopy.crs as ccrs
 from cartopy.io.shapereader import Reader
 import cartopy.feature as cfeature
 import cmocean.cm as cmo
+import csv
 import dask.array
 import datetime as dt
 from datetime import datetime as datetime
@@ -63,16 +64,16 @@ def optimal_workers(power=1.0):
 # ALGORITHM FUNCTIONS
 
 ### FUNCTION:
-def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
+def compute_optimal_path(config, directory, model_dataset, glider_raw_speed=0.5):
     
     '''
     Calculates the optimal path between waypoints for a mission, considering the impact of ocean currents and distance.
     
-    This function uses the "A*" algorithm to determine the most efficient path between waypoints specified in the config,
-    taking into account the ocean's depth-averaged current data provided by the "model_dataset".
+    This function uses the "A*" algorithm to determine the most efficient path between waypoints specified in the config, taking into account the ocean's depth-averaged current data provided by the "model_dataset".
 
     Args:
     - config (dict): A dictionary containing mission config details including waypoints.
+    - directory (str): The directory path to save the output statistics file.
     - model_dataset (xarray.Dataset): An xarray dataset containing depth-averaged ocean current data.
     - glider_raw_speed (float, optional): The glider's base speed in meters per second
         - default: 0.5
@@ -85,6 +86,9 @@ def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
     print(f"\n### COMPUTING OPTIMAL PATH [{model_name}] ###\n")
     start_time = print_starttime()
 
+    model_name = model_dataset.attrs['model_name']
+    csv_data = [("Segment Start", "Segment End", "Segment Time (s)", "Segment Distance (m)")]
+
     def calculate_haversine_distance(longitude1, latitude1, longitude2, latitude2):
         '''Calculates the great circle distance between two points on the earth using the Haversine formula.'''
         longitude1, latitude1, longitude2, latitude2 = map(radians, [longitude1, latitude1, longitude2, latitude2])
@@ -93,19 +97,6 @@ def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
         a = sin(delta_latitude / 2)**2 + cos(latitude1) * cos(latitude2) * sin(delta_longitude / 2)**2
         distance = 2 * asin(sqrt(a)) * 6371000
         return distance
-    
-    def calculate_route_analytics(model_dataset, start_index, end_index, glider_raw_speed):
-        '''Calculates time, distance, and adjusted time between two points considering ocean currents.'''
-        start_lat, start_lon = convert_grid2coord(*start_index)
-        end_lat, end_lon = convert_grid2coord(*end_index)
-        direction = np.arctan2(end_lon - start_lon, end_lat - start_lat)
-        u_current = model_dataset['u_depth_avg'].isel(lat=start_index[0], lon=start_index[1]).values
-        v_current = model_dataset['v_depth_avg'].isel(lat=start_index[0], lon=start_index[1]).values
-        current_speed = u_current * np.cos(direction) + v_current * np.sin(direction)
-        net_speed = max(glider_raw_speed + current_speed, 0.1)
-        distance = calculate_haversine_distance(start_lon, start_lat, end_lon, end_lat)
-        time = distance / net_speed
-        return time, distance
 
     def calculate_direct_path(start_index, end_index, glider_raw_speed):
         '''Fallback to the direct great circle path if no optimal path is found.'''
@@ -134,22 +125,26 @@ def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
         heuristic_cost = calculate_haversine_distance(current_longitude, current_latitude, goal_longitude, goal_latitude)
         return heuristic_cost
     
-    def calculate_movement_cost(model_dataset, current_index, next_index, speed):
-        '''Calculates the cost of moving from the current index to the next, taking into account the effect of ocean currents.'''
-        current_latitude, current_longitude = convert_grid2coord(*current_index)
-        next_latitude, next_longitude = convert_grid2coord(*next_index)
-        direction_to_next_index = np.arctan2(next_longitude - current_longitude, next_latitude - current_latitude)
-        u_current_component = model_dataset['u_depth_avg'].isel(lat=current_index[0], lon=current_index[1]).values
-        v_current_component = model_dataset['v_depth_avg'].isel(lat=current_index[0], lon=current_index[1]).values
-        glider_velocity_component_u = speed * np.cos(direction_to_next_index)
-        glider_velocity_component_v = speed * np.sin(direction_to_next_index)
-        net_velocity_component_u = glider_velocity_component_u + u_current_component
-        net_velocity_component_v = glider_velocity_component_v + v_current_component
-        net_speed = np.sqrt(net_velocity_component_u**2 + net_velocity_component_v**2)
+    def calculate_movement(model_dataset, start_index, end_index, glider_raw_speed):
+        '''Calculates the time and distance cost of moving from one grid point to the next, considering ocean currents.'''
+        start_lat, start_lon = convert_grid2coord(*start_index)
+        end_lat, end_lon = convert_grid2coord(*end_index)
+        if start_lat == end_lat and start_lon == end_lon:
+            return 0, 0
+        heading_vector = np.array([end_lon - start_lon, end_lat - start_lat])
+        norm = np.linalg.norm(heading_vector)
+        if norm == 0:
+            return 0, 0
+        heading_vector = heading_vector / norm
+        u_current = model_dataset['u_depth_avg'].isel(lat=start_index[0], lon=start_index[1]).values.item()
+        v_current = model_dataset['v_depth_avg'].isel(lat=start_index[0], lon=start_index[1]).values.item()
+        current_vector = np.array([u_current, v_current])
+        current_along_heading = np.dot(current_vector, heading_vector)
+        net_speed = glider_raw_speed + current_along_heading
         net_speed = max(net_speed, 0.1)
-        distance_to_next_index = calculate_haversine_distance(current_longitude, current_latitude, next_longitude, next_latitude)
-        movement_cost = distance_to_next_index / net_speed
-        return movement_cost
+        distance = calculate_haversine_distance(start_lon, start_lat, end_lon, end_lat)
+        time = distance / net_speed
+        return time, distance
     
     def generate_neighbor_nodes(index):
         '''Generates neighboring index nodes for exploration based on the current index's position.'''
@@ -186,7 +181,7 @@ def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
                 path_found = True
                 break
             for neighbor in generate_neighbor_nodes(current):
-                tentative_g_score = g_score[current] + calculate_movement_cost(model_dataset, current, neighbor, glider_raw_speed)
+                tentative_g_score = g_score[current] + calculate_movement(model_dataset, current, neighbor, glider_raw_speed)[1]
                 if tentative_g_score < g_score.get(neighbor, float('inf')):
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
@@ -195,7 +190,7 @@ def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
                         heapq.heappush(open_set, (f_score[neighbor], neighbor))
         if path_found:
             path = reconstruct_path(came_from, start_index, end_index)
-            time, distance = calculate_route_analytics(model_dataset, start_index, end_index, glider_raw_speed)
+            time, distance = calculate_movement(model_dataset, start_index, end_index, glider_raw_speed)
         else:
             print(f"Direct path used from {convert_grid2coord(*start_index)} to {convert_grid2coord(*end_index)}.")
             path, time, distance = calculate_direct_path(start_index, end_index, glider_raw_speed)
@@ -217,10 +212,19 @@ def compute_optimal_path(config, model_dataset, glider_raw_speed=0.5):
         optimal_mission_path.extend(segment_path[:-1])
         total_time += segment_time
         total_distance += segment_distance
+        
+        csv_data.append((mission_waypoints[i], mission_waypoints[i+1], segment_time, segment_distance))
+        print(f"Segment {i+1}: Start {mission_waypoints[i]} End {mission_waypoints[i+1]} Time {segment_time} seconds Distance {segment_distance} meters")
+    
     optimal_mission_path.append(mission_waypoints[-1])
     
     print(f"Total mission time (adjusted): {total_time} seconds")
     print(f"Total mission distance: {total_distance} meters")
+
+    csv_file_path = os.path.join(directory, f"{model_name}_mission_statistics.csv")
+    with open(csv_file_path, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(csv_data)
 
     end_time = print_endtime()
     print_runtime(start_time, end_time)
@@ -904,6 +908,20 @@ def plot_optimal_path(ax, config, model_depth_average, optimal_path):
 ### FUNCTION:
 def profile_rtofs(axs, dataset, latitude_qc, longitude_qc, threshold):
     
+    '''
+    Plot the RTOFS model data profiles for a given latitude and longitude.
+
+    Args:
+    - axs (list): List of matplotlib axes objects.
+    - dataset (tuple): Tuple containing the RTOFS model data, depth-averaged data, and bin-averaged data.
+    - latitude_qc (float): Target latitude value.
+    - longitude_qc (float): Target longitude value.
+    - threshold (float): Threshold value for shading.
+
+    Returns:
+    - None
+    '''
+
     rtofs_model_data, rtofs_depth_average, rtofs_bin_average = dataset
 
     (y_rtofs_model, x_rtofs_model), _ = calculate_gridpoint(rtofs_model_data, latitude_qc, longitude_qc)
@@ -928,7 +946,11 @@ def profile_rtofs(axs, dataset, latitude_qc, longitude_qc, threshold):
     rtofs_bin_mag1d = rtofs_bin_mag[0]
 
     rtofs_bin_dir = rtofs_bin_average['dir_bin_avg'].isel(y=y_rtofs_bin, x=x_rtofs_bin).values
-    rtofs_bin_dir = np.mod(rtofs_bin_dir + 180, 360) - 180
+    rtofs_bin_dir = np.mod(rtofs_bin_dir, 360)
+
+    rtofs_avg_dir = rtofs_depth_average['dir_depth_avg'].isel(y=y_rtofs_avg, x=x_rtofs_avg).values
+    rtofs_avg_dir = rtofs_avg_dir.item()
+    rtofs_avg_dir = np.mod(rtofs_avg_dir, 360)
 
     rtofs_max_depth = rtofs_model_data.depth.max().item()
     rtofs_max_bins = rtofs_max_depth + 1
@@ -957,6 +979,7 @@ def profile_rtofs(axs, dataset, latitude_qc, longitude_qc, threshold):
 
     ax = axs[3]
     ax.scatter(rtofs_bin_dir, rtofs_bin_depths, label='1m Interpolation', color='purple', alpha=1.0, zorder=2)
+    ax.axvline(x=rtofs_avg_dir, label=f'Depth Average = [{rtofs_avg_dir:.2f}]', color='darkviolet', linestyle='--', linewidth=2, zorder=1)
     ax.set_xlabel('Current Direction (degrees)', fontsize=12, fontweight='bold')
     ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
 
@@ -971,11 +994,25 @@ def profile_rtofs(axs, dataset, latitude_qc, longitude_qc, threshold):
         ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
         handles, labels = ax.get_legend_handles_labels()
         if labels:
-            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0)
+            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0, fontsize=14)
 
 ### FUNCTION:
 def profile_cmems(axs, dataset, latitude_qc, longitude_qc, threshold):
     
+    '''
+    Plot the CMEMS model data profiles for a given latitude and longitude.
+
+    Args:
+    - axs (list): List of matplotlib axes objects.
+    - dataset (tuple): Tuple containing the CMEMS model data, depth-averaged data, and bin-averaged data.
+    - latitude_qc (float): Target latitude value.
+    - longitude_qc (float): Target longitude value.
+    - threshold (float): Threshold value for shading.
+
+    Returns:
+    - None
+    '''
+
     cmems_model_data, cmems_depth_average, cmems_bin_average = dataset
         
     (y_cmems_model, x_cmems_model), _ = calculate_gridpoint(cmems_model_data, latitude_qc, longitude_qc)
@@ -1000,7 +1037,11 @@ def profile_cmems(axs, dataset, latitude_qc, longitude_qc, threshold):
     cmems_bin_mag1d = cmems_bin_mag[0]
 
     cmems_bin_dir = cmems_bin_average['dir_bin_avg'].isel(lat=y_cmems_bin, lon=x_cmems_bin).values
-    cmems_bin_dir = np.mod(cmems_bin_dir + 180, 360) - 180
+    cmems_bin_dir = np.mod(cmems_bin_dir, 360)
+
+    cmems_avg_dir = cmems_depth_average['dir_depth_avg'].isel(lat=y_cmems_bin, lon=x_cmems_bin).values
+    cmems_avg_dir = cmems_avg_dir.item()
+    cmems_avg_dir = np.mod(cmems_avg_dir, 360)
 
     cmems_max_depth = cmems_model_data.depth.max().item()
     cmems_max_bins = cmems_max_depth + 1
@@ -1029,6 +1070,7 @@ def profile_cmems(axs, dataset, latitude_qc, longitude_qc, threshold):
 
     ax = axs[3]
     ax.scatter(cmems_bin_dir, cmems_bin_depths, label='1m Interpolation', color='purple', alpha=1.0, zorder=2)
+    ax.axvline(x=cmems_avg_dir, label=f'Depth Average = [{cmems_avg_dir:.2f}]', color='darkviolet', linestyle='--', linewidth=2, zorder=1)
     ax.set_xlabel('Current Direction (degrees)', fontsize=12, fontweight='bold')
     ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
 
@@ -1043,11 +1085,25 @@ def profile_cmems(axs, dataset, latitude_qc, longitude_qc, threshold):
         ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
         handles, labels = ax.get_legend_handles_labels()
         if labels:
-            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0)
+            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0, fontsize=14)
 
 ### FUNCTION:
 def profile_gofs(axs, dataset, latitude_qc, longitude_qc, threshold):
     
+    '''
+    Plot the GOFS model data profiles for a given latitude and longitude.
+
+    Args:
+    - axs (list): List of matplotlib axes objects.
+    - dataset (tuple): Tuple containing the GOFS model data, depth-averaged data, and bin-averaged data.
+    - latitude_qc (float): Target latitude value.
+    - longitude_qc (float): Target longitude value.
+    - threshold (float): Threshold value for shading.
+
+    Returns:
+    - None
+    '''
+
     gofs_model_data, gofs_depth_average, gofs_bin_average = dataset
         
     (y_gofs_model, x_gofs_model), _ = calculate_gridpoint(gofs_model_data, latitude_qc, longitude_qc)
@@ -1072,7 +1128,11 @@ def profile_gofs(axs, dataset, latitude_qc, longitude_qc, threshold):
     gofs_bin_mag1d = gofs_bin_mag[0]
 
     gofs_bin_dir = gofs_bin_average['dir_bin_avg'].isel(lat=y_gofs_bin, lon=x_gofs_bin).values
-    gofs_bin_dir = np.mod(gofs_bin_dir + 180, 360) - 180
+    gofs_bin_dir = np.mod(gofs_bin_dir, 360)
+
+    gofs_avg_dir = gofs_depth_average['dir_depth_avg'].isel(lat=y_gofs_avg, lon=x_gofs_avg).values
+    gofs_avg_dir = gofs_avg_dir.item()
+    gofs_avg_dir = np.mod(gofs_avg_dir, 360)
 
     gofs_max_depth = gofs_model_data.depth.max().item()
     gofs_max_bins = gofs_max_depth + 1
@@ -1101,6 +1161,7 @@ def profile_gofs(axs, dataset, latitude_qc, longitude_qc, threshold):
     
     ax = axs[3]
     ax.scatter(gofs_bin_dir, gofs_bin_depths, label='1m Interpolation', color='purple', alpha=1.0, zorder=2)
+    ax.axvline(x=gofs_avg_dir, label=f'Depth Average = [{gofs_avg_dir:.2f}]', color='darkviolet', linestyle='--', linewidth=2, zorder=1)
     ax.set_xlabel('Current Direction (degrees)', fontsize=12, fontweight='bold')
     ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
 
@@ -1115,7 +1176,7 @@ def profile_gofs(axs, dataset, latitude_qc, longitude_qc, threshold):
         ax.grid(color='lightgrey', linestyle='-', linewidth=0.5)
         handles, labels = ax.get_legend_handles_labels()
         if labels:
-            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0)
+            ax.legend(handles, labels, loc='lower center', facecolor='lightgrey', edgecolor='black', framealpha=1.0, fontsize=14)
 
 ### FUNCTION:
 def plot_add_gliders(ax, glider_data_frame, legend=True):

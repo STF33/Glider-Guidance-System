@@ -39,7 +39,7 @@
       "mag4": 0.4,
       "mag5": 0.5,
       "tolerance": 15,
-      "show_gliders": true,
+      "show_gliders": false,
       "show_waypoints": false,
       "show_eez": true,
       "show_qc": false,

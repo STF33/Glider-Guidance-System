@@ -8,6 +8,8 @@ __ARCHIVE__/
 GGS_AutomationScripts/__pycache__/
 GGS_AutomationScripts/data/
 
+GGS_executable/
+
 GGS_Scripts/__pycache__/
 GGS_Scripts/data/
 GGS_Scripts/GGS_test.ipynb

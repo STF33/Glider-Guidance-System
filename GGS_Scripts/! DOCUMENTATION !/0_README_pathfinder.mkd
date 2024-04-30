@@ -1,0 +1,59 @@
+# Ocean Pathfinding Algorithm Documentation
+
+## Overview
+This algorithm is designed to compute the optimal path for an underwater glider, taking into account ocean currents and other navigational factors. It uses the A* search algorithm to determine the most efficient path between specified waypoints based on the depth-averaged current data.
+
+## Code
+
+### Inputs
+- `config`: A dictionary containing mission configuration details including waypoints in the form of GPS coordinates.
+- `directory`: The path to the directory where output statistics files will be saved.
+- `model_dataset`: An `xarray.Dataset` containing depth-averaged ocean current data including east-west (`u`) and north-south (`v`) components.
+- `glider_raw_speed`: The base speed of the glider in meters per second, defaulting to 0.5 m/s.
+
+### Helper Functions
+- `calculate_haversine_distance(longitude1, latitude1, longitude2, latitude2)`: Calculates the great circle distance between two points on the earth.
+- `calculate_direct_path(start_index, end_index, glider_raw_speed)`: Provides a direct path calculation in case no optimal path is found.
+- `convert_coord2grid(latitude, longitude)`: Converts geographical latitude and longitude into the nearest index on the dataset grid.
+- `convert_grid2coord(latitude_index, longitude_index)`: Converts dataset grid indices back to geographical coordinates.
+- `calculate_heuristic_cost(current_index, goal_index)`: Computes the estimated cost from the current node to the goal using the Haversine formula.
+- `calculate_movement(model_dataset, start_index, end_index, glider_raw_speed)`: Combines movement cost calculation with adjustments for ocean currents' impact.
+- `generate_neighbor_nodes(index)`: Yields neighboring nodes for exploration based on the current node's position.
+- `reconstruct_path(came_from_dictionary, start_index, goal_index)`: Reconstructs the path from start to end using the dictionary populated by the A* algorithm.
+- `algorithm_a_star(model_dataset, start_index, end_index, glider_raw_speed)`: Implements the A* algorithm to find the most efficient path.
+### Output
+- `optimal_mission_path`: A list of tuples representing the latitude and longitude coordinates of the optimal route.
+
+## Algorithm Logic
+
+### a) Glider at Start Node
+The glider begins at a defined start node within a grid that represents geographical locations.
+
+### b) Evaluations for Possible Movements
+For each node (current location of the glider), the algorithm evaluates possible movements to adjacent nodes (north, south, east, west, and diagonals).
+
+### c) Mathematics Involved in Movements
+1. **Heading Vector Calculation**:
+   - The heading vector `d` from the current node to a neighboring node is calculated using the differences in their geographic coordinates (longitude and latitude).
+    - `d = [Delta lon, Delta lat]`
+
+2. **Normalization**:
+   - The heading vector is normalized to create a unit vector `h` pointing in the direction of travel.
+    - `h = d / norm(d)`
+
+3. **Current Vector Retrieval**:
+   - The ocean current vector `c` at the current node, with components `u` and `v` (eastward and northward water velocity), is retrieved.
+    - `c = [u, v]`
+
+4. **Dot Product for Effective Current Component**:
+   - The dot product between the normalized heading vector `h` and the current vector `c` gives the component of the current that is in-line with the glider’s direction of travel. This represents how much the current aids or opposes the glider's movement.
+    - `current_along_heading = dot(c, h)`
+
+5. **Effective Speed Calculation**:
+   - The effective speed `net_speed` of the glider is the sum of its baseline speed and the current along its heading. A minimum speed threshold is enforced to avoid the glider being stalled by strong opposing currents.
+   - `net_speed = glider_raw_speed + current_along_heading`
+
+### d) Decision-Making and Iteration
+- Using the effective speed and the Haversine formula to calculate the distance between nodes, the time to travel each segment is computed.
+- The A* algorithm uses these time costs to prioritize which node to explore next, aiming to minimize the total travel time to the end node.
+- The algorithm iterates over possible paths, updating costs and backtracking as needed until the optimal path to the destination is determined.

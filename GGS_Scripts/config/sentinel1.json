@@ -2,10 +2,10 @@
     "MISSION": {
       "mission_name": "Sentinel Leg 1",
       
-      "target_date": "2024-03-27 00:00:00",
+      "target_date": null,
       "max_depth": 1000,
       "extent": [[10, -78], [44, -10]],
-      "GPS_coords": [[41.675, -70.522], [37.7540,-70.3833], [37.4061,-67.4915], [15.067, -23.650]],
+      "GPS_coords": [[41.240, -70.958], [37.992, -71.248], [36.943, -66.862], [38.666, -62.978], [39.801, -60.653], [39.618, -55.87], [39.496, -53.334], [38.686, -51.616], [37.05, -48.005], [34.29, -47.592], [31.66, -42.355], [24.479, -36.122], [15.789, -25.433]],
 
       "glider_id": null,
       "glider_buffer": null
@@ -25,10 +25,10 @@
     },
     "PRODUCT": {
       "create_magnitude_plot": false,
-      "create_threshold_plot": false,
-      "create_advantage_plot": true,
+      "create_threshold_plot": true,
+      "create_advantage_plot": false,
       "create_profile_plot": false,
-      "create_gpkg_file": true,
+      "create_gpkg_file": false,
 
       "latitude_qc": 39,
       "longitude_qc": -69,
@@ -45,7 +45,7 @@
       "show_qc": false,
       "manual_extent": null,
 
-      "compute_optimal_path": false
+      "compute_optimal_path": true
     },
     "DATA": {
       "bathymetry_path": "data/bathymetry/GEBCO_2023_sub_ice_topo.nc",

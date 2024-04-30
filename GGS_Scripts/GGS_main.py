@@ -87,7 +87,7 @@ def GGS_reprocessor(task):
         optimal_paths = []
         try:
             for model_data in model_datasets:
-                optimal_path = compute_optimal_path(config_flag, model_data[1], 0.5)
+                optimal_path = compute_optimal_path(config_flag, sub_directory_data, model_data[1], 0.5)
                 optimal_paths.append(optimal_path)
         except Exception as e:
             optimal_paths.append(None)
@@ -251,7 +251,7 @@ def GGS_executioner(task):
         optimal_paths = []
         try:
             for model_data in model_datasets:
-                optimal_path = compute_optimal_path(config_flag, model_data[1], 0.5)
+                optimal_path = compute_optimal_path(config_flag, sub_directory_data, model_data[1], 0.5)
                 optimal_paths.append(optimal_path)
         except Exception as e:
             optimal_paths.append(None)
@@ -339,7 +339,7 @@ def GGS_main(power=1, path="local", config_name=None):
     
     target_datetime = config['MISSION'].get('target_date')
     if not target_datetime:
-        print("Issue with target datetime. Using current datetime.")
+        print("No target datetime. Using current datetime.")
         target_datetime = dt.datetime.now(dt.timezone.utc)
 
     if path == "local":
@@ -397,4 +397,4 @@ def GGS_main(power=1, path="local", config_name=None):
             executor.map(GGS_executioner, tasks)
 
 if __name__ == "__main__":
-    GGS_main(power=1, path="local", config_name="sentinel2")
+    GGS_main(power=1, path="local", config_name="ru29")
