@@ -16,7 +16,7 @@ This section helps you set up Visual Studio Code for Python development.
 
 ## Environment Setup Section
 After installing the necessary tools, you can setup a new environment in Python using Conda.
-- **Creating a Conda Environment**: Open your terminal (this can be done in Visual Studio Code at the top of the window by pressing: Terminal --> New Terminal) and create a new environment by running `conda create --name myenv python=3.8`, replacing `myenv` with your desired environment name and `3.8` with your preferred Python version.
+- **Creating a Conda Environment**: Open your terminal (this can be done in Visual Studio Code at the top of the window by pressing: Terminal --> New Terminal) and create a new environment by running `conda create --name myenv python=3.12`, replacing `myenv` with your desired environment name and `3.12` with your preferred Python version.
 - **Activating the Environment**: Activate the newly created environment by running `conda activate myenv`.
 
 ## Importing an Environment Section

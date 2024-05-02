@@ -1,4 +1,4 @@
-# Ocean Pathfinding Algorithm Documentation
+# Glider Guidance System (GGS) Pathfinding Algorithm Documentation
 
 ## Overview
 This algorithm is designed to compute the optimal path for an underwater glider, taking into account ocean currents and other navigational factors. It uses the A* search algorithm to determine the most efficient path between specified waypoints based on the depth-averaged current data.
