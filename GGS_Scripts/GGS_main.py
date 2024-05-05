@@ -397,4 +397,4 @@ def GGS_main(power=1, path="local", config_name=None):
             executor.map(GGS_executioner, tasks)
 
 if __name__ == "__main__":
-    GGS_main(power=1, path="local", config_name="ru29")
+    GGS_main(power=1, path="local", config_name="sentinel1")

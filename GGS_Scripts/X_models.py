@@ -189,7 +189,7 @@ class CMEMS:
         min_lat, max_lat = min(lats), max(lats)
 
         self.data_origin = cmems_fetch(
-            dataset_id="cmems_mod_glo_phy-cur_anfc_0.083deg_PT6H-i",
+            dataset_id='cmems_mod_glo_phy-cur_anfc_0.083deg_PT6H-i',
             min_lon=min_lon,
             max_lon=max_lon,
             min_lat=min_lat,

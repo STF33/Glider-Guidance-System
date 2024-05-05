@@ -1,8 +1,10 @@
 __ARCHIVE__/
+
 0-Deliverables/
 0-Thesis/
 
 GGS_Scripts/__pycache__/
+
 GGS_Scripts/data/bathymetry/GEBCO_2023_sub_ice_topo.nc
 GGS_Scripts/data/eez/eez_boundaries_v12.cpg
 GGS_Scripts/data/eez/eez_boundaries_v12.dbf
@@ -17,6 +19,5 @@ GGS_Scripts/data/eez/eez_v12.qmd
 GGS_Scripts/data/eez/eez_v12.shx
 GGS_Scripts/data/eez/eez_v12.shp
 GGS_Scripts/data/eez/LICENSE_EEZ_v12.txt
-GGS_Scripts/GGS_test.ipynb
 
 !-GGS.code-workspace

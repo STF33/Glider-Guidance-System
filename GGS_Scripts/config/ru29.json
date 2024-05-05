@@ -13,8 +13,8 @@
     "MODEL": {
       "single_datetime": true,
 
-      "enable_rtofs": false,
-      "enable_cmems": true,
+      "enable_rtofs": true,
+      "enable_cmems": false,
       "enable_gofs": false,
       
       "chunk": true,
