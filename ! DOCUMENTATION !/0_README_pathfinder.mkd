@@ -1,9 +1,9 @@
 # Glider Guidance System (GGS) Pathfinding Algorithm Documentation
 
 ## Overview
-This algorithm is designed to compute the optimal path for an underwater glider, taking into account ocean currents and other navigational factors. It uses the A* search algorithm to determine the most efficient path between specified waypoints based on the depth-averaged current data.
+This algorithm is designed to compute the optimal path for an underwater glider, taking into account depth-averaged ocean currents (DAC) and other navigational factors. It uses a modified version of the A* search algorithm to determine the most efficient path between specified waypoints based on the DAC data.
 
-## Code
+## Algorithm Code Structure
 
 ### Inputs
 - `config`: A dictionary containing mission configuration details including waypoints in the form of GPS coordinates.
@@ -22,38 +22,50 @@ This algorithm is designed to compute the optimal path for an underwater glider,
 - `reconstruct_path(came_from_dictionary, start_index, goal_index)`: Reconstructs the path from start to end using the dictionary populated by the A* algorithm.
 - `algorithm_a_star(model_dataset, start_index, end_index, glider_raw_speed)`: Implements the A* algorithm to find the most efficient path.
 ### Output
-- `optimal_mission_path`: A list of tuples representing the latitude and longitude coordinates of the optimal route.
+- `optimal_mission_path`: A list of tuples representing the latitude and longitude coordinates of the optimal route along the DAC grid.
 
-## Algorithm Logic
+## Algorithm Mathematical Approach
 
-### a) Glider at Start Node
-The glider begins at a defined start node within a grid that represents geographical locations.
+### 1. **Vector Representation of Movements and Currents**
 
-### b) Evaluations for Possible Movements
-For each node (current location of the glider), the algorithm evaluates possible movements to adjacent nodes (north, south, east, west, and diagonals).
+- **Movement Vector (M)**: Defines the vector from the current node to a neighboring node, calculated based on the distance between geographic coordinates.
+- **Current Vector (C)**: Represents the ocean current velocity at the node, given by components `u` (eastward) and `v` (northward).
 
-### c) Mathematics Involved in Movements
-1. **Heading Vector Calculation**:
-   - The heading vector `d` from the current node to a neighboring node is calculated using the differences in their geographic coordinates (longitude and latitude).
-    - `d = [Delta lon, Delta lat]`
+### 2. **Step-Wise Decision Making**
 
-2. **Normalization**:
-   - The heading vector is normalized to create a unit vector `h` pointing in the direction of travel.
-    - `h = d / norm(d)`
+#### a. **Calculate the Movement Vector *(M)***
 
-3. **Current Vector Retrieval**:
-   - The ocean current vector `c` at the current node, with components `u` and `v` (eastward and northward water velocity), is retrieved.
-    - `c = [u, v]`
+For each adjacent node, compute the movement vector *(M)*:
+$$ M = (\Delta \text{lon}, \Delta \text{lat}) $$
 
-4. **Dot Product for Effective Current Component**:
-   - The dot product between the normalized heading vector `h` and the current vector `c` gives the component of the current that is in-line with the glider’s direction of travel. This represents how much the current aids or opposes the glider's movement.
-    - `current_along_heading = dot(c, h)`
+Normalize *(M)* to obtain the unit direction vector *($\hat{M}$)*:
+$$ \hat{M} = \frac{M}{\|M\|} $$
 
-5. **Effective Speed Calculation**:
-   - The effective speed `net_speed` of the glider is the sum of its baseline speed and the current along its heading. A minimum speed threshold is enforced to avoid the glider being stalled by strong opposing currents.
-   - `net_speed = glider_raw_speed + current_along_heading`
+#### b. **Current Vector at the start Node *(C)***
 
-### d) Decision-Making and Iteration
-- Using the effective speed and the Haversine formula to calculate the distance between nodes, the time to travel each segment is computed.
-- The A* algorithm uses these time costs to prioritize which node to explore next, aiming to minimize the total travel time to the end node.
-- The algorithm iterates over possible paths, updating costs and backtracking as needed until the optimal path to the destination is determined.
+Retrieve the current vector *(C)* at the starting node:
+$$ C = (u, v) $$
+
+Calculate the current vector of *(C)* from the current components `u` and `v`.
+$$ |\mathbf{C}| = \sqrt{u^2 + v^2} $$
+
+Determine the angle *(θ)* of the current vector *(C)* using the arctangent function, considering both components:
+$$ \theta = \arctan2(v, u) $$
+
+Express the dot product in terms of the angle between the current vector and the movement direction; where $\phi$ is the angle between the vectors, and $\cos(\phi)$ reflects the impact of the current's direction relative to the AUV's movement.:
+$$ C_{\text{along}} = |\mathbf{C}| |\hat{M}| \cos(\phi) $$
+
+#### c. **Component of Current along the Movement Vector *($C_{\text{along}}$)***
+
+Compute the component of the current vector *(C)* along the movement vectors direction *($\hat{M}$)* using the dot product:
+$$ C_{\text{along}} = \hat{M} \cdot C $$
+
+#### d. **Calculate Effective Speed *($V_{\text{net}}$)***
+
+Combine the raw speed of the AUV *($V_{\text{raw}}$)* with the current's component along the movement vector *($C_{\text{along}}$)*:
+$$ V_{\text{net}} = V_{\text{raw}} + C_{\text{along}} $$
+
+#### e. **Compute Travel Cost**
+
+Calculate the time cost to move to the adjacent node using the net speed *($V_{\text{net}}$)*:
+$$ \text{Time} = \frac{\text{Distance}}{V_{\text{net}}} $$
