@@ -194,7 +194,7 @@ def GGS_plot_magnitude(config, directory, datetime_index, model_datasets, latitu
         plot_magnitude(ax, config, model_data[1], latitude_qc, longitude_qc, density, gliders, show_waypoints, show_qc, show_eez, manual_extent, optimal_path)
         ax.set_title(f"{model_name}", fontsize=14, fontweight='bold', pad=20)
 
-    title_text = f"Depth Averaged Currents - Depth Range: {config['MISSION']['max_depth']}m"
+    title_text = f"Depth Averaged Currents - Depth Range: {config['MISSION']['max_depth']} meters"
     model_names_combined = " vs. ".join(model_names)
     format_figure_titles(axs[0], fig, config, datetime_index, model_name=model_names_combined, title=title_text)
 
@@ -317,7 +317,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
         plot_threshold(ax, config, model_data[1], latitude_qc, longitude_qc, density, mag1, mag2, mag3, mag4, mag5, gliders, show_waypoints, show_qc, show_eez, manual_extent, optimal_path)
         ax.set_title(f"{model_name}", fontsize=14, fontweight='bold', pad=20)
     
-    title_text = f"Depth Averaged Current Threshold Zones - Depth Range: {config['MISSION']['max_depth']}m"
+    title_text = f"Depth Averaged Current Threshold Zones - Depth Range: {config['MISSION']['max_depth']} meters"
     model_names_combined = " vs. ".join(model_names)
     format_figure_titles(axs[0], fig, config, datetime_index, model_name=model_names_combined, title=title_text)
 
@@ -449,7 +449,7 @@ def GGS_plot_advantage(config, directory, datetime_index, model_datasets, latitu
         plot_advantage(ax, config, model_data[1], latitude_qc, longitude_qc, density, tolerance, mag1, mag2, mag3, mag4, mag5, gliders, show_waypoints, show_qc, show_eez, manual_extent, optimal_path)
         ax.set_title(f"{model_name}", fontsize=14, fontweight='bold', pad=20)
     
-    title_text = f"Depth Averaged Current Advantage Zones - Depth Range: {config['MISSION']['max_depth']}m"
+    title_text = f"Depth Averaged Current Advantage Zones - Depth Range: {config['MISSION']['max_depth']} meters"
     model_names_combined = " vs. ".join(model_names)
     format_figure_titles(axs[0], fig, config, datetime_index, model_name=model_names_combined, title=title_text)
 

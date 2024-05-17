@@ -7,15 +7,15 @@
       "extent": [[12, -71], [19 ,-66]],
       "GPS_coords": [[17.757, -67.659], [17.750, -69.000], [17.000, -69.000], [16.000, -69.000], [15.000, -69.000], [14.000, -69.000], [13.000, -69.000], [14.000, -69.000], [15.000, -69.000], [16.000, -69.000], [17.000, -69.000], [17.750, -69.000]],
 
-      "glider_id": null,
-      "glider_buffer": 3
+      "glider_id": "ru29-20240419T1430",
+      "glider_buffer": 4
     },
     "MODEL": {
       "single_datetime": true,
 
-      "enable_rtofs": true,
+      "enable_rtofs": false,
       "enable_cmems": false,
-      "enable_gofs": false,
+      "enable_gofs": true,
       
       "chunk": true,
 

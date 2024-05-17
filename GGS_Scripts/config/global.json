@@ -1,10 +1,10 @@
 {
     "MISSION": {
-      "mission_name": "UGOS",
+      "mission_name": "GLOBAL",
 
-      "target_date": "2024-04-01 00:00:00",
+      "target_date": null,
       "max_depth": 1000,
-      "extent": [[15, -90], [30, -78]],
+      "extent": [[-70, -170], [70, 170]],
       "GPS_coords": null,
 
       "glider_id": null,
@@ -14,24 +14,24 @@
       "single_datetime": true,
 
       "enable_rtofs": true,
-      "enable_cmems": true,
-      "enable_gofs": true,
+      "enable_cmems": false,
+      "enable_gofs": false,
       
       "chunk": true,
 
-      "save_model_data": false,
+      "save_model_data": true,
       "save_depth_average": true,
       "save_bin_average": false
     },
     "PRODUCT": {
-      "create_magnitude_plot": true,
-      "create_threshold_plot": true,
+      "create_magnitude_plot": false,
+      "create_threshold_plot": false,
       "create_advantage_plot": false,
-      "create_profile_plot": true,
+      "create_profile_plot": false,
       "create_gpkg_file": false,
 
-      "latitude_qc": 21.175,
-      "longitude_qc": -86.185,
+      "latitude_qc": 0,
+      "longitude_qc": 0,
       "density": 3,
       "mag1": 0.0,
       "mag2": 0.2,
@@ -39,9 +39,9 @@
       "mag4": 0.4,
       "mag5": 0.5,
       "tolerance": 15,
-      "show_gliders": true,
+      "show_gliders": false,
       "show_waypoints": false,
-      "show_eez": true,
+      "show_eez": false,
       "show_qc": false,
       "manual_extent": null,
 
