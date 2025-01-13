@@ -1,19 +1,5 @@
 GGS_CurrentMapper/__pycache__/
 GGS_CurrentMapper/__ARCHIVE__/
-GGS_CurrentMapper/data/bathymetry/GEBCO_2023_sub_ice_topo.nc
-GGS_CurrentMapper/data/eez/eez_boundaries_v12.cpg
-GGS_CurrentMapper/data/eez/eez_boundaries_v12.dbf
-GGS_CurrentMapper/data/eez/eez_boundaries_v12.prj
-GGS_CurrentMapper/data/eez/eez_boundaries_v12.qmd
-GGS_CurrentMapper/data/eez/eez_boundaries_v12.shp
-GGS_CurrentMapper/data/eez/eez_boundaries_v12.shx
-GGS_CurrentMapper/data/eez/eez_v12.cpg
-GGS_CurrentMapper/data/eez/eez_v12.dbf
-GGS_CurrentMapper/data/eez/eez_v12.prj
-GGS_CurrentMapper/data/eez/eez_v12.qmd
-GGS_CurrentMapper/data/eez/eez_v12.shx
-GGS_CurrentMapper/data/eez/eez_v12.shp
-GGS_CurrentMapper/data/eez/LICENSE_EEZ_v12.txt
 
 GGS_DataToolbox/__pycache__/
 GGS_DataToolbox/__ARCHIVE__/
