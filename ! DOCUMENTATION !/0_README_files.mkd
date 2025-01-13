@@ -1,0 +1,13 @@
+# Glider Guidance System (GGS) Data File Resources
+
+## Overview
+This guide provides details on configuring the GGS data file resources.
+
+## Bathymetry Data
+The bathymetry datafile is NOT provided in this repository due to its size (~15GB). If bathymetric representation is desired, you will need to download the netCDF file manually and place it in the folder: `.../GGS_Scripts/data/bathymetry`. Without this file, GGS will default to using a plain blue fill for the ocean. The bathymetry netCDF data file is available to download at this URL:
+- https://www.bodc.ac.uk/data/open_download/gebco/gebco_2023_sub_ice_topo/zip/
+- NOTE: Do NOT rename the file when moving it into the data folder, as this will prevent it from being accessed.
+
+## EEZ Data
+All EEZ data utilized in GGS is available in the repository. The EEZ files are housed in the folder: `.../GGS_Scripts/data/eez`. These data files are available via the link below:
+- https://www.marineregions.org/downloads.php
