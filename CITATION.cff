@@ -1,0 +1,16 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Glider Guidance System (GGS)
+message: >-
+  © 2025 Salvatore Fricano. All rights reserved.
+  This software is intended for free public use by all.
+  If you use this software, please cite it using the metadata from this file.
+type: software
+authors:
+  - given-names: Salvatore
+    family-names: Fricano
+    email: sal_fricano@outlook.com
+    affiliation: Rutgers University & Teledyne Marine
+repository-code: 'https://github.com/STF33/Glider-Guidance-System/'

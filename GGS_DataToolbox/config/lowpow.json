@@ -1,0 +1,30 @@
+{
+    "GLIDER": {
+      "glider_unit": "capex594",
+      "glider_version": "BSD1104RC05",
+      "glider_type": "deep"
+    },
+    "SENSORS": {
+      "sensor_list": ["m_present_secs_into_mission", "m_coulomb_amphr_total", "m_coulomb_current", "m_depth", "m_de_oil_vol", "x_low_power_status"]
+    },
+    "DECOMPRESSION": {
+      "run_decompression": true
+    },
+    "CONVERSION": {
+      "run_conversion": true
+    },
+    "DATA": {
+      "run_dataframe": true
+    },
+    "PRODUCTS": {
+      "run_excel": true,
+      "run_data_sorter": false,
+      "run_fde": false,
+
+      "run_low_power_test": true
+    },
+    "ADVANCED": {
+      "run_data_cleanup": true
+    }
+  }
+  

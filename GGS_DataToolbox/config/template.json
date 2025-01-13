@@ -1,0 +1,30 @@
+{
+    "GLIDER": {
+      "glider_unit": "glider_unit",
+      "glider_version": "glider_version",
+      "glider_type": "glider_type"
+    },
+    "SENSORS": {
+      "sensor_list": ["m_depth"]
+    },
+    "DECOMPRESSION": {
+      "run_decompression": true
+    },
+    "CONVERSION": {
+      "run_conversion": true
+    },
+    "DATA": {
+      "run_dataframe": true
+    },
+    "PRODUCTS": {
+      "run_excel": true,
+      "run_data_sorter": false,
+      "run_fde": false,
+
+      "run_low_power_test": false
+    },
+    "ADVANCED": {
+      "run_data_cleanup": false
+    }
+  }
+  

@@ -1,0 +1,8 @@
+### For: Low Power Eval
+"sensor_list": ["m_present_secs_into_mission", "m_coulomb_amphr_total", "m_coulomb_current", "m_depth", "m_de_oil_vol", "x_low_power_status"]
+
+### For: Flight Data Eval (Deep, no ebay)
+"sensor_list": ["m_present_time", "m_depth", "m_de_oil_vol", "c_de_oil_vol", "m_battpos", "c_battpos", "m_fin", "c_fin", "m_heading", "c_heading", "m_roll", "m_dist_to_wpt", "x_hit_a_waypoint", "m_vacuum", "m_coulomb_amphr_total", "m_bms_pitch_current", "m_bms_aft_current", "m_tot_num_inflections", "m_altitude", "m_raw_altitude", "m_water_depth", "c_argos_on", "c_air_pump", "m_mission_avg_speed_climbing", "m_mission_avg_speed_diving"]
+
+### For: Flight Data Eval (Shallow, no ebay)
+"sensor_list": ["m_present_time", "m_depth", "m_ballast_pumped", "c_ballast_pumped", "m_battpos", "c_battpos", "m_fin", "c_fin", "m_heading", "c_heading", "m_roll", "m_dist_to_wpt", "x_hit_a_waypoint", "m_vacuum", "m_coulomb_amphr_total", "m_bms_pitch_current", "m_bms_aft_current", "m_tot_num_inflections", "m_altitude", "m_raw_altitude", "m_water_depth", "c_argos_on", "c_air_pump", "m_mission_avg_speed_climbing", "m_mission_avg_speed_diving"]

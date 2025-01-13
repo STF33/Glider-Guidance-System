@@ -1,0 +1,37 @@
+
+# Glider Guidance System (GGS): Data Toolbox Configuration Guide
+
+## Overview
+This guide provides details on configuring your GGS: Data Toolbox setup using the provided .json file. Each section of the configuration file is detailed below.
+
+## GLIDER Section
+This section outlines glider configuration.
+- **glider_unit**: (String) The name of the glider.
+- **glider_version**: (String) The version of software on the glider.
+- **glider_type**: (String) The type of glider (deep or shallow).
+
+## SENSORS Section
+This section configures the sensor variables to pull from the data files.
+- **sensor_list**: (Array of Strings) A list of sensor variables to extract from the glider data files in the format `["Sensor1", "Sensor2", "Sensor3", etc.]`
+
+## DECOMPRESSION Section
+This section toggles decompressing glider data files.
+- **run_decompression**: (Boolean) Set to `true` to run decompression on glider data files, `false` otherwise.
+
+## CONVERSION Section
+This section toggles converting binary glider data files to ascii.
+- **run_conversion**: (Boolean) Set to `true` to run ascii conversion on glider data files, `false` otherwise.
+
+## DATA Section
+This section toggles the creation of an internal dataframe, needed for subsequent products.
+- **run_dataframe**: (Boolean) Set to `true` to generate a dataframe from glider data files, `false` otherwise.
+
+## PRODUCTS Section
+This section defines what products/tests should be performed on the dataframe,  `false` otherwise.
+- **run_excel**: (Boolean) Set to `true` to create an excel file from the dataframe,  `false` otherwise.
+- **run_data_sorter**: (Boolean) Set to `true` to run the mission data sorter,  `false` otherwise.
+- **run_fde**: (Boolean) Set to `true` to runs the Flight Data Evaluation,  `false` otherwise.
+- **run_low_power_test**: (Boolean) Set to `true` to runs the low power test,  `false` otherwise.
+
+## ADVANCED Section
+- **run_data_cleanup**: (Boolean) Set to `true` to clear/delete all glider data files in the directory, `false` otherwise.

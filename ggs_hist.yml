@@ -1,0 +1,16 @@
+name: ggs_base
+channels:
+  - defaults
+dependencies:
+  - cartopy
+  - cmocean
+  - dask
+  - erddapy
+  - geopandas
+  - matplotlib
+  - netcdf4
+  - numpy
+  - pandas
+  - scipy
+  - xarray
+prefix: C:\Users\sfricano\AppData\Local\anaconda3\envs\ggs_base

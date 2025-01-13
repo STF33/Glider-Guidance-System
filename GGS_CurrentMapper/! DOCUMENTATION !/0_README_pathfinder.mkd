@@ -1,0 +1,151 @@
+# Optimal Pathfinding Algorithm Documentation
+
+## Executable Function
+
+### `compute_optimal_path(config, directory, model_dataset, glider_raw_speed=0.5)`
+Calculates the optimal path between waypoints for a mission, considering the impact of ocean currents and distance.
+- **Args**: config (mission details), directory (output path), model_dataset (ocean current data), glider_raw_speed (optional base speed)
+- **Returns**: optimal_mission_path (list of coordinates)
+
+## Internal Functions
+
+### `calculate_haversine_distance(longitude1, latitude1, longitude2, latitude2)`
+Calculates the great circle distance between two points on the Earth using the Haversine formula.
+- **Args**: longitude1, latitude1, longitude2, latitude2 (coordinates in degrees)
+- **Returns**: distance (in meters)
+
+### `calculate_direct_path(start_index, end_index, glider_raw_speed)`
+Fallback to the direct great circle path if no optimal path is found.
+- **Args**: start_index, end_index (grid indices), glider_raw_speed (base speed in m/s)
+- **Returns**: path (list of coordinates), time (seconds), distance (meters)
+
+### `convert_coord2grid(latitude, longitude)`
+Converts geographical latitude and longitude to the nearest index on the dataset grid.
+- **Args**: latitude, longitude (in degrees)
+- **Returns**: latitude_index, longitude_index (grid indices)
+
+### `convert_grid2coord(latitude_index, longitude_index)`
+Converts dataset grid indices back to geographical latitude and longitude coordinates.
+- **Args**: latitude_index, longitude_index (grid indices)
+- **Returns**: latitude, longitude (in degrees)
+
+### `calculate_remaining_distance(current_index, goal_index)`
+Estimates the distance from the current index to the goal using the Haversine formula as a heuristic.
+- **Args**: current_index, goal_index (grid indices)
+- **Returns**: estimated_distance (in meters)
+
+### `calculate_movement_variables(model_dataset, start_index, end_index, glider_raw_speed)`
+Calculates the time and distance cost of moving from one grid point to the next, considering ocean currents.
+- **Args**: model_dataset, start_index, end_index (grid indices), glider_raw_speed (base speed in m/s)
+- **Returns**: distance (meters), time (seconds), current_along_heading
+
+### `generate_adjacent_nodes(index)`
+Generates neighboring index nodes for exploration based on the current index's position.
+- **Args**: index (grid index)
+- **Yields**: neighboring indices
+
+### `reconstruct_path(came_from_dictionary, start_index, goal_index)`
+Reconstructs the path from the start index to the goal index using the came_from dictionary populated by the A* algorithm.
+- **Args**: came_from_dictionary, start_index, goal_index (grid indices)
+- **Returns**: optimal_path_coords (list of coordinates)
+
+### `GGS_algorithm(model_dataset, start_index, end_index, glider_raw_speed)`
+Executes the GGS A* algorithm to find the most efficient path from the start index to the goal index.
+- **Args**: model_dataset, start_index, end_index (grid indices), glider_raw_speed (base speed in m/s)
+- **Returns**: path (list of coordinates), time (seconds), distance (meters)
+
+## Step-by-Step Approach
+
+1. **Generate Adjacent Nodes**
+   - Function: `generate_adjacent_nodes`
+   - Identifies all possible neighboring nodes around the current node.
+   
+2. **Estimate Distance to Target from Current Node**
+   - Function: `calculate_remaining_distance`
+   - Uses the Haversine formula to estimate the distance from the current node to the target node.
+
+3. **Loop Through Each Neighbor**
+   - For each neighbor, calculate the movement variables.
+
+4. **Calculate Movement Variables**
+   - Function: `calculate_movement_variables`
+   - Determines the distance, time, and current component for movement from the current node to each neighboring node.
+
+5. **Estimate Distance to Target from Neighbor**
+   - Function: `calculate_remaining_distance`
+   - Estimates the distance from each neighboring node to the target node.
+
+6. **Calculate Distance Gain**
+   - Equation: `distance_gain = current_distance_to_target - neighbor_distance_to_target`
+   - Calculates the change in distance achieved by moving to the neighbor.
+
+7. **Calculate Efficiency**
+   - Equation: `distance_gain_per_time = distance_gain / neighbor_time`
+   - Determines the distance gain per unit time for each potential movement.
+
+8. **Evaluate Tentative Distance Traveled**
+   - Equation: `tentative_distance_traveled = distance_traveled[current_node] + neighbor_distance / (glider_raw_speed + max(0.1, distance_gain_per_time))`
+   - Estimates the distance traveled if moving to the neighbor.
+
+9. **Update Priority Queue and Paths**
+   - If the tentative distance traveled is less than the known distance traveled to the neighbor, update the path and push the neighbor into the priority queue.
+
+## Mathematical Equations
+
+### Haversine Formula
+Calculates the great-circle distance between two points on a sphere:
+
+$$ distance = 2 \times 6371000 \times \text{asin}(\sqrt{\text{sin}(\Delta \text{latitude} / 2)^2 + \text{cos}(\text{latitude1}) \times \text{cos}(\text{latitude2}) \times \text{sin}(\Delta \text{longitude} / 2)^2}) $$
+
+- The output is the distance in meters, used to calculate the distance between geographical points.
+
+### Distance Gain
+Calculates the change in distance achieved:
+
+$$ \Delta \text{distance} = \text{distance}_{\text{current to target}} - \text{distance}_{\text{neighbor to target}} $$
+
+- Used to evaluate the progress towards the target.
+
+### Efficiency (Distance Gain per Unit Time)
+Calculates the efficiency of movement:
+
+$$ \text{Efficiency} = \frac{\text{distance}_{\text{gain}}}{\text{time}_{\text{current to neighbor}}} $$
+
+- Used to determine the most efficient path considering both distance and time.
+
+### Along-Heading Component of Ocean Current
+Calculates the component of the ocean current along the heading direction from the current node to the neighboring node:
+
+$$ \text{current\_along\_heading} = \text{u\_current} \times \text{heading\_vector}[0] + \text{v\_current} \times \text{heading\_vector}[1] $$
+
+- `u` and `v` are the components of the ocean current.
+- The `heading vector` is the normalized vector pointing from the current node to the neighboring node.
+- The output is the current component along the heading direction, used to adjust the glider's speed.
+
+### Net Speed Calculation
+Calculates the effective speed of the glider considering the ocean current:
+
+$$ \text{net\_speed} = \text{glider\_raw\_speed} + \text{current\_along\_heading} $$
+
+- `glider raw speed` is the base speed of the glider.
+- `current along heading` is the component of the ocean current along the heading direction.
+- The output is the effective speed of the glider.
+
+### Transit Time Calculation
+Calculates the time to travel from the current node to the neighboring node:
+
+$$ \text{time} = \frac{\text{distance}}{\text{net\_speed}} $$
+
+- `distance` is the Haversine distance between the current node and the neighboring node.
+- `net speed` is the effective speed of the glider.
+- The output is the time required to travel the distance.
+
+### Tentative Distance Traveled
+Evaluates the distance traveled if moving to the neighbor:
+
+$$ \text{tentative\_distance\_traveled} = \text{distance\_traveled}[\text{current\_node}] + \frac{\text{neighbor\_distance}}{\text{glider\_raw\_speed} + \max(0.1, \text{distance\_gain\_per\_time})} $$
+
+- `distance traveled [current node]` is the distance traveled to reach the current node.
+- `neighbor distance` is the distance to the neighboring node.
+- `distance gain per time` is the efficiency of movement.
+- The output is the tentative distance traveled to reach the neighboring node.
