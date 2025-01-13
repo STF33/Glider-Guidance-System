@@ -17,7 +17,7 @@ GGS_CurrentMapper/data/eez/LICENSE_EEZ_v12.txt
 
 GGS_DataToolbox/__pycache__/
 GGS_DataToolbox/__ARCHIVE__/
-GGS_DataToolbox/cache/*
+GGS_DataToolbox/cache/
 GGS_DataToolbox/test.ipynb
 
 GGS_DevToolbox
