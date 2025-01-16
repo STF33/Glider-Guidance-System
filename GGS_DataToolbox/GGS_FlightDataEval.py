@@ -19,6 +19,8 @@ def run_fde(df):
 
     df['timestamp'] = pd.to_datetime(df['m_present_time'], unit='s')
 
+    df['m_depth'] = -df['m_depth']
+
     # Test 1: Average time difference between m_depth datapoints
     avg_time_diff = df['timestamp'].diff().mean()
     if not approve(f"Test 1: Average m_depth cycle time = {avg_time_diff}. Approve?"):
@@ -27,9 +29,10 @@ def run_fde(df):
     # Test 2: m_de_oil_vol vs c_de_oil_vol
     if 'm_de_oil_vol' in df.columns and 'c_de_oil_vol' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_de_oil_vol'], label='m_de_oil_vol')
-        plt.scatter(df['timestamp'], df['c_de_oil_vol'], label='c_de_oil_vol')
+        plt.plot(df['timestamp'], df['m_de_oil_vol'], label='m_de_oil_vol', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_de_oil_vol'], label='c_de_oil_vol', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Oil Volume')
         plt.legend()
         plt.title('Oil Volume over Time')
@@ -40,9 +43,10 @@ def run_fde(df):
     # Test 3: Plot m_pitch and c_pitch over time
     if 'm_pitch' in df.columns and 'c_pitch' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_pitch'], label='m_pitch')
-        plt.scatter(df['timestamp'], df['c_pitch'], label='c_pitch')
+        plt.plot(df['timestamp'], df['m_pitch'], label='m_pitch', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_pitch'], label='c_pitch', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Pitch')
         plt.legend()
         plt.title('Pitch over Time')
@@ -53,9 +57,10 @@ def run_fde(df):
     # Test 4: Plot m_battpos and c_battpos over time
     if 'm_battpos' in df.columns and 'c_battpos' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_battpos'], label='m_battpos')
-        plt.scatter(df['timestamp'], df['c_battpos'], label='c_battpos')
+        plt.plot(df['timestamp'], df['m_battpos'], label='m_battpos', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_battpos'], label='c_battpos', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Battery Position')
         plt.legend()
         plt.title('Battery Position over Time')
@@ -71,9 +76,10 @@ def run_fde(df):
     # Test 6: Plot m_fin and c_fin over time
     if 'm_fin' in df.columns and 'c_fin' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_fin'], label='m_fin')
-        plt.scatter(df['timestamp'], df['c_fin'], label='c_fin')
+        plt.plot(df['timestamp'], df['m_fin'], label='m_fin', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_fin'], label='c_fin', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Fin Position')
         plt.legend()
         plt.title('Fin Position over Time')
@@ -84,9 +90,10 @@ def run_fde(df):
     # Test 7: Plot m_heading and c_heading over time
     if 'm_heading' in df.columns and 'c_heading' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_heading'], label='m_heading')
-        plt.scatter(df['timestamp'], df['c_heading'], label='c_heading')
+        plt.plot(df['timestamp'], df['m_heading'], label='m_heading', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_heading'], label='c_heading', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Heading')
         plt.legend()
         plt.title('Heading over Time')
@@ -97,9 +104,10 @@ def run_fde(df):
     # Test 8: Plot m_dist_to_wpt and x_hit_a_waypoint over time
     if 'm_dist_to_wpt' in df.columns and 'x_hit_a_waypoint' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_dist_to_wpt'], label='m_dist_to_wpt')
-        plt.scatter(df['timestamp'], df['x_hit_a_waypoint'], label='x_hit_a_waypoint')
+        plt.plot(df['timestamp'], df['m_dist_to_wpt'], label='m_dist_to_wpt', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['x_hit_a_waypoint'], label='x_hit_a_waypoint', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Distance to Waypoint')
         plt.legend()
         plt.title('Distance to Waypoint over Time')
@@ -110,9 +118,10 @@ def run_fde(df):
     # Test 9: Plot m_vacuum and m_depth over time
     if 'm_vacuum' in df.columns and 'm_depth' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_vacuum'], label='m_vacuum')
-        plt.scatter(df['timestamp'], df['m_depth'], label='m_depth')
+        plt.plot(df['timestamp'], df['m_vacuum'], label='m_vacuum', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['m_depth'], label='m_depth', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Vacuum and Depth')
         plt.legend()
         plt.title('Vacuum and Depth over Time')
@@ -123,9 +132,10 @@ def run_fde(df):
     # Test 10: Plot m_battery and m_depth over time
     if 'm_battery' in df.columns and 'm_depth' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_battery'], label='m_battery')
-        plt.scatter(df['timestamp'], df['m_depth'], label='m_depth')
+        plt.plot(df['timestamp'], df['m_battery'], label='m_battery', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['m_depth'], label='m_depth', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Battery and Depth')
         plt.legend()
         plt.title('Battery and Depth over Time')
@@ -144,8 +154,9 @@ def run_fde(df):
     # Test 12: Plot m_coulomb_amphr_total against time
     if 'm_coulomb_amphr_total' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_coulomb_amphr_total'])
+        plt.plot(df['timestamp'], df['m_coulomb_amphr_total'], label='m_coulomb_amphr_total', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Coulomb Amp-Hour Total')
         plt.title('Coulomb Amp-Hour Total over Time')
         plt.show()
@@ -157,8 +168,9 @@ def run_fde(df):
     if bms_columns:
         plt.figure()
         for col in bms_columns:
-            plt.scatter(df['timestamp'], df[col], label=col)
+            plt.plot(df['timestamp'], df[col], label=col, marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Current')
         plt.legend()
         plt.title('BMS Currents over Time')
@@ -177,8 +189,9 @@ def run_fde(df):
     # Test 15: Plot m_tot_num_inflections against time
     if 'm_tot_num_inflections' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_tot_num_inflections'])
+        plt.plot(df['timestamp'], df['m_tot_num_inflections'], label='m_tot_num_inflections', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Total Number of Inflections')
         plt.title('Total Number of Inflections over Time')
         plt.show()
@@ -188,10 +201,11 @@ def run_fde(df):
     # Test 16: Plot m_altitude, m_raw_altitude, and m_water_depth against time
     if 'm_altitude' in df.columns and 'm_raw_altitude' in df.columns and 'm_water_depth' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_altitude'], label='m_altitude')
-        plt.scatter(df['timestamp'], df['m_raw_altitude'], label='m_raw_altitude')
-        plt.scatter(df['timestamp'], df['m_water_depth'], label='m_water_depth')
+        plt.plot(df['timestamp'], df['m_altitude'], label='m_altitude', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['m_raw_altitude'], label='m_raw_altitude', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['m_water_depth'], label='m_water_depth', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Altitude and Water Depth')
         plt.legend()
         plt.title('Altitude and Water Depth over Time')
@@ -202,10 +216,11 @@ def run_fde(df):
     # Test 17: Plot m_depth, c_argos_on, and c_air_pump against time
     if 'm_depth' in df.columns and 'c_argos_on' in df.columns and 'c_air_pump' in df.columns:
         plt.figure()
-        plt.scatter(df['timestamp'], df['m_depth'], label='m_depth')
-        plt.scatter(df['timestamp'], df['c_argos_on'], label='c_argos_on')
-        plt.scatter(df['timestamp'], df['c_air_pump'], label='c_air_pump')
+        plt.plot(df['timestamp'], df['m_depth'], label='m_depth', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_argos_on'], label='c_argos_on', marker='o', markersize=1)
+        plt.plot(df['timestamp'], df['c_air_pump'], label='c_air_pump', marker='o', markersize=1)
         plt.xlabel('Time (secs)')
+        plt.xticks(rotation=45)
         plt.ylabel('Depth, Argos On, and Air Pump')
         plt.legend()
         plt.title('Depth, Argos On, and Air Pump over Time')
