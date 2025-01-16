@@ -99,4 +99,4 @@ def GGS_DataToolbox_Main(config_name=None):
             pass
 
 if __name__ == "__main__":
-    GGS_DataToolbox_Main(config_name="lowpow")
+    GGS_DataToolbox_Main(config_name="cleanup")
