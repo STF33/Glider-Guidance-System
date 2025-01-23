@@ -17,7 +17,7 @@
       "run_dataframe": true
     },
     "PRODUCTS": {
-      "run_excel": true,
+      "run_excel": false,
       "run_data_sorter": false,
       "run_fde": false,
 
