@@ -1,0 +1,86 @@
+{
+    "sensors": {
+        "sensor1": "sensor_value",
+        "sensor2": "sensor_value",
+        "sensor3": "sensor_value"
+    },
+    "behaviors": {
+        "abend": {
+            "b_args": {
+                "b_arg1": "b_arg_value",
+                "b_arg2": "b_arg_value",
+                "b_arg3": "b_arg_value"
+            }
+        },
+        "surface": {
+            "surfac01": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }
+            },
+            "surfac02": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }
+            },
+            "surfac03": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }   
+            }
+        },
+        "goto_list": {
+            "goto_l01": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }
+            }
+        },
+        "yo": {
+            "yo01": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }
+            }
+        },
+        "sample": {
+            "sample01": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }
+            }
+        }
+    },
+    "sbdlist": {
+        "sensor1": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor2": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor3": ["interval", "state", "halfyos", "yo_duty_cycle"]
+    },
+    "mbdlist": {
+        "sensor1": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor2": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor3": ["interval", "state", "halfyos", "yo_duty_cycle"]
+    },
+    "tbdlist": {
+        "sensor1": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor2": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor3": ["interval", "state", "halfyos", "yo_duty_cycle"]
+    },
+    "nbdlist": {
+        "sensor1": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor2": ["interval", "state", "halfyos", "yo_duty_cycle"],
+        "sensor3": ["interval", "state", "halfyos", "yo_duty_cycle"]
+    }
+}

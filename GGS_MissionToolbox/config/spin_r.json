@@ -1,0 +1,195 @@
+{
+    "sensors": {
+        "c_science_all_on_enabled(bool)": "1",
+        "u_use_ctd_depth_for_flying(bool)": "0",
+        "u_use_current_correction(nodim)": "1"
+    },
+    "behaviors": {
+        "abend": {
+            "b_args": {
+                "overdepth(m)": "-1",
+                "overtime(sec)": "1800",
+                "samedepth_for(sec)": "1000",
+                "samedepth_for_sample_time(sec)": "1000",
+                "undervolts(volts)": "9"
+            }
+        },
+        "surface": {
+            "surfac31": {
+                "b_args": {
+                    "start_when(enum)": "12",
+                    "when_secs(sec)": "1200",
+                    "end_action(enum)": "1",
+                    "gps_wait_time(s)": "300",
+                    "keystroke_wait_time(sec)": "300",
+                    "when_wpt_dist(m)": "10",
+                    "c_use_bpump(enum)": "0",
+                    "c_use_pitch(enum)": "3",
+                    "c_pitch_value(X)": "0.4538",
+                    "printout_cycle_time(sec)": "60"
+                }
+            }
+        },
+        "set_heading": {
+            "set_he30": {
+                "b_args": {
+                    "use_heading(bool)": "4",
+                    "heading_value(X)": "0.45",
+                    "start_when(enum)": "0",
+                    "stop_when(enum)": "0"
+                }
+            }
+        },
+        "yo": {
+            "yo30": {
+                "b_args": {
+                    "start_when(enum)": "4",
+                    "num_half_cycles_to_do(nodim)": "6",
+                    "d_target_depth(m)": "8",
+                    "d_target_altitude(m)": "4",
+                    "d_use_bpump(enum)": "0",
+                    "d_bpump_value(X)": "360",
+                    "d_use_pitch(enum)": "3",
+                    "d_pitch_value(X)": "-0.34",
+                    "d_max_thermal_charge_time(sec)": "30",
+                    "d_stop_when_stalled_for(sec)": "600",
+                    "c_target_depth(m)": "1.5",
+                    "c_target_altitude(m)": "-1",
+                    "c_use_bpump(enum)": "0",
+                    "c_use_pitch(enum)": "3",
+                    "c_pitch_value(X)": "0.34",
+                    "c_stop_when_stalled_for(sec)": "600",
+                    "end_action(enum)": "0"
+                }
+            }
+        },
+        "sample": {
+            "sample30": {
+                "b_args": {
+                    "sensor_type(enum)": "0",
+                    "state_to_sample(enum)": "5",
+                    "intersample_time(s)": "0"
+                }
+            }
+        },
+        "prepare_to_dive": {
+            "prepar30": {
+                "b_args": {
+                    "start_when(enum)": "0",
+                    "wait_time(sec)": "5",
+                    "max_thermal_charge_time(sec)": "10"
+                }
+            }
+        }
+    },
+    "sbdlist": {
+        "m_present_secs_into_mission": ["", "", "", ""],
+        "m_present_time": ["", "", "", ""],
+        "m_depth": ["16", "", "", ""],
+        "m_de_oil_vol": ["60", "", "", ""],
+        "c_de_oil_vol": ["60", "", "", ""],
+        "m_ballast_pumped": ["60", "", "", ""],
+        "c_ballast_pumped": ["60", "", "", ""],
+        "m_pitch": ["30", "", "", ""],
+        "c_pitch": ["3600", "", "", ""],
+        "m_roll": ["30", "", "", ""],
+        "m_battpos": ["30", "", "", ""],
+        "c_battpos": ["1200", "", "", ""],
+        "c_fin": ["1800", "", "", ""],
+        "m_fin": ["1800", "", "", ""],
+        "m_heading": ["60", "", "", ""],
+        "m_vacuum": ["1800", "", "", ""],
+        "m_veh_temp": ["1800", "", "", ""],
+        "x_surface_active": ["1800", "", "", ""],
+        "m_gps_lat": ["30", "", "", ""],
+        "m_gps_lon": ["30", "", "", ""],
+        "m_lat": ["30", "", "", ""],
+        "m_lon": ["30", "", "", ""],
+        "c_wpt_lat": ["", "", "", ""],
+        "c_wpt_lon": ["", "", "", ""],
+        "m_water_vx": ["", "", "", ""],
+        "m_water_vy": ["", "", "", ""],
+        "m_altitude": ["30", "", "", ""],
+        "m_raw_altitude": ["15", "", "", ""],
+        "m_water_depth": ["30", "", "", ""],
+        "c_climb_bpump": ["300", "", "", ""],
+        "c_dive_bpump": ["300", "", "", ""],
+        "m_leakdetect_voltage": ["1800", "", "", ""],
+        "m_leakdetect_voltage_forward": ["1800", "", "", ""],
+        "m_digifin_leakdetect_reading": ["1800", "", "", ""],
+        "m_battery": ["60", "", "", ""],
+        "m_coulomb_amphr_total": ["1800", "", "", ""],
+        "m_coulomb_current": ["180", "", "", ""],
+        "m_argos_on": ["3600", "", "", ""],
+        "m_argos_is_xmitting": ["3600", "", "", ""],
+        "m_iridium_on": ["3600", "", "", ""],
+        "m_iridium_status": ["3600", "", "", ""],
+        "m_avg_thruster_power": ["600", "", "", ""],
+        "m_thruster_current": ["600", "", "", ""],
+        "c_thruster_on": ["600", "", "", ""],
+        "m_thruster_voltage": ["600", "", "", ""],
+        "m_thruster_power": ["600", "", "", ""]
+    },
+    "mbdlist": {
+        "m_present_secs_into_mission": ["", "", "", ""],
+        "m_present_time": ["", "", "", ""],
+        "m_depth": ["", "", "", ""],
+        "m_de_oil_vol": ["", "", "", ""],
+        "c_de_oil_vol": ["", "", "", ""],
+        "m_ballast_pumped": ["", "", "", ""],
+        "c_ballast_pumped": ["", "", "", ""],
+        "m_pitch": ["", "", "", ""],
+        "c_pitch": ["", "", "", ""],
+        "m_roll": ["", "", "", ""],
+        "m_battpos": ["", "", "", ""],
+        "c_battpos": ["", "", "", ""],
+        "c_fin": ["", "", "", ""],
+        "m_fin": ["", "", "", ""],
+        "m_heading": ["", "", "", ""],
+        "m_vacuum": ["", "", "", ""],
+        "m_veh_temp": ["", "", "", ""],
+        "x_surface_active": ["", "", "", ""],
+        "m_gps_lat": ["", "", "", ""],
+        "m_gps_lon": ["", "", "", ""],
+        "m_lat": ["", "", "", ""],
+        "m_lon": ["", "", "", ""],
+        "c_wpt_lat": ["", "", "", ""],
+        "c_wpt_lon": ["", "", "", ""],
+        "m_water_vx": ["", "", "", ""],
+        "m_water_vy": ["", "", "", ""],
+        "m_altitude": ["", "", "", ""],
+        "m_raw_altitude": ["", "", "", ""],
+        "m_water_depth": ["", "", "", ""],
+        "c_climb_bpump": ["", "", "", ""],
+        "c_dive_bpump": ["", "", "", ""],
+        "m_leakdetect_voltage": ["", "", "", ""],
+        "m_leakdetect_voltage_forward": ["", "", "", ""],
+        "m_digifin_leakdetect_reading": ["", "", "", ""],
+        "m_battery": ["", "", "", ""],
+        "m_coulomb_amphr_total": ["", "", "", ""],
+        "m_coulomb_current": ["", "", "", ""],
+        "m_argos_on": ["", "", "", ""],
+        "m_argos_is_xmitting": ["", "", "", ""],
+        "m_iridium_on": ["", "", "", ""],
+        "m_iridium_status": ["", "", "", ""],
+        "m_avg_thruster_power": ["", "", "", ""],
+        "m_thruster_current": ["", "", "", ""],
+        "c_thruster_on": ["", "", "", ""],
+        "m_thruster_voltage": ["", "", "", ""],
+        "m_thruster_power": ["", "", "", ""]
+    },
+    "tbdlist": {
+        "SCI_M_PRESENT_TIME": ["", "", "", ""],
+        "SCI_M_PRESENT_SECS_INTO_MISSION": ["", "", "", ""],
+        "SCI_WATER_COND": ["", "", "", ""],
+        "SCI_WATER_TEMP": ["", "", "", ""],
+        "SCI_WATER_PRESSURE": ["", "", "", ""]
+    },
+    "nbdlist": {
+        "SCI_M_PRESENT_TIME": ["", "", "", ""],
+        "SCI_M_PRESENT_SECS_INTO_MISSION": ["", "", "", ""],
+        "SCI_WATER_COND": ["", "", "", ""],
+        "SCI_WATER_TEMP": ["", "", "", ""],
+        "SCI_WATER_PRESSURE": ["", "", "", ""]
+    }
+}
