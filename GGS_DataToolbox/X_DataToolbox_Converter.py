@@ -1,3 +1,8 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
 # =========================
 # IMPORTS
 # =========================
@@ -50,7 +55,10 @@ def run_ascii_converter():
     
     print(f"\n### RUNNING: CONVERTER ###\n")
 
-    os.makedirs('DBD_Files/ProcessedAscii', exist_ok=True)
+    current_directory = os.path.abspath(os.path.dirname(__file__))
+    ascii_directory = os.path.join(current_directory, 'DBD_Files/ProcessedAscii')
+    os.makedirs(ascii_directory, exist_ok=True)
+
     file_types = ['.sbd', '.dbd', '.tbd', '.ebd']
     
     for file_type in file_types:
