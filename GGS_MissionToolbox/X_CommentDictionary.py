@@ -1,3 +1,11 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
+# =========================
+
+# FUNCTION:
 def comment_dictionary(config_dictionary):
 
     b_arg_comments = {}

@@ -1,6 +1,16 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
+# =========================
+# IMPORTS
+# =========================
+
 import os
 import shutil
 import re
+from datetime import datetime
 
 ### FUNCTION:
 def organize_data_files(input_data_folder, output_folder):
@@ -98,11 +108,15 @@ def run_data_sorter(output_directory):
 
     print(f"\n### RUNNING: DATA SORTER ###\n")
 
-    os.makedirs('DBD_Files/Logfiles', exist_ok=True)
+    datetime_string = datetime.now().strftime("%Y%m%dT%H%M%S")
+    output_directory_with_datetime = f"{output_directory}_{datetime_string}"
 
-    current_directory = os.path.dirname(__file__)
+    current_directory = os.path.abspath(os.path.dirname(__file__))
+    logfile_directory = os.path.join(current_directory, 'DBD_Files/Logfiles')
+    os.makedirs(logfile_directory, exist_ok=True)
+
     data_directory = os.path.join(current_directory, 'DBD_Files')
     logfile_directory = os.path.join(current_directory, 'DBD_Files', 'Logfiles')
 
-    organize_data_files(data_directory, output_directory)
-    organize_log_files(logfile_directory, output_directory)
+    organize_data_files(data_directory, output_directory_with_datetime)
+    organize_log_files(logfile_directory, output_directory_with_datetime)

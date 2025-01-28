@@ -1,3 +1,8 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
 # =========================
 # IMPORTS
 # =========================
@@ -49,7 +54,10 @@ def run_file_rename():
     
     print(f"\n### RUNNING: RENAME ###\n")
 
-    os.makedirs('DBD_Files/RenamedBinary', exist_ok=True)
+    current_directory = os.path.abspath(os.path.dirname(__file__))
+    renamed_directory = os.path.join(current_directory, 'DBD_Files/RenamedBinary')
+    os.makedirs(renamed_directory, exist_ok=True)
+
     file_types = ['.sbd', '.scd', '.dbd', '.dcd', '.tbd', '.tcd', '.ebd', '.ecd']
     
     for file_type in file_types:

@@ -1,3 +1,8 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
 # =========================
 # IMPORTS
 # =========================
@@ -99,4 +104,4 @@ def GGS_DataToolbox_Main(config_name=None):
             pass
 
 if __name__ == "__main__":
-    GGS_DataToolbox_Main(config_name="clear_data")
+    GGS_DataToolbox_Main(config_name="data_sort")

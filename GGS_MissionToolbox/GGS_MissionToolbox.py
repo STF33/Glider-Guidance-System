@@ -1,8 +1,20 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
+# =========================
+# IMPORTS
+# =========================
+ 
 import os
 import json
 import re
 from X_CommentDictionary import comment_dictionary
 
+# =========================
+
+# FUNCTION:
 def create_mission(config_name="unknown"):
 
     '''
@@ -163,7 +175,9 @@ def create_mission(config_name="unknown"):
     create_mi_file(config_dictionary, mission_name, output_directory, comments)
     create_data_lists(config_dictionary, output_directory)
 
+    print(f"\n")
     print(f"The mission files have been saved to: '{os.path.join(os.path.expanduser('~'), 'Downloads', config_name)}'")
+    print(f"\n")
 
 if __name__ == "__main__":
     create_mission(config_name="spin_r")

@@ -1,4 +1,11 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
 
+# =========================
+# IMPORTS
+# =========================
 
 import pandas as pd
 import os

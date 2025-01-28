@@ -1,3 +1,8 @@
+"""
+Author: Salvatore Fricano
+Repository: https://github.com/STF33/Glider-Guidance-System
+"""
+
 # =========================
 # IMPORTS
 # =========================
@@ -50,7 +55,10 @@ def run_file_decompression():
     
     print(f"\n### RUNNING: DECOMPRESSION ###\n")
 
-    os.makedirs('DBD_Files/Decompressed', exist_ok=True)
+    current_directory = os.path.abspath(os.path.dirname(__file__))
+    decompressed_directory = os.path.join(current_directory, 'DBD_Files/Decompressed')
+    os.makedirs(decompressed_directory, exist_ok=True)
+    
     file_mappings = {
         '.dcd': '.dbd',
         '.ecd': '.ebd',
