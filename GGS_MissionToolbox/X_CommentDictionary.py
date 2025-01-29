@@ -910,7 +910,7 @@ def comment_dictionary(config_dictionary):
                         elif use_heading_value == 5:
                             degrees = b_arg_value * (180 / 3.14159)
                             degrees = round(degrees, 2)
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Current = {b_arg_value} radians = {degrees} degrees"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Heading = {b_arg_value} radians offset from the current = {degrees} degrees offset from the current"
                     elif b_arg == "start_when(enum)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
                         if b_arg_value == 0:
