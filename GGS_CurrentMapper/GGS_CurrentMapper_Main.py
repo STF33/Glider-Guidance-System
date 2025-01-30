@@ -16,8 +16,6 @@ from X_CurrentMapper_Products import *
 from concurrent.futures import ProcessPoolExecutor
 
 # =========================
-# MAIN
-# =========================
 
 ### REPROCESSOR:
 def GGS_reprocessor(task):

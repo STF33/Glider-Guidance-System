@@ -21,7 +21,8 @@
       "run_data_sorter": false,
       "run_fde": false,
 
-      "run_low_power_test": false
+      "run_low_power_eval": false,
+      "run_yo_eval": false
     },
     "ADVANCED": {
       "run_data_cleanup": false

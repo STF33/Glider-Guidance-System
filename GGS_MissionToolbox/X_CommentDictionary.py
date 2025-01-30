@@ -5,9 +5,19 @@ Repository: https://github.com/STF33/Glider-Guidance-System
 
 # =========================
 
-# FUNCTION:
+### FUNCTION:
 def comment_dictionary(config_dictionary):
 
+    '''
+    A repository of Slocum glider behavior argument comments for various behaviors and their dependencies.
+
+    Args:
+    config_dictionary (dict): A dictionary of configuration behaviors and behavior arguments.
+
+    Returns:
+    b_arg_comments (dict): A dictionary of the comments for each behaviors arguments.
+    '''
+    
     b_arg_comments = {}
     behaviors = config_dictionary.get('behaviors', {})
 

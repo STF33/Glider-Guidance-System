@@ -55,7 +55,8 @@ def GGS_config_import(config_name):
 
             product_config = config['PRODUCTS']
             product_config['run_excel'] = product_config.get('run_excel', False)
-            product_config['run_low_power_test'] = product_config.get('run_low_power_test', False)
+            product_config['run_low_power_eval'] = product_config.get('run_low_power_eval', False)
+            product_config['run_yo_eval'] = product_config.get('run_yo_eval', False)
             
             advanced_config = config['ADVANCED']
             advanced_config['run_data_cleanup'] = advanced_config.get('run_data_cleanup', False)

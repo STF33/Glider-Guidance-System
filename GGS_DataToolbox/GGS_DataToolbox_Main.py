@@ -10,6 +10,7 @@ Repository: https://github.com/STF33/Glider-Guidance-System
 from X_GGS_DataSorter import *
 from X_GGS_FlightDataEval import *
 from X_GGS_LowPowerEval import *
+from X_GGS_YoEval import *
 
 from X_DataToolbox_ClearDataLibrary import *
 from X_DataToolbox_Config import *
@@ -20,8 +21,6 @@ from X_DataToolbox_Rename import *
 from X_DataToolbox_SensorTools import *
 from X_DataToolbox_Excel import *
 
-# =========================
-# MAIN
 # =========================
 
 ### FUNCTION:
@@ -38,8 +37,21 @@ def GGS_DataToolbox_Main(config_name=None):
     - None
     '''
 
+    current_directory = os.path.abspath(os.path.dirname(__file__))
+
+    cache_directory = os.path.join(current_directory, 'cache')
+    os.makedirs(cache_directory, exist_ok=True)
+    decompressed_directory = os.path.join(current_directory, 'DBD_Files/Decompressed')
+    os.makedirs(decompressed_directory, exist_ok=True)
+    logfile_directory = os.path.join(current_directory, 'DBD_Files/Logfiles')
+    os.makedirs(logfile_directory, exist_ok=True)
+    ascii_directory = os.path.join(current_directory, 'DBD_Files/ProcessedAscii')
+    os.makedirs(ascii_directory, exist_ok=True)
+    renamed_directory = os.path.join(current_directory, 'DBD_Files/RenamedBinary')
+    os.makedirs(renamed_directory, exist_ok=True)
+
     config = GGS_config_import(config_name)
-    output_directory = GGS_config_process(config, path="default")
+    root_directory = GGS_config_process(config, path="default")
 
     glider_config = config['GLIDER']
     glider_info = (glider_config.get('glider_unit'), glider_config.get('glider_version'), glider_config.get('glider_type'))
@@ -78,11 +90,11 @@ def GGS_DataToolbox_Main(config_name=None):
         product_config = config['PRODUCTS']
         # Generic Products
         if product_config.get('run_excel'):
-            run_excel(output_directory, glider_info, dataframe)
+            run_excel(root_directory, glider_info, dataframe)
         else:
             pass
         if product_config.get('run_data_sorter'):
-            run_data_sorter(output_directory)
+            run_data_sorter(root_directory, glider_info)
         else:
             pass
         if product_config.get('run_fde'):
@@ -90,8 +102,10 @@ def GGS_DataToolbox_Main(config_name=None):
         else:
             pass
         # Specific Products
-        if product_config.get('run_low_power_test'):
-            run_low_power_eval(output_directory, glider_info)
+        if product_config.get('run_low_power_eval'):
+            run_low_power_eval(root_directory, glider_info)
+        elif product_config.get('run_yo_eval'):
+            run_yo_eval(root_directory, glider_info)
         else:
             pass
     
@@ -104,4 +118,4 @@ def GGS_DataToolbox_Main(config_name=None):
             pass
 
 if __name__ == "__main__":
-    GGS_DataToolbox_Main(config_name="data_sort")
+    GGS_DataToolbox_Main(config_name="cleanup")
