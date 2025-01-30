@@ -14,7 +14,7 @@ from X_CommentDictionary import comment_dictionary
 
 # =========================
 
-# FUNCTION:
+### FUNCTION:
 def create_mission(config_name="unknown"):
 
     '''
@@ -34,6 +34,7 @@ def create_mission(config_name="unknown"):
     output_directory = os.path.join(os.path.expanduser('~'), 'Downloads', mission_name)
     os.makedirs(output_directory, exist_ok=True)
 
+    ### FUNCTION:
     def load_config(file_path):
 
         '''
@@ -55,6 +56,7 @@ def create_mission(config_name="unknown"):
 
         return config_dictionary
 
+    ### FUNCTION:
     def create_mi_file(config_dictionary, mission_name, output_directory, comments):
 
         '''
@@ -124,6 +126,7 @@ def create_mission(config_name="unknown"):
         with open(os.path.join(output_directory, f"{mission_name}.mi"), 'w') as file:
             file.write(mission_content)
 
+    ### FUNCTION:
     def create_ma_file(behavior, sub_behavior, sub_details, output_directory, comments):
 
         '''
@@ -161,6 +164,7 @@ def create_mission(config_name="unknown"):
                         file.write(f"{lon} {lat} # waypoint {i}\n")
                     file.write("\n<end:waypoints>\n")
 
+    ### FUNCTION:
     def create_data_lists(config_dictionary, output_directory):
         
         '''

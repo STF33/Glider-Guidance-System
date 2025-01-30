@@ -9,7 +9,6 @@ Repository: https://github.com/STF33/Glider-Guidance-System
 
 import os
 
-
 # =========================
 
 ### FUNCTION:

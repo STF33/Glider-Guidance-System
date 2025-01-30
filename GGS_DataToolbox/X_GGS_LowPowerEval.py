@@ -10,8 +10,20 @@ Repository: https://github.com/STF33/Glider-Guidance-System
 import pandas as pd
 import os
 
+# =========================
+
 ### FUNCTION:
 def calculate_statistics(sub_df):
+    
+    '''
+    Calculates statistics for the low power data evaluation
+    
+    Args:
+    - sub_df (pd.DataFrame): The dataframe interval of glider data to evaluate.
+
+    Returns:
+    - glider_statistics (dict): A dictionary containing the calculated statistics.
+    '''
 
     initial_time = sub_df['m_present_secs_into_mission'].iloc[0]
     final_time = sub_df['m_present_secs_into_mission'].iloc[-1]
@@ -40,14 +52,25 @@ def calculate_statistics(sub_df):
     }
 
 ### FUNCTION:
-def run_low_power_eval(directory, glider_info):
+def run_low_power_eval(root_directory, glider_info):
+
+    '''
+    Executes the low power data evaluation.
+    
+    Args:
+    - root_directory (str): The root directory from the configuration file.
+    - glider_info (tuple): A tuple containing glider unit, version, and type information.
+
+    Returns:
+    - None
+    '''
 
     print(f"\n### RUNNING: LOW POWER EVALUATION ###\n")
 
     glider_unit, glider_version, glider_type = glider_info
 
     df_filename = f"{glider_unit}-{glider_version}-{glider_type}_DataOutput.xlsx"
-    df_file = os.path.join(directory, df_filename)
+    df_file = os.path.join(root_directory, df_filename)
 
     df = pd.read_excel(df_file)
 
@@ -81,7 +104,7 @@ def run_low_power_eval(directory, glider_info):
         else:
             climbing_stats.append(stats)
 
-    output_file = os.path.join(directory, f'{glider_unit}-{glider_version}_{glider_type}_LowPowerIntervalsStatistics.xlsx')
+    output_file = os.path.join(root_directory, f'{glider_unit}-{glider_version}_{glider_type}_LowPowerStatistics.xlsx')
     stats_df = pd.DataFrame(diving_stats + climbing_stats)
     stats_df.to_excel(output_file, index=False)
 

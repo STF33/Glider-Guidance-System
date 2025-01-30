@@ -13,12 +13,35 @@ import matplotlib.pyplot as plt
 
 # =========================
 
+### FUNCTION:
 def approve(message):
-    """Function to get user approval"""
+    
+    '''
+    Prompt for user approval
+    
+    Args:
+    - message (str): The message prompt needing approval.
+
+    Returns:
+    - response (bool): Continues if True (y).
+    '''
+
     response = input(f"{message} (y/n): ")
+
     return response.lower() == 'y'
 
+### FUNCTION:
 def run_fde(df):
+
+    '''
+    Performs a Flight Data Evaluation on glider data.
+    
+    Args:
+    - df (pd.DataFrame): The DataFrame containing sensor data.
+
+    Returns:
+    - None
+    '''
 
     print(f"\n### RUNNING: FLIGHT DATA EVAL ###\n")
 
