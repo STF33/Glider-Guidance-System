@@ -51,7 +51,8 @@ def create_mission(config_name="unknown"):
             config = json.load(file)
         
         config_dictionary = {
-            'behaviors': config.get('behaviors', {})
+            'behaviors': config.get('behaviors', {}),
+            'sensors': config.get('sensors', {})
         }
 
         return config_dictionary
@@ -87,41 +88,43 @@ def create_mission(config_name="unknown"):
         mission_content += f"#.........+##*.......*##+.........\n"
         mission_content += f"#.........+*...........*+.........\n"
 
-        sensors = config_dictionary.get('sensors', {})
-        for sensor, value in sensors.items():
-            mission_content += f"sensor: {sensor} {value}\n"
-
-        mission_content += "\n#########################\n"
-        mission_content += f"\n"
+        if config_dictionary.get('sensors'):
+            mission_content += "\n#########################\n"
+            mission_content += "\n# sensors\n"
+            sensors = config_dictionary.get('sensors', {})
+            for sensor, value in sensors.items():
+                mission_content += f"sensor: {sensor} {value}\n"
 
         behaviors = config_dictionary.get('behaviors', {})
 
-        if 'abend' in behaviors:
-            mission_content += "behavior: abend\n"
-            b_args = behaviors['abend'].get('b_args', {})
-            for b_arg, b_arg_value in b_args.items():
-                comment = comments.get('abend', {}).get(b_arg, "")
-                mission_content += f"    b_arg: {b_arg} {b_arg_value} {comment}\n"
-            mission_content += "\n#########################\n\n"
-
         for behavior, details in behaviors.items():
             if behavior == "abend":
-                continue
-            for sub_behavior, sub_details in details.items():
-                b_args = sub_details.get('b_args', {})
-                if "args_from_file(enum)" in b_args:
-                    b_arg_value = b_args["args_from_file(enum)"]
-                    comment = comments.get(behavior, {}).get(sub_behavior, {}).get("args_from_file(enum)", "")
-                    mission_content += f"behavior: {behavior}\n"
-                    mission_content += f"    b_arg: args_from_file(enum) {b_arg_value} # {comment}\n"
-                    mission_content += "\n#########################\n\n"
-                    create_ma_file(behavior, sub_behavior, sub_details, output_directory, comments)
-                else:
-                    mission_content += f"behavior: {behavior}\n"
+                mission_content += "\n#########################\n"
+                mission_content += f"\n# {behavior}\n"
+                mission_content += f"behavior: {behavior}\n"
+                for sub_behavior, sub_details in details.items():
+                    b_args = sub_details.get('b_args', {})
                     for b_arg, b_arg_value in b_args.items():
                         comment = comments.get(behavior, {}).get(sub_behavior, {}).get(b_arg, "")
                         mission_content += f"    b_arg: {b_arg} {b_arg_value} {comment}\n"
-                    mission_content += "\n#########################\n\n"
+            else:
+                for sub_behavior, sub_details in details.items():
+                    mission_content += "\n#########################\n"
+                    mission_content += f"\n# {behavior}\n"
+                    b_args = sub_details.get('b_args', {})
+                    if "args_from_file(enum)" in b_args:
+                        b_arg_value = b_args["args_from_file(enum)"]
+                        comment = comments.get(behavior, {}).get(sub_behavior, {}).get("args_from_file(enum)", "")
+                        mission_content += f"behavior: {behavior}\n"
+                        mission_content += f"    b_arg: args_from_file(enum) {b_arg_value} # {comment}\n"
+                        create_ma_file(behavior, sub_behavior, sub_details, output_directory, comments)
+                    else:
+                        mission_content += f"behavior: {behavior}\n"
+                        for b_arg, b_arg_value in b_args.items():
+                            comment = comments.get(behavior, {}).get(sub_behavior, {}).get(b_arg, "")
+                            mission_content += f"    b_arg: {b_arg} {b_arg_value} {comment}\n"
+
+        mission_content += "\n#########################\n"
 
         with open(os.path.join(output_directory, f"{mission_name}.mi"), 'w') as file:
             file.write(mission_content)
@@ -194,9 +197,7 @@ def create_mission(config_name="unknown"):
     create_mi_file(config_dictionary, mission_name, output_directory, comments)
     create_data_lists(config_dictionary, output_directory)
 
-    print(f"\n")
     print(f"The mission files have been saved to: '{os.path.join(os.path.expanduser('~'), 'Downloads', config_name)}'")
-    print(f"\n")
 
 if __name__ == "__main__":
-    create_mission(config_name="sen_ccb")
+    create_mission(config_name="astock")

@@ -762,9 +762,15 @@ def plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag
     max_mag = np.nanmax(mag_depth_avg)
     max_label = f'{max_mag:.2f}'
 
+    levels = []
+    colors = []
+    labels = []
+
     if max_mag <= mag1:
+        print("Warning: Threshold zone levels are too small to parse, no zones will be displayed")
         pass
     elif mag1 < max_mag <= mag2:
+        print("Warning: Threshold zone levels are too small to parse, no zones will be displayed")
         pass
     elif mag2 < max_mag <= mag3:
         levels = [mag1, mag2, mag3]
@@ -782,7 +788,7 @@ def plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag
         levels = [mag1, mag2, mag3, mag4, mag5, max_mag]
         colors = ['none', 'yellow', 'orange', 'orangered', 'maroon', 'maroon']
         labels = [None, f'{mag2} - {mag3} m/s', f'{mag3} - {mag4} m/s', f'{mag4} - {mag5} m/s', f'{mag5} - {max_label} m/s']
-
+    
     if levels:
         threshold_contourf = ax.contourf(longitude, latitude, mag_depth_avg, levels=levels, colors=colors[:len(levels)-1], extend='both', transform=ccrs.PlateCarree(), zorder=10)
     
