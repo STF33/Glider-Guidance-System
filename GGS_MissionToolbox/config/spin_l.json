@@ -2,83 +2,32 @@
     "sensors": {
         "c_science_all_on_enabled(bool)": "1",
         "u_use_ctd_depth_for_flying(bool)": "0",
-        "u_use_current_correction(nodim)": "1"
+        "u_use_current_correction(nodim)": "0"
     },
     "behaviors": {
         "abend": {
-            "MS_ABORT_OVERDEPTH": {
+            "abend1": {
                 "b_args": {
-                    "overdepth_sample_time(sec)": "26"
-                }
-            },
-            "MS_ABORT_OVERTIME": {
-                "b_args": {
-                    "overtime(sec)": "-1"
-                }
-            },
-            "MS_ABORT_UNDERVOLTS": {
-                "b_args": {
+                    "overdepth(m)": "-1",
+                    "overtime(sec)": "3600",
+                    "samedepth_for(sec)": "1000",
+                    "samedepth_for_sample_time(sec)": "1000",
                     "undervolts(volts)": "9"
-                }
-            },
-            "MS_ABORT_SAMEDEPTH": {
-                "b_args": {
-                    "samedepth_for_sample_time(sec)": "30"
-                }
-            },
-            "MS_ABORT_NO_TICKLE": {
-                "b_args": {
-                    "no_cop_tickle_for(sec)": "48600",
-                    "no_cop_tickle_percent(%)": "-1"
                 }
             }
         },
         "surface": {
-            "surfac21": {
+            "surfac01": {
                 "b_args": {
-                    "args_from_file(enum)": "21",
-                    "start_when(enum)": "12",
-                    "when_secs(sec)": "1200",
-                    "end_action(enum)": "1",
-                    "gps_wait_time(s)": "300",
-                    "keystroke_wait_time(sec)": "300",
-                    "when_wpt_dist(m)": "10",
-                    "c_use_bpump(enum)": "0",
-                    "c_use_pitch(enum)": "3",
-                    "c_pitch_value(X)": "0.4538",
-                    "printout_cycle_time(sec)": "60"
-                }
-            },
-            "surfac22": {
-                "b_args": {
-                    "args_from_file(enum)": "22",
-                    "start_when(enum)": "3",
+                    "start_when(enum)": "1",
                     "end_action(enum)": "0",
-                    "gps_wait_time(s)": "300",
-                    "keystroke_wait_time(sec)": "300",
-                    "when_wpt_dist(m)": "10",
-                    "c_use_bpump(enum)": "0",
-                    "c_use_pitch(enum)": "3",
-                    "c_pitch_value(X)": "0.4538"
+                    "gps_wait_time(s)": "300"
                 }
             },
-            "surfac23": {
+            "surfac02": {
                 "b_args": {
-                    "args_from_file(enum)": "23",
-                    "start_when(enum)": "2",
-                    "end_action(enum)": "1",
-                    "gps_wait_time(s)": "300",
-                    "keystroke_wait_time(sec)": "300",
-                    "when_wpt_dist(m)": "10",
-                    "c_use_bpump(enum)": "0",
-                    "c_use_pitch(enum)": "3",
-                    "c_pitch_value(X)": "0.4538"
-                }
-            },
-            "surfac24": {
-                "b_args": {
-                    "args_from_file(enum)": "24",
-                    "start_when(enum)": "8",
+                    "start_when(enum)": "12",
+                    "when_secs(sec)": "2700",
                     "end_action(enum)": "1",
                     "gps_wait_time(s)": "300",
                     "keystroke_wait_time(sec)": "300",
@@ -87,95 +36,61 @@
                     "c_use_pitch(enum)": "3",
                     "c_pitch_value(X)": "0.4538",
                     "printout_cycle_time(sec)": "60"
-                }   
-            },
-            "surfac25": {
-                "b_args": {
-                    "args_from_file(enum)": "25",
-                    "start_when(enum)": "11",
-                    "end_action(enum)": "1",
-                    "gps_wait_time(s)": "300",
-                    "keystroke_wait_time(sec)": "300",
-                    "when_wpt_dist(m)": "10",
-                    "c_use_bpump(enum)": "0",
-                    "c_use_pitch(enum)": "3",
-                    "c_pitch_value(X)": "0.4538"
-                }   
-            },
-            "surfac26": {
-                "b_args": {
-                    "args_from_file(enum)": "26",
-                    "start_when(enum)": "9",
-                    "end_action(enum)": "1",
-                    "when_secs(sec)": "10800",
-                    "gps_wait_time(s)": "300",
-                    "keystroke_wait_time(sec)": "300",
-                    "when_wpt_dist(m)": "10",
-                    "c_use_bpump(enum)": "0",
-                    "c_use_pitch(enum)": "3",
-                    "c_pitch_value(X)": "0.4538",
-                    "printout_cycle_time(sec)": "60"
-                }   
+                }
             }
         },
-        "goto_list": {
-            "goto_l10": {
+        "set_heading": {
+            "set_he30": {
                 "b_args": {
-                    "args_from_file(enum)": "10",
-                    "num_legs_to_run(nodim)": "-1",
+                    "use_heading(bool)": "4",
+                    "heading_value(X)": "-0.45",
                     "start_when(enum)": "0",
-                    "list_stop_when(enum)": "7",
-                    "initial_wpt(enum)": "-1",
-                    "num_waypoints(nodim)": "4"
-                },
-                "waypoints": {
-                    "waypoint0": ["-7032.0640", "4138.1060"],
-                    "waypoint1": ["-7031.9200", "4138.1090"],
-                    "waypoint2": ["-7031.9170", "4138.0000"],
-                    "waypoint3": ["-7032.0610", "4137.9980"]
+                    "stop_when(enum)": "5"
                 }
             }
         },
         "yo": {
-            "yo14": {
+            "yo01": {
                 "b_args": {
-                    "args_from_file(enum)": "14",
-                    "start_when(enum)": "2",
+                    "start_when(enum)": "4",
                     "num_half_cycles_to_do(nodim)": "6",
-                    "d_target_depth(m)": "8",
-                    "d_target_altitude(m)": "5",
+                    "d_target_depth(m)": "25",
+                    "d_target_altitude(m)": "8",
                     "d_use_bpump(enum)": "0",
-                    "d_bpump_value(X)": "360",
+                    "d_bpump_value(X)": "600",
                     "d_use_pitch(enum)": "3",
-                    "d_pitch_value(X)": "-0.37",
-                    "d_stop_when_hover_for(sec)": "600",
-                    "d_stop_when_stalled_for(sec)": "660",
-                    "d_speed_min(m/s)": "0.06",
-                    "c_target_depth(m)": "3.5",
+                    "d_pitch_value(X)": "-0.4538",
+                    "d_max_thermal_charge_time(sec)": "30",
+                    "d_stop_when_stalled_for(sec)": "600",
+                    "c_target_depth(m)": "6",
                     "c_target_altitude(m)": "-1",
                     "c_use_bpump(enum)": "0",
                     "c_use_pitch(enum)": "3",
-                    "c_pitch_value(X)": "0.37",
-                    "c_stop_when_hover_for(sec)": "600",
-                    "c_stop_when_stalled_for(sec)": "660",
-                    "c_speed_min(m/s)": "-0.06",
-                    "end_action(enum)": "2"
+                    "c_pitch_value(X)": "0.4538",
+                    "c_stop_when_stalled_for(sec)": "600",
+                    "end_action(enum)": "0"
                 }
             }
         },
         "sample": {
-            "sample10": {
+            "sample01": {
                 "b_args": {
-                    "args_from_file(enum)": "10",
                     "sensor_type(enum)": "0",
-                    "state_to_sample(enum)": "7",
-                    "intersample_time(s)": "0",
-                    "nth_yo_to_sample(nodim)": "1",
-                    "intersample_depth(m)": "-1",
-                    "min_depth(m)": "-5",
-                    "max_depth(m)": "2000"
+                    "state_to_sample(enum)": "5",
+                    "intersample_time(s)": "0"
                 }
             }
+        },
+        "prepare_to_dive": {
+            "prepar30": {
+                "b_args": {
+                    "start_when(enum)": "0",
+                    "wait_time(sec)": "300",
+                    "max_thermal_charge_time(sec)": "10"
+                }
+            }
+        },
+        "sensors_in":{
         }
     },
     "sbdlist": {

@@ -253,13 +253,13 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
         return
 
     def plot_threshold(ax, config, model_depth_average, latitude_qc, longitude_qc, density, mag1, mag2, mag3, mag4, mag5, gliders, show_waypoints, show_qc, show_eez, manual_extent, optimal_path):
-        
+
         longitude = model_depth_average.lon.values.squeeze()
         latitude = model_depth_average.lat.values.squeeze()
         u_depth_avg = model_depth_average['u_depth_avg'].values.squeeze()
         v_depth_avg = model_depth_average['v_depth_avg'].values.squeeze()
         mag_depth_avg = model_depth_average['mag_depth_avg'].values.squeeze()
-        
+
         if manual_extent is not None and len(manual_extent) == 2 and all(len(sublist) == 2 for sublist in manual_extent):
             map_extent = [manual_extent[0][1], manual_extent[1][1], manual_extent[0][0], manual_extent[1][0]]
         else:
@@ -268,7 +268,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
             map_extent = data_extent_lon + data_extent_lat
         ax.set_extent(map_extent, crs=ccrs.PlateCarree())
         plot_formatted_ticks(ax, map_extent[:2], map_extent[2:], proj=ccrs.PlateCarree(), fontsize=16, label_left=True, label_right=False, label_bottom=True, label_top=False, gridlines=True)
-
+        
         plot_threshold_zones(ax, longitude, latitude, mag_depth_avg, mag1, mag2, mag3, mag4, mag5, threshold_legend=True)
         plot_streamlines(ax, longitude, latitude, u_depth_avg, v_depth_avg, density=density)
 
@@ -282,10 +282,10 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
 
         if show_waypoints:
             plot_glider_route(ax, config)
-            
+
         if optimal_path:
             plot_optimal_path(ax, config, model_depth_average, optimal_path)
-        
+
         if show_qc:
             (y_index, x_index), (lat_index, lon_index) = calculate_gridpoint(model_depth_average, latitude_qc, longitude_qc)
             qc_lon = model_depth_average['lon'].isel(x=x_index, y=y_index).values
@@ -295,7 +295,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
 
         if show_eez:
             plot_add_eez(ax, config, color='dimgrey', linewidth=3, zorder=90)
-        
+
         try:
             plot_bathymetry(ax, config, model_depth_average, isobath1=-100, isobath2=-1000, downsample="auto", show_legend=False)
             bathymetry_legend = ax.get_legend()
@@ -303,7 +303,7 @@ def GGS_plot_threshold(config, directory, datetime_index, model_datasets, latitu
                 bathymetry_legend.get_frame().set_alpha(0.5)
                 ax.add_artist(bathymetry_legend)
         except:
-            print(f"!!!WARNING!!!: Bathymetry contouring was unsuccessful for {model_depth_average.attrs['model_name']}. Using default ocean color instead.")
+            print(f"Warning: Bathymetry contouring was unsuccessful for {model_depth_average.attrs['model_name']}. Using default ocean color instead.")
             ax.add_feature(cfeature.OCEAN, zorder=1)
 
         ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90)
@@ -435,7 +435,7 @@ def GGS_plot_advantage(config, directory, datetime_index, model_datasets, latitu
                 bathymetry_legend.get_frame().set_alpha(0.5)
                 ax.add_artist(bathymetry_legend)
         except:
-            print(f"!!!WARNING!!!: Bathymetry contouring was unsuccessful for {model_depth_average.attrs['model_name']}. Using default ocean color instead.")
+            print(f"Warning: Bathymetry contouring was unsuccessful for {model_depth_average.attrs['model_name']}. Using default ocean color instead.")
             ax.add_feature(cfeature.OCEAN, zorder=1)
 
         ax.add_feature(cfeature.GSHHSFeature(scale='full'), edgecolor="black", facecolor="tan", linewidth=0.25, zorder=90)

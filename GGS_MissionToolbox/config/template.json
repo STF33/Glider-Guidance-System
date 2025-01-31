@@ -6,10 +6,12 @@
     },
     "behaviors": {
         "abend": {
-            "b_args": {
-                "b_arg1": "b_arg_value",
-                "b_arg2": "b_arg_value",
-                "b_arg3": "b_arg_value"
+            "MS_ABORT_XXX": {
+                "b_args": {
+                    "b_arg1": "b_arg_value",
+                    "b_arg2": "b_arg_value",
+                    "b_arg3": "b_arg_value"
+                }
             }
         },
         "surface": {

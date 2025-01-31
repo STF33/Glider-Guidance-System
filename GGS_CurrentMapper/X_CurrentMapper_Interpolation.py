@@ -102,22 +102,22 @@ def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_ave
     start_time = print_starttime()
 
     if chunk:
-        model_data = model_data.chunk({'y': 'auto', 'x': 'auto'})
+        model_data = model_data.chunk({'Y': 'auto', 'X': 'auto'})
 
     model_data = model_data.load()
 
     config_depth = config['MISSION']['max_depth']
     config_bins = config_depth + 1
-    max_depth = model_data.depth.max().item()
+    max_depth = model_data.Depth.max().item()
     max_bins = max_depth + 1
 
     results = xr.apply_ufunc(
         interpolation_model,
         model_data['u'],
         model_data['v'],
-        model_data['depth'],
+        model_data['Depth'],
         kwargs={'max_bins': max_bins, 'config_bins': config_bins},
-        input_core_dims=[['depth'], ['depth'], ['depth']],
+        input_core_dims=[['Depth'], ['Depth'], ['Depth']],
         output_core_dims=[['bin'], ['bin'], ['bin'], ['bin'], [], [], [], []],
         output_dtypes=[float, float, float, float, float, float, float, float],
         dask_gufunc_kwargs={'output_sizes': {'bin': max_depth}},
@@ -127,21 +127,21 @@ def interpolate_rtofs(config, directory, model_data, chunk=False, save_depth_ave
     u_bin_avg, v_bin_avg, mag_bin_avg, dir_bin_avg, u_depth_avg, v_depth_avg, mag_depth_avg, dir_depth_avg = results
 
     model_depth_average = xr.Dataset({
-        'u_depth_avg': (('y', 'x'), u_depth_avg.data),
-        'v_depth_avg': (('y', 'x'), v_depth_avg.data),
-        'mag_depth_avg': (('y', 'x'), mag_depth_avg.data),
-        'dir_depth_avg': (('y', 'x'), dir_depth_avg.data)
-    }, coords={'lat': model_data.lat, 'lon': model_data.lon})
+        'u_depth_avg': (('Y', 'X'), u_depth_avg.data),
+        'v_depth_avg': (('Y', 'X'), v_depth_avg.data),
+        'mag_depth_avg': (('Y', 'X'), mag_depth_avg.data),
+        'dir_depth_avg': (('Y', 'X'), dir_depth_avg.data)
+    }, coords={'lat': model_data.Latitude, 'lon': model_data.Longitude})
     model_depth_average = model_depth_average.expand_dims('time')
     model_depth_average.attrs['model_datetime'] = model_data.attrs['model_datetime']
     model_depth_average.attrs['model_name'] = model_data.attrs['model_name']
 
     model_bin_average = xr.Dataset({
-        'u_bin_avg': (('y', 'x', 'bin'), u_bin_avg.data),
-        'v_bin_avg': (('y', 'x', 'bin'), v_bin_avg.data),
-        'mag_bin_avg': (('y', 'x', 'bin'), mag_bin_avg.data),
-        'dir_bin_avg': (('y', 'x', 'bin'), dir_bin_avg.data)
-    }, coords={'lat': model_data.lat, 'lon': model_data.lon, 'bin': np.arange(max_bins)})
+        'u_bin_avg': (('Y', 'X', 'bin'), u_bin_avg.data),
+        'v_bin_avg': (('Y', 'X', 'bin'), v_bin_avg.data),
+        'mag_bin_avg': (('Y', 'X', 'bin'), mag_bin_avg.data),
+        'dir_bin_avg': (('Y', 'X', 'bin'), dir_bin_avg.data)
+    }, coords={'lat': model_data.Latitude, 'lon': model_data.Longitude, 'bin': np.arange(max_bins)})
     model_bin_average = model_bin_average.expand_dims('time')
     model_bin_average.attrs['model_datetime'] = model_data.attrs['model_datetime']
     model_bin_average.attrs['model_name'] = model_data.attrs['model_name']

@@ -5,15 +5,17 @@
     },
     "behaviors": {
         "abend": {
-            "b_args": {
-                "overdepth_sample_time(s)": "15",
-                "overtime(sec)": "3600",
-                "max_wpt_distance(m)": "-1",
-                "samedepth_for(sec)": "10800",
-                "samedepth_for_sample_time(s)": "30",
-                "undervolts(volts)": "10",
-                "no_cop_tickle_for(sec)": "48600",
-                "no_cop_tickle_percent(%)": "-1"
+            "abend1": {
+                "b_args": {
+                    "overdepth_sample_time(s)": "15",
+                    "overtime(sec)": "3600",
+                    "max_wpt_distance(m)": "-1",
+                    "samedepth_for(sec)": "10800",
+                    "samedepth_for_sample_time(s)": "30",
+                    "undervolts(volts)": "10",
+                    "no_cop_tickle_for(sec)": "48600",
+                    "no_cop_tickle_percent(%)": "-1"
+                }
             }
         },
         "surface": {

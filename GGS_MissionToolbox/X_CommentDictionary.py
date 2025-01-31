@@ -26,7 +26,6 @@ def comment_dictionary(config_dictionary):
         for sub_behavior, sub_details in details.items():
             b_arg_comments[behavior][sub_behavior] = {}
             b_args = sub_details.get('b_args', {})
-            # print(f"b_args = {b_args}")
             for b_arg, b_arg_value in b_args.items():
                 try:
                     b_arg_value = float(b_arg_value)

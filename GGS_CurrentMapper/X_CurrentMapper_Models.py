@@ -59,21 +59,21 @@ class RTOFS():
         '''
 
         rtofs_access = "https://tds.marine.rutgers.edu/thredds/dodsC/cool/rtofs/rtofs_us_east_scraped"
-
         try:
             rtofs_raw = xr.open_dataset(rtofs_access)
+            
             datetime = pd.Timestamp(datetime_index).tz_localize(None)
-            time_values = rtofs_raw.time.values
+            time_values = rtofs_raw.MT.values
             time_index = np.argmin(np.abs(time_values - np.datetime64(datetime)))
-            rtofs_raw = rtofs_raw.isel(time=time_index)
+            rtofs_raw = rtofs_raw.isel(MT=time_index)
 
             self.data_origin = rtofs_raw
-            self.x = self.data_origin.x.values
-            self.y = self.data_origin.y.values
-            self.grid_lons = self.data_origin.lon.values[0,:]
-            self.grid_lats = self.data_origin.lat.values[:,0]
+            self.x = self.data_origin.X.values
+            self.y = self.data_origin.Y.values
+            self.grid_lons = self.data_origin.Longitude.values[0, :]
+            self.grid_lats = self.data_origin.Latitude.values[:, 0]
             
-            self.data_origin.attrs['model_datetime'] = str(rtofs_raw.time.values)
+            self.data_origin.attrs['model_datetime'] = str(rtofs_raw.MT.values)
             self.data_origin.attrs['model_name'] = 'RTOFS'
 
             lats, lons = zip(*config['MISSION']['extent'])
@@ -91,14 +91,16 @@ class RTOFS():
             ]
 
             self.data_origin = self.data_origin.isel(
-                x=slice(extent[0], extent[1]),
-                y=slice(extent[2], extent[3])
+                X=slice(extent[0], extent[1]),
+                Y=slice(extent[2], extent[3])
             )
 
             max_depth = config['MISSION']['max_depth']
-            depth_indices = self.data_origin.depth.values
+            depth_indices = self.data_origin.Depth.values
             target_depth_index = depth_indices[depth_indices >= max_depth][0]
-            self.data_origin = self.data_origin.sel(depth=slice(0, target_depth_index))
+            self.data_origin = self.data_origin.sel(Depth=slice(0, target_depth_index))
+        except AttributeError as e:
+            print(f"AttributeError fetching RTOFS data: {e}")
         except Exception as e:
             print(f"Error fetching RTOFS data: {e}")
     
