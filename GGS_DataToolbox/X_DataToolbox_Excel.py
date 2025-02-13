@@ -167,9 +167,6 @@ def run_dataframe(input_directory, sensor_list):
     while num_read < tot_num_files:
         master_dict, files_processed, num_read, first_file, last_file = dbd_directory_to_dict(input_directory, files_processed, num_read)
         
-        print("Master dictionary keys:", master_dict.keys())
-        print("First file:", first_file)
-        
         if not sensor_list:
             first_file_key = os.path.splitext(first_file)[0]
             first_file_dict = master_dict[first_file_key]
