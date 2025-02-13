@@ -173,7 +173,7 @@ def comment_dictionary(config_dictionary):
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Report just GPS"
                         elif b_arg_value == 1:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Report all sensors once"
-                    elif b_arg == "gps_wait_time(s)":
+                    elif b_arg == "gps_wait_time(sec)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# Wait {b_arg_value} seconds for a GPS fix"
                     elif b_arg == "keystroke_wait_time(sec)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# Wait {b_arg_value} seconds for a keystroke"
@@ -254,7 +254,7 @@ def comment_dictionary(config_dictionary):
                         elif c_use_thruster_value == 2:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Commanded input voltage = {b_arg_value} % of max thruster voltage"
                         elif c_use_thruster_value == 3:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Commanded depth change rate = {b_arg_value} m/s"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Commanded depth change rate = {b_arg_value} m/s (should be <0 for climb, >0 for dive)"
                         elif c_use_thruster_value == 4:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Commanded input wattage = {b_arg_value} watts"
                     elif b_arg == "printout_cycle_time(sec)":
@@ -531,7 +531,7 @@ def comment_dictionary(config_dictionary):
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# Number of half cycles to do = {b_arg_value} = {num_yos_to_do} yos"
                     elif b_arg == "d_target_depth(m)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if 3 < b_arg_value < 1000:
+                        if -1 < b_arg_value < 1000:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Dive to {b_arg_value} meters" 
                         else:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" WARNING: OUT OF LIMITS"
@@ -561,7 +561,7 @@ def comment_dictionary(config_dictionary):
                         if d_use_bpump_value is not None:
                             d_use_bpump_value = int(d_use_bpump_value)
                         if d_use_bpump_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" D_BPUMP_VALUE(X) is ignored"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Total amount of ballast (C_AUTOBALLAST_VOLUME = {b_arg_value})"
                         elif d_use_bpump_value in [1, 2, 3]:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Dive with {b_arg_value} cc (clipped to max legal)"
                     elif b_arg == "d_use_pitch(enum)":
@@ -656,7 +656,7 @@ def comment_dictionary(config_dictionary):
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# Thruster required pressure multiplier = {b_arg_value}"
                     elif b_arg == "c_target_depth(m)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if 3 < b_arg_value < 1000:
+                        if -1 < b_arg_value < 1000:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Climb to {b_arg_value} meters"
                         else:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" WARNING: OUT OF LIMITS"
@@ -803,78 +803,13 @@ def comment_dictionary(config_dictionary):
                 # SENSORS_IN #
                 ##############
                 elif behavior == "sensors_in":
-                    if b_arg == "c_att_time(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = "#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "c_pressure_time(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "c_alt_time(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "u_battery_time(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "u_vacuum_time(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "c_leakdetect_time(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "c_gps_on(bool)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "c_science_all_on(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
-                    elif b_arg == "c_profile_on(sec)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if b_arg_value < 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
-                        elif b_arg_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
-                        elif b_arg_value > 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
+                    b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
+                    if b_arg_value < 0:
+                        b_arg_comments[behavior][sub_behavior][b_arg] += f" Off"
+                    elif b_arg_value == 0:
+                        b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample as fast as possible"
+                    elif b_arg_value > 0:
+                        b_arg_comments[behavior][sub_behavior][b_arg] += f" Sample every {b_arg_value} seconds"
 
                 ###############
                 # SET_HEADING #
@@ -1447,20 +1382,20 @@ def comment_dictionary(config_dictionary):
                         if b_arg_value == 0:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Autoballast"
                         elif b_arg_value == 1:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Reserved, Use BPUMP_VALUE(X) around 0"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Reserved, Use D_BPUMP_VALUE(X) around 0"
                         elif b_arg_value == 2:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use BPUMP_VALUE(X) as the total difference between dives and climbs"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use D_BPUMP_VALUE(X) as the total difference between dives and climbs"
                         elif b_arg_value == 3:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use BPUMP_VALUE(X) during the surface interval"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use D_BPUMP_VALUE(X) during the surface interval"
                         elif b_arg_value == 5:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Speed relative to water current"
                     elif b_arg == "d_bpump_value(X)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
                         d_use_bpump_value = b_args.get("d_use_bpump(enum)", None)
-                        if use_thruster_value is not None:
-                            use_thruster_value = int(use_thruster_value)
+                        if d_use_bpump_value is not None:
+                            d_use_bpump_value = int(d_use_bpump_value)
                         if d_use_bpump_value == 0:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" BPUMP_VALUE(X) is ignored"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Total amount of ballast (C_AUTOBALLAST_VOLUME = {b_arg_value})"
                         elif d_use_bpump_value in [1, 2, 3]:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Dive with {b_arg_value} cc (clipped to max legal)"
                         elif d_use_bpump_value == 5:
@@ -1520,11 +1455,11 @@ def comment_dictionary(config_dictionary):
                         if b_arg_value == 0:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Autoballast"
                         elif b_arg_value == 1:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Reserved, Use BPUMP_VALUE(X) around 0"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Reserved, Use C_BPUMP_VALUE(X) around 0"
                         elif b_arg_value == 2:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use BPUMP_VALUE(X) as the total difference between dives and climbs"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use C_BPUMP_VALUE(X) as the total difference between dives and climbs"
                         elif b_arg_value == 3:
-                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use BPUMP_VALUE(X) during the surface interval"
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" Absolute, use C_BPUMP_VALUE(X) during the surface interval"
                         elif b_arg_value == 5:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Speed relative to water current"
                     elif b_arg == "c_bpump_value(X)":
