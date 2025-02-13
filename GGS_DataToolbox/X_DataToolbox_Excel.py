@@ -110,14 +110,15 @@ def dbd_directory_to_dict(directory, files_read, num_read=0):
             if file.endswith("dbd.asc") or file.endswith("sbd.asc") or file.endswith("DBD.asc") or\
                     file.endswith("SBD.asc") or file.endswith("ebd.asc"):
                 sub_dict, sub_name = read_ascii(directory, file)
-                master_dict[sub_name] = sub_dict
+                file_key = os.path.splitext(file)[0]
+                master_dict[file_key] = sub_dict
                 files_read.append(file)
                 last_file = file
                 num_read += 1
                 chunk_count += 1
         else:
             continue
-    print("Files {} to {} Processed to Dict, Following Values pertain to that Chunck". format(first_file, last_file))
+    print("Files {} to {} Processed to Dict, Following Values pertain to that Chunk".format(first_file, last_file))
     return master_dict, files_read, num_read, first_file, last_file
 
 ### FUNCTION:
@@ -160,14 +161,29 @@ def run_dataframe(input_directory, sensor_list):
     files_processed = []
     tot_num_files = len(os.listdir(input_directory))
     num_read = 0
+
     dataframe = initialize_data_frame(sensor_list)
 
     while num_read < tot_num_files:
         master_dict, files_processed, num_read, first_file, last_file = dbd_directory_to_dict(input_directory, files_processed, num_read)
+        
+        print("Master dictionary keys:", master_dict.keys())
+        print("First file:", first_file)
+        
+        if not sensor_list:
+            first_file_key = os.path.splitext(first_file)[0]
+            first_file_dict = master_dict[first_file_key]
+            sensor_list = list(first_file_dict['data'].keys())
+            dataframe = initialize_data_frame(sensor_list)
+            print("Sensor list was empty. Populated with all available variables:", sensor_list)
+        
         dataframe = pull_sensor_list_data(sensor_list, dataframe, master_dict)
         print('{} Files Processed'.format(num_read))
         master_dict.clear()
-
+    
+    print(f'\n# DATAFRAME #\n')
+    print(dataframe)
+    
     return dataframe
 
 ### FUNCTION:

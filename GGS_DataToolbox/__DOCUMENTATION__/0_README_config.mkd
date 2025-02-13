@@ -14,6 +14,7 @@ This section outlines glider configuration.
 This section configures the sensor variables to pull from the data files.
 - **sensor_list**: (Array of Strings) A list of sensor variables to extract from the glider data files in the format `["Sensor1", "Sensor2", "Sensor3", etc.]`
     - *Note: The sensor list can be left empty for certain functions such as "run_data_sorter" and "run_data_cleanup"*
+    - *Note: If left empty and using the dataframe/Excel feature(s), the program will default to grabbing all available variables in the glider data files*
 
 ## DECOMPRESSION Section
 This section toggles decompressing glider data files.

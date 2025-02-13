@@ -118,4 +118,4 @@ def GGS_DataToolbox_Main(config_name=None):
             pass
 
 if __name__ == "__main__":
-    GGS_DataToolbox_Main(config_name="yo_eval")
+    GGS_DataToolbox_Main(config_name="cleanup")

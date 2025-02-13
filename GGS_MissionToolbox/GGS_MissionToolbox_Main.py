@@ -52,8 +52,12 @@ def create_mission(config_name="unknown"):
         
         config_dictionary = {
             'behaviors': config.get('behaviors', {}),
-            'sensors': config.get('sensors', {})
-        }
+            'sensors': config.get('sensors', {}),
+            'sbdlist': config.get('sbdlist', {}),
+            'mbdlist': config.get('mbdlist', {}),
+            'tbdlist': config.get('tbdlist', {}),
+            'nbdlist': config.get('nbdlist', {})
+            }
 
         return config_dictionary
 
@@ -169,7 +173,6 @@ def create_mission(config_name="unknown"):
 
     ### FUNCTION:
     def create_data_lists(config_dictionary, output_directory):
-        
         '''
         Create data list files based on the configuration.
         
@@ -200,4 +203,4 @@ def create_mission(config_name="unknown"):
     print(f"The mission files have been saved to: '{os.path.join(os.path.expanduser('~'), 'Downloads', config_name)}'")
 
 if __name__ == "__main__":
-    create_mission(config_name="astock")
+    create_mission(config_name="g3s-pond-bathtub")
