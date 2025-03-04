@@ -57,7 +57,11 @@ def comment_dictionary(config_dictionary):
                     elif b_arg == "no_cop_tickle_for(sec)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# MS_ABORT_NO_TICKLE: No COP tickle threshold = {b_arg_value} seconds"
                     elif b_arg == "no_cop_tickle_percent(%)":
-                        b_arg_comments[behavior][sub_behavior][b_arg] = f"# MS_ABORT_NO_TICKLE: No COP tickle threshold = {b_arg_value} %"
+                        b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
+                        if b_arg_value < 0:
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" MS_ABORT_NO_TICKLE: No COP tickle threshold = DISABLED"
+                        elif b_arg_value >= 0:
+                            b_arg_comments[behavior][sub_behavior][b_arg] += f" MS_ABORT_NO_TICKLE: No COP tickle threshold = {b_arg_value} %"
                     elif b_arg == "no_comms_tickle_for(hours)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# MS_ABORT_NO_COMMS_TICKLE: No comms tickle threshold = {b_arg_value} hours"
                     elif b_arg == "max_wpt_distance(m)":

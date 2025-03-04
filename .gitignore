@@ -5,9 +5,13 @@ GGS_CurrentMapper/__ARCHIVE__/
 
 GGS_DataToolbox/__pycache__/
 GGS_DataToolbox/__ARCHIVE__/
+GGS_DataToolbox/cache/*
+
+GGS_DataToolbox_GUI/__pycache__/
+GGS_DataToolbox_GUI/__ARCHIVE__/
+GGS_DataToolbox/cache/*
 
 GGS_MissionToolbox/__pycache__/
 GGS_MissionToolbox/__ARCHIVE__/
-GGS_MissionToolbox/masterdata
 
 !-GGS.code-workspace
