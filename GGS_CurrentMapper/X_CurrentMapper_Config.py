@@ -107,7 +107,7 @@ def GGS_config_process(config, path="default"):
         print(f"Error using provided 'mission_name'. Defaulting mission name to 'UnknownMission'.")
     
     if path == "default":
-        root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS-CM_{mission_name}")
+        root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS-CurrentMapper_{mission_name}")
     else:
         root_directory = os.path.join(path, f"GGS_{mission_name}")
     

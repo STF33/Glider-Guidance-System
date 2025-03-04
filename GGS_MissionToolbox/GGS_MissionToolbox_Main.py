@@ -173,6 +173,7 @@ def create_mission(config_name="unknown"):
 
     ### FUNCTION:
     def create_data_lists(config_dictionary, output_directory):
+        
         '''
         Create data list files based on the configuration.
         
@@ -203,4 +204,4 @@ def create_mission(config_name="unknown"):
     print(f"The mission files have been saved to: '{os.path.join(os.path.expanduser('~'), 'Downloads', config_name)}'")
 
 if __name__ == "__main__":
-    create_mission(config_name="g3s-pond-bathtub")
+    create_mission(config_name="sentinel-pond-bathtub")
