@@ -130,7 +130,7 @@ class InteractivePlotGUI(QWidget):
                 y_min = y_data.min()
                 y_max = y_data.max()
                 buffer = 0.05 * (y_max - y_min) if y_max != y_min else 1
-                ax.set_ylim(y_max + buffer, y_min - buffer)  # Inverted y-axis
+                ax.set_ylim(y_max + buffer, y_min - buffer)
                 ax.set_ylabel(var, color=color)
                 ax.tick_params(axis='y', colors=color)
 
