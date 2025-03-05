@@ -1,8 +1,8 @@
 {
     "GLIDER": {
-        "glider_unit": "sen02mil",
-        "glider_version": "LBS",
-        "glider_type": "sentinel"
+        "glider_unit": "",
+        "glider_version": "",
+        "glider_type": ""
     },
     "SENSORS": {
         "sensor_list": [
@@ -31,20 +31,20 @@
         ]
     },
     "DECOMPRESSION": {
-        "run_decompression": true
+        "run_decompression": false
     },
     "CONVERSION": {
-        "run_conversion": true
+        "run_conversion": false
     },
     "DATA": {
-        "run_dataframe": true
+        "run_dataframe": false
     },
     "PRODUCTS": {
-        "run_plot": true,
+        "run_plot": false,
         "run_excel": false,
         "run_data_sorter": false
     },
     "ADVANCED": {
-        "run_data_cleanup": false
+        "run_data_cleanup": true
     }
 }
