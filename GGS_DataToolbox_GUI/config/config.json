@@ -27,7 +27,8 @@
             "c_argos_on",
             "c_air_pump",
             "m_mission_avg_speed_climbing",
-            "m_mission_avg_speed_diving"
+            "m_mission_avg_speed_diving",
+            "m_pitch"
         ]
     },
     "DECOMPRESSION": {

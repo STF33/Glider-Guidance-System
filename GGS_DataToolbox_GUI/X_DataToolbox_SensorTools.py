@@ -9,6 +9,7 @@ Repository: https://github.com/STF33/Glider-Guidance-System
 
 from matplotlib import pyplot as plt
 import pandas as pd
+import numpy as np
 
 # =========================
 
@@ -64,9 +65,10 @@ def pull_sensor_data(sensor, master_dict):
     
     data = []
     for key in master_dict:
-        active_data = master_dict[key]['data'][sensor]
-        for value in active_data['values']:
-            data.append(float(active_data['values'][value]))
+        if sensor in master_dict[key]['data']:
+            active_data = master_dict[key]['data'][sensor]
+            for value in active_data['values']:
+                data.append(float(active_data['values'][value]))
     return data
 
 ### FUNCTION:
@@ -85,9 +87,22 @@ def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
     '''
     
     subframe = {}
+    max_length = 0
     for sensor in sensor_list:
-        sensor_data = pull_sensor_data(sensor, master_dict)
-        subframe[sensor] = sensor_data
+        try:
+            sensor_data = pull_sensor_data(sensor, master_dict)
+            subframe[sensor] = sensor_data
+            if len(sensor_data) > max_length:
+                max_length = len(sensor_data)
+        except KeyError:
+            print(f"Warning: Sensor '{sensor}' not found in the data. Skipping...")
+            continue
+    
+    # Pad shorter lists with NaN values
+    for sensor in subframe:
+        if len(subframe[sensor]) < max_length:
+            subframe[sensor] += [np.nan] * (max_length - len(subframe[sensor]))
+    
     subframe = pd.DataFrame(subframe)
-    chosen_dataframe = pd.concat([chosen_dataframe, subframe])
+    chosen_dataframe = pd.concat([chosen_dataframe, subframe], ignore_index=True)
     return chosen_dataframe
