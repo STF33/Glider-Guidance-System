@@ -106,7 +106,6 @@ class InteractivePlotGUI(QWidget):
             return
         
         host = self.figure.add_subplot(111)
-        # host.set_title("Interactive Data Plot")
         
         x_data = pd.to_datetime(self.dataframe[self.x_variable].astype(float), unit='s')
         host.set_xlabel(self.x_variable)
@@ -117,36 +116,52 @@ class InteractivePlotGUI(QWidget):
         variable_handles = []
         
         for idx, var in enumerate(self.selected_variables):
-            y_data = self.dataframe[var].astype(float)
-            if idx == 0:
+            y_data = pd.to_numeric(self.dataframe[var], errors='coerce').dropna()
+            x_data_cleaned = x_data[y_data.index]
+            
+            if var == 'm_depth':
                 ax = host
+                ax.invert_yaxis()
+                color = colors[idx % len(colors)]
+                handle = ax.scatter(x_data_cleaned, y_data, color=color, label=var, marker='o')
+                ax.plot(x_data_cleaned, y_data, color=color)
+                variable_handles.append(handle)
+
+                y_min = y_data.min()
+                y_max = y_data.max()
+                buffer = 0.05 * (y_max - y_min) if y_max != y_min else 1
+                ax.set_ylim(y_max + buffer, y_min - buffer)  # Inverted y-axis
+                ax.set_ylabel(var, color=color)
+                ax.tick_params(axis='y', colors=color)
+
             else:
                 ax = host.twinx()
-                ax.spines["right"].set_position(("axes", 1 + 0.1*(idx-1)))
-            axes.append(ax)
-            
-            color = colors[idx % len(colors)]
+                ax.spines["right"].set_position(("axes", 1 + 0.1*(len(axes)-1)))
+                axes.append(ax)
 
-            handle = ax.scatter(x_data, y_data, color=color, label=var, marker='o')
-            ax.plot(x_data, y_data, color=color)
-            variable_handles.append(handle)
-            
-            y_min = y_data.min()
-            y_max = y_data.max()
-            buffer = 0.05 * (y_max - y_min) if y_max != y_min else 1
-            ax.set_ylim(y_min - buffer, y_max + buffer)
-            ax.set_ylabel(var, color=color)
-            ax.tick_params(axis='y', colors=color)
+                color = colors[idx % len(colors)]
+                handle = ax.scatter(x_data_cleaned, y_data, color=color, label=var, marker='o')
+                ax.plot(x_data_cleaned, y_data, color=color)
+                variable_handles.append(handle)
+
+                y_min = y_data.min()
+                y_max = y_data.max()
+                buffer = 0.05 * (y_max - y_min) if y_max != y_min else 1
+                ax.set_ylim(y_min - buffer, y_max + buffer)
+                ax.set_ylabel(var, color=color)
+                ax.tick_params(axis='y', colors=color)
+
         
         host.xaxis_date()
         locator = mdates.AutoDateLocator()
         formatter = mdates.ConciseDateFormatter(locator)
         host.xaxis.set_major_locator(locator)
         host.xaxis.set_major_formatter(formatter)
-        
-        host.legend(handles=variable_handles, labels=self.selected_variables,
+
+        host.legend(handles=variable_handles, labels=[handle.get_label() for handle in variable_handles],
                     loc="upper center", bbox_to_anchor=(0.5, 1.15),
-                    ncol=len(self.selected_variables), borderaxespad=0)
+                    ncol=len(variable_handles), borderaxespad=0)
+
         self.canvas.draw()
 
 plot_window = None
