@@ -149,6 +149,17 @@ class GUI_MainWindow(QWidget):
 
     ### FUNCTION:    
     def GUI_Main_ConfigSave(self):
+        sensor_text = self.sensor_list.toPlainText().strip()
+
+        if sensor_text == "":
+            sensor_list_value = []
+        else:
+            try:
+                sensor_list_value = json.loads(sensor_text)
+            except Exception as e:
+                print(f"Error decoding sensor_list, defaulting to empty list: {e}")
+                sensor_list_value = []
+                
         config = {
             "GLIDER": {
                 "glider_unit": self.glider_unit.text(),
@@ -156,14 +167,14 @@ class GUI_MainWindow(QWidget):
                 "glider_type": self.glider_type.text()
             },
             "SENSORS": {
-                "sensor_list": json.loads(self.sensor_list.toPlainText())
+                "sensor_list": sensor_list_value
             }
         }
         for option, (section, key) in self.config_map.items():
             if section not in config:
                 config[section] = {}
             config[section][key] = self.options[option].isChecked()
-        
+
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
         with open(config_path, "w") as f:
             json.dump(config, f, indent=4)
