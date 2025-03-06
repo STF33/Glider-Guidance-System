@@ -1,8 +1,6 @@
 """
 Author: Salvatore Fricano
 Repository: https://github.com/STF33/Glider-Guidance-System
-
-This module provides functions for parsing ASCII data files and compiling sensor data into a DataFrame.
 """
 
 # =========================
