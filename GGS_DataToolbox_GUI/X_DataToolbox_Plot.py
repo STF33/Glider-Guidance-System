@@ -11,7 +11,8 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QListWidget, QListWidgetItem, QMessageBox, QSplitter)
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QComboBox, QListWidget, QListWidgetItem, QMessageBox, QSplitter)
 from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -37,8 +38,7 @@ class InteractivePlotGUI(QWidget):
                 self.x_variable = var
                 break
         if self.x_variable is None:
-            QMessageBox.warning(self, "Missing Time Variable",
-                                "Required time variable (m_present_time or sci_m_present_time) not found in the dataframe.")
+            QMessageBox.warning(self, "Missing Time Variable", "Required time variable (m_present_time or sci_m_present_time) not found in the dataframe.")
             self.close()
             return
 
@@ -61,7 +61,8 @@ class InteractivePlotGUI(QWidget):
         
         top_control_layout = QHBoxLayout()
         self.variable_selector = QComboBox()
-        variables = [col for col in self.dataframe.columns if col != self.x_variable]
+
+        variables = sorted([col for col in self.dataframe.columns if col != self.x_variable])
         self.variable_selector.addItems(variables)
         top_control_layout.addWidget(QLabel("Select Variable:"))
         top_control_layout.addWidget(self.variable_selector)
@@ -151,7 +152,6 @@ class InteractivePlotGUI(QWidget):
                 ax.set_ylabel(var, color=color)
                 ax.tick_params(axis='y', colors=color)
 
-        
         host.xaxis_date()
         locator = mdates.AutoDateLocator()
         formatter = mdates.ConciseDateFormatter(locator)

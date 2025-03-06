@@ -5,31 +5,7 @@
         "glider_type": ""
     },
     "SENSORS": {
-        "sensor_list": [
-            "m_present_time",
-            "m_depth",
-            "m_de_oil_vol",
-            "c_de_oil_vol",
-            "m_battpos",
-            "c_battpos",
-            "m_fin",
-            "c_fin",
-            "m_heading",
-            "c_heading",
-            "m_roll",
-            "m_dist_to_wpt",
-            "x_hit_a_waypoint",
-            "m_vacuum",
-            "m_tot_num_inflections",
-            "m_altitude",
-            "m_raw_altitude",
-            "m_water_depth",
-            "c_argos_on",
-            "c_air_pump",
-            "m_mission_avg_speed_climbing",
-            "m_mission_avg_speed_diving",
-            "m_pitch"
-        ]
+        "sensor_list": []
     },
     "DECOMPRESSION": {
         "run_decompression": false
