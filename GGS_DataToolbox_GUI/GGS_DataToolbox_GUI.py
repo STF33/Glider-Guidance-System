@@ -101,7 +101,6 @@ class GUI_FileBox(QFrame):
             shutil.copy(file, dbd_root)
         print("Files copied to DBD_Files.")
 
-
 ### CLASS:
 class GUI_MainWindow(QWidget):
 
@@ -289,6 +288,7 @@ class GUI_MainWindow(QWidget):
 
 ### MAIN:
 if __name__ == "__main__":
+    
     '''
     Create the application, instantiate the GUI_MainWindow, and start the application event loop.
 
@@ -298,6 +298,7 @@ if __name__ == "__main__":
     Returns:
       None
     '''
+
     app = QApplication(sys.argv)
     window = GUI_MainWindow()
     window.show()
