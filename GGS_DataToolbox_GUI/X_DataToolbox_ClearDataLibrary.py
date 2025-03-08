@@ -15,15 +15,15 @@ import os
 def define_directories_to_clean():
     
     '''
-    Define directories which contain run-specific data files.
+    Define directories that contain run-specific data files.
     
     Args:
-    - None
-    
+      None
+      
     Returns:
-    - directories_to_clean (list): A list of directory paths.
+      directories_to_clean (list): A list of directory paths.
     '''
-    
+
     current_directory = os.path.dirname(__file__)
     directories_to_clean = [
         os.path.join(current_directory, 'DBD_Files'),
@@ -37,19 +37,18 @@ def define_directories_to_clean():
 
 ### FUNCTION:
 def run_data_cleanup(directories_to_clean):
-
+    
     '''
-    Delete data files in the data directories.
+    Delete data files in the specified directories.
     
     Args:
-    - directories_to_clean (list): A list of directory paths.
-    
+      directories_to_clean (list): A list of directory paths.
+      
     Returns:
-    - None
+      None
     '''
-
+    
     print(f"\n### RUNNING: DATA LIBRARY CLEANUP ###\n")
-
     for directory in directories_to_clean:
         if os.path.exists(directory):
             for item in os.listdir(directory):
@@ -61,4 +60,3 @@ def run_data_cleanup(directories_to_clean):
                     print(f"Skipped folder: {item_path}")
         else:
             print(f"Directory does not exist: {directory}")
-

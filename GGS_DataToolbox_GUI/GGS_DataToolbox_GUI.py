@@ -25,6 +25,17 @@ class GUI_FileBox(QFrame):
 
     ### FUNCTION:
     def __init__(self, parent=None):
+        
+        '''
+        Initialize a GUI_FileBox instance for drag-and-drop file selection.
+
+        Args:
+          parent (QWidget, optional): The parent widget. Defaults to None.
+        
+        Returns:
+          None
+        '''
+
         super().__init__(parent)
         self.setFrameStyle(QFrame.Shape.Box)
         self.setStyleSheet("border: 2px dashed #aaa; border-radius: 10px; background-color: #f0f0f0;")
@@ -38,30 +49,75 @@ class GUI_FileBox(QFrame):
         layout.addWidget(self.label)
         self.setLayout(layout)
 
-    ### FUNCTION:    
+    ### FUNCTION:
     def dragEnterEvent(self, event):
+        
+        '''
+        Handle the drag enter event to accept file URLs.
+
+        Args:
+          event (QDragEnterEvent): The drag enter event.
+        
+        Returns:
+          None
+        '''
+
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
-    ### FUNCTION:    
+    ### FUNCTION:
     def dropEvent(self, event):
+        
+        '''
+        Handle the drop event by collecting the dropped file paths and updating the label.
+
+        Args:
+          event (QDropEvent): The drop event.
+        
+        Returns:
+          None
+        '''
+
         new_files = [url.toLocalFile() for url in event.mimeData().urls()]
         self.file_list.extend(new_files)
         self.label.setText("\n".join(self.file_list))
 
-    ### FUNCTION:    
+    ### FUNCTION:
     def GUI_FileBox_Copy(self, script_directory):
+        
+        '''
+        Copy the files collected via drag-and-drop to the DBD_Files directory within the given script directory.
+
+        Args:
+          script_directory (str): The base directory where the DBD_Files folder will be created.
+        
+        Returns:
+          None
+        '''
+
         dbd_root = os.path.join(script_directory, "DBD_Files")
         os.makedirs(dbd_root, exist_ok=True)
         for file in self.file_list:
             shutil.copy(file, dbd_root)
         print("Files copied to DBD_Files.")
 
+
 ### CLASS:
 class GUI_MainWindow(QWidget):
 
-    ### FUNCTION:    
+    ### FUNCTION:
     def __init__(self):
+        
+        '''
+        Initialize a GUI_MainWindow instance which serves as the main interface for the Data Toolbox GUI.
+
+        Args:
+          None
+        
+        Returns:
+          None
+        '''
+
         super().__init__()
         self.setWindowTitle("Glider Guidance System: Data Toolbox GUI")
         self.setGeometry(100, 100, 600, 600)
@@ -123,6 +179,19 @@ class GUI_MainWindow(QWidget):
 
     ### FUNCTION:
     def GUI_Main_CreateSection(self, layout, title, widgets):
+        
+        '''
+        Create a labeled section in the GUI and add the provided widgets to it.
+
+        Args:
+          layout (QLayout): The parent layout to add the section to.
+          title (str): The title of the section.
+          widgets (list): A list of widgets or strings to add to the section.
+        
+        Returns:
+          None
+        '''
+
         section_label = QLabel(title)
         section_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         layout.addWidget(section_label, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -133,8 +202,19 @@ class GUI_MainWindow(QWidget):
             else:
                 layout.addWidget(widget)
 
-    ### FUNCTION:    
+    ### FUNCTION:
     def GUI_Main_ConfigLoad(self):
+        
+        '''
+        Load the configuration from the JSON file and update the GUI fields accordingly.
+
+        Args:
+          None
+        
+        Returns:
+          None
+        '''
+
         if os.path.exists(config_path):
             with open(config_path, "r") as f:
                 config = json.load(f)
@@ -147,8 +227,19 @@ class GUI_MainWindow(QWidget):
                     if section in config and key in config[section]:
                         self.options[option].setChecked(config[section][key])
 
-    ### FUNCTION:    
+    ### FUNCTION:
     def GUI_Main_ConfigSave(self):
+        
+        '''
+        Save the current GUI configuration to the JSON config file.
+
+        Args:
+          None
+        
+        Returns:
+          None
+        '''
+
         sensor_text = self.sensor_list.toPlainText().strip()
 
         if sensor_text == "":
@@ -181,12 +272,32 @@ class GUI_MainWindow(QWidget):
 
     ### FUNCTION:
     def GUI_Main_RunFunction(self):
+        
+        '''
+        Save the configuration, copy the dragged files to the designated folder, and run the main Data Toolbox function.
+
+        Args:
+          None
+        
+        Returns:
+          None
+        '''
+
         self.GUI_Main_ConfigSave()
         self.dragDropBox.GUI_FileBox_Copy(self.script_directory)
         GGS_DataToolbox_Main(config_name="config")
 
 ### MAIN:
 if __name__ == "__main__":
+    '''
+    Create the application, instantiate the GUI_MainWindow, and start the application event loop.
+
+    Args:
+      None
+      
+    Returns:
+      None
+    '''
     app = QApplication(sys.argv)
     window = GUI_MainWindow()
     window.show()

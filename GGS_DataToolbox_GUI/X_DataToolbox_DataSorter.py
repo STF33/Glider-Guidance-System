@@ -19,13 +19,13 @@ def organize_data_files(input_data_folder, output_folder):
 
     '''
     Organize data files into mission-specific folders.
-    
+
     Args:
-    - input_data_folder (str): The directory containing the input data files.
-    - output_folder (str): The directory to save the organized data files.
-    
+      input_data_folder (str): The directory containing the input data files.
+      output_folder (str): The directory where the organized data files will be saved.
+      
     Returns:
-    - None
+      None
     '''
 
     file_groups = {}
@@ -61,13 +61,13 @@ def organize_log_files(input_log_folder, output_folder):
 
     '''
     Organize log files by matching them with corresponding data files.
-    
+
     Args:
-    - input_log_folder (str): The directory containing the input log files.
-    - output_folder (str): The directory to save the organized log files.
-    
+      input_log_folder (str): The directory containing the input log files.
+      output_folder (str): The directory where the organized log files will be saved.
+      
     Returns:
-    - None
+      None
     '''
 
     for filename in os.listdir(input_log_folder):
@@ -100,31 +100,25 @@ def run_data_sorter(root_directory, glider_info):
 
     '''
     Run the data sorting process to organize data and log files.
-    
+
     Args:
-    - root_directory (str): The root directory from the configuration file.
-    
+      root_directory (str): The root directory from the configuration file.
+      glider_info (tuple): A tuple containing glider unit, version, and type information.
+      
     Returns:
-    - None
+      None
     '''
-
+    
     print(f"\n### RUNNING: DATA SORTER ###\n")
-
     datetime_string = datetime.now().strftime("%Y%m%dT%H%M%S")
-
     glider_unit, glider_version, glider_type = glider_info
-
     data_sort_directory = os.path.join(root_directory, f"GliderDataSorter")
     runtime_directory = os.path.join(data_sort_directory, f"{glider_unit}-{glider_type}-{glider_version}-{datetime_string}")
     os.makedirs(runtime_directory, exist_ok=True)
-
     current_directory = os.path.abspath(os.path.dirname(__file__))
-
     logfile_directory = os.path.join(current_directory, 'DBD_Files/Logfiles')
     data_directory = os.path.join(current_directory, 'DBD_Files')
     logfile_directory = os.path.join(current_directory, 'DBD_Files', 'Logfiles')
-
     organize_data_files(data_directory, runtime_directory)
     organize_log_files(logfile_directory, runtime_directory)
-
     print(f"\nGlider Data/Log Files saved to: {runtime_directory}\n")
