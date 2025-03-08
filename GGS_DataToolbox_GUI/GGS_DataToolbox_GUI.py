@@ -41,7 +41,7 @@ class GUI_FileBox(QFrame):
         self.setMinimumSize(250, 200)
         self.setAcceptDrops(True)
         self.file_list = []
-        self.label = QLabel("Drag and Drop Files Here", self)
+        self.label = QLabel("Drag and Drop Data Files Here", self)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setStyleSheet("font-size: 18px; color: black; font-weight: bold;")
         layout = QVBoxLayout()
