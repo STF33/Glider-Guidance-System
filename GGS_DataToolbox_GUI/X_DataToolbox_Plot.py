@@ -18,14 +18,19 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 
 # =========================
 
-### FUNCTION:
+### CLASS:
 class InteractivePlotGUI(QWidget):
-    
-    '''
-    Class for creating an interactive plot GUI using PyQt and Matplotlib.
 
-    
     '''
+    Create an interactive plot GUI using PyQt and Matplotlib.
+    
+    Args:
+      dataframe (pd.DataFrame): The merged sensor data containing a "time" column and sensor values.
+      
+    Returns:
+      None
+    '''
+
     def __init__(self, dataframe):
         super().__init__()
         self.dataframe = dataframe
@@ -34,6 +39,17 @@ class InteractivePlotGUI(QWidget):
     
     ### FUNCTION:
     def initUI(self):
+
+        '''
+        Initialize the interactive plot GUI layout, including the plot area and control panel.
+        
+        Args:
+          None
+          
+        Returns:
+          None
+        '''
+
         if "time" not in self.dataframe.columns:
             QMessageBox.warning(self, "Missing Time Column",
                                 "The merged dataframe must have a 'time' column.")
@@ -54,7 +70,7 @@ class InteractivePlotGUI(QWidget):
         plot_layout.addWidget(self.toolbar)
         splitter.addWidget(plot_widget)
         splitter.setStretchFactor(0, 4)
-
+        
         control_widget = QWidget()
         control_layout = QVBoxLayout(control_widget)
         top_control_layout = QHBoxLayout()
@@ -81,6 +97,17 @@ class InteractivePlotGUI(QWidget):
     
     ### FUNCTION:
     def toggle_variable(self):
+
+        '''
+        Toggle the inclusion of a variable for plotting when the user clicks the "Add/Remove" button.
+        
+        Args:
+          None
+          
+        Returns:
+          None
+        '''
+
         var = self.variable_selector.currentText()
         if var in self.selected_variables:
             self.selected_variables.remove(var)
@@ -94,6 +121,17 @@ class InteractivePlotGUI(QWidget):
     
     ### FUNCTION:
     def update_plot(self):
+
+        '''
+        Update the plot based on the selected variables, grouping y-axes by unit and adjusting layout.
+        
+        Args:
+          None
+          
+        Returns:
+          None
+        '''
+
         self.figure.clf()
 
         left_margin = 0.1
@@ -162,6 +200,17 @@ plot_window = None
 
 ### FUNCTION:
 def run_plot(dataframe):
+
+    '''
+    Launch the interactive plot GUI with the provided dataframe.
+
+    Args:
+      dataframe (pd.DataFrame): The merged sensor data containing a "time" column and sensor values.
+      
+    Returns:
+      None
+    '''
+
     global plot_window
     app = QApplication.instance()
     if app is None:
