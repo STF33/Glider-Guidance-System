@@ -11,7 +11,8 @@ import sys
 import os
 import shutil
 import json
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QCheckBox, QLineEdit, QTextEdit)
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QFrame, QCheckBox, QLineEdit, QTextEdit)
 from PyQt6.QtCore import Qt
 
 from GGS_DataToolbox_Main import GGS_DataToolbox_Main
@@ -22,20 +23,18 @@ config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config",
 
 ### CLASS:
 class GUI_FileBox(QFrame):
+    
+    '''
+    A drag-and-drop file box for selecting data files.
+    
+    Args:
+      parent (QWidget, optional): The parent widget.
+      
+    Returns:
+      None
+    '''
 
-    ### FUNCTION:
     def __init__(self, parent=None):
-        
-        '''
-        Initialize a GUI_FileBox instance for drag-and-drop file selection.
-
-        Args:
-          parent (QWidget, optional): The parent widget. Defaults to None.
-        
-        Returns:
-          None
-        '''
-
         super().__init__(parent)
         self.setFrameStyle(QFrame.Shape.Box)
         self.setStyleSheet("border: 2px dashed #aaa; border-radius: 10px; background-color: #f0f0f0;")
@@ -49,15 +48,14 @@ class GUI_FileBox(QFrame):
         layout.addWidget(self.label)
         self.setLayout(layout)
 
-    ### FUNCTION:
     def dragEnterEvent(self, event):
         
         '''
         Handle the drag enter event to accept file URLs.
-
+        
         Args:
           event (QDragEnterEvent): The drag enter event.
-        
+          
         Returns:
           None
         '''
@@ -65,15 +63,14 @@ class GUI_FileBox(QFrame):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
-    ### FUNCTION:
     def dropEvent(self, event):
         
         '''
         Handle the drop event by collecting the dropped file paths and updating the label.
-
+        
         Args:
           event (QDropEvent): The drop event.
-        
+          
         Returns:
           None
         '''
@@ -82,15 +79,14 @@ class GUI_FileBox(QFrame):
         self.file_list.extend(new_files)
         self.label.setText("\n".join(self.file_list))
 
-    ### FUNCTION:
     def GUI_FileBox_Copy(self, script_directory):
         
         '''
-        Copy the files collected via drag-and-drop to the DBD_Files directory within the given script directory.
-
-        Args:
-          script_directory (str): The base directory where the DBD_Files folder will be created.
+        Copy the files from the file list to the DBD_Files directory.
         
+        Args:
+          script_directory (str): The base directory where the DBD_Files folder exists.
+          
         Returns:
           None
         '''
@@ -101,22 +97,60 @@ class GUI_FileBox(QFrame):
             shutil.copy(file, dbd_root)
         print("Files copied to DBD_Files.")
 
-### CLASS:
-class GUI_MainWindow(QWidget):
 
-    ### FUNCTION:
-    def __init__(self):
+### CLASS:
+class CacheFileBox(GUI_FileBox):
+    
+    '''
+    A drag-and-drop file box for selecting cache files.
+    
+    Args:
+      parent (QWidget, optional): The parent widget.
+      
+    Returns:
+      None
+    '''
+
+    def __init__(self, parent=None):
+        
+        super().__init__(parent)
+        self.setMinimumSize(200, 150)
+        self.label.setText("Drag and Drop Cache Files Here")
+    
+    def GUI_FileBox_Copy(self, script_directory):
         
         '''
-        Initialize a GUI_MainWindow instance which serves as the main interface for the Data Toolbox GUI.
-
-        Args:
-          None
+        Copy the files from the file list to the cache folder.
         
+        Args:
+          script_directory (str): The base directory where the cache folder will be created.
+          
         Returns:
           None
         '''
 
+        cache_dir = os.path.join(script_directory, "cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        for file in self.file_list:
+            shutil.copy(file, cache_dir)
+        print("Cache files copied to cache.")
+
+
+### CLASS:
+class GUI_MainWindow(QWidget):
+    
+    '''
+    Main interface for the Data Toolbox GUI.
+    
+    Args:
+      None
+      
+    Returns:
+      None
+    '''
+
+    def __init__(self):
+        
         super().__init__()
         self.setWindowTitle("Glider Guidance System: Data Toolbox GUI")
         self.setGeometry(100, 100, 600, 600)
@@ -144,17 +178,20 @@ class GUI_MainWindow(QWidget):
         content_layout = QHBoxLayout()
         content_layout.setStretch(0, 1)
         content_layout.setStretch(1, 1)
-        self.dragDropBox = GUI_FileBox(self)
-        content_layout.addWidget(self.dragDropBox, 1)
+        
+        left_layout = QVBoxLayout()
+        self.dataFileBox = GUI_FileBox(self)
+        self.cacheFileBox = CacheFileBox(self)
+        left_layout.addWidget(self.dataFileBox)
+        left_layout.addWidget(self.cacheFileBox)
+        content_layout.addLayout(left_layout, 1)
         
         right_section = QVBoxLayout()
         right_section.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
         self.glider_unit = QLineEdit()
         self.glider_version = QLineEdit()
         self.glider_type = QLineEdit()
         self.sensor_list = QTextEdit()
-
         self.options = {}
         for option in self.config_map.keys():
             self.options[option] = QCheckBox(f"Enable: {option}")
@@ -176,17 +213,16 @@ class GUI_MainWindow(QWidget):
         
         self.GUI_Main_ConfigLoad()
 
-    ### FUNCTION:
     def GUI_Main_CreateSection(self, layout, title, widgets):
         
         '''
-        Create a labeled section in the GUI and add the provided widgets to it.
+        Create a labeled section in the GUI and add the provided widgets.
 
         Args:
           layout (QLayout): The parent layout to add the section to.
           title (str): The title of the section.
           widgets (list): A list of widgets or strings to add to the section.
-        
+          
         Returns:
           None
         '''
@@ -201,15 +237,14 @@ class GUI_MainWindow(QWidget):
             else:
                 layout.addWidget(widget)
 
-    ### FUNCTION:
     def GUI_Main_ConfigLoad(self):
         
         '''
-        Load the configuration from the JSON file and update the GUI fields accordingly.
+        Load the configuration from the JSON file and update the GUI fields.
 
         Args:
           None
-        
+          
         Returns:
           None
         '''
@@ -226,7 +261,6 @@ class GUI_MainWindow(QWidget):
                     if section in config and key in config[section]:
                         self.options[option].setChecked(config[section][key])
 
-    ### FUNCTION:
     def GUI_Main_ConfigSave(self):
         
         '''
@@ -234,13 +268,12 @@ class GUI_MainWindow(QWidget):
 
         Args:
           None
-        
+          
         Returns:
           None
         '''
 
         sensor_text = self.sensor_list.toPlainText().strip()
-
         if sensor_text == "":
             sensor_list_value = []
         else:
@@ -264,33 +297,32 @@ class GUI_MainWindow(QWidget):
             if section not in config:
                 config[section] = {}
             config[section][key] = self.options[option].isChecked()
-
         os.makedirs(os.path.dirname(config_path), exist_ok=True)
         with open(config_path, "w") as f:
             json.dump(config, f, indent=4)
 
-    ### FUNCTION:
     def GUI_Main_RunFunction(self):
         
         '''
-        Save the configuration, copy the dragged files to the designated folder, and run the main Data Toolbox function.
+        Save the configuration, copy the dragged files to their designated folders, and run the main Data Toolbox function.
 
         Args:
           None
-        
+          
         Returns:
           None
         '''
 
         self.GUI_Main_ConfigSave()
-        self.dragDropBox.GUI_FileBox_Copy(self.script_directory)
+        self.dataFileBox.GUI_FileBox_Copy(self.script_directory)
+        self.cacheFileBox.GUI_FileBox_Copy(self.script_directory)
         GGS_DataToolbox_Main(config_name="config")
 
 ### MAIN:
 if __name__ == "__main__":
     
     '''
-    Create the application, instantiate the GUI_MainWindow, and start the application event loop.
+    Create the application, instantiate the GUI_MainWindow, and start the event loop.
 
     Args:
       None
