@@ -22,14 +22,15 @@ from X_DataToolbox_Excel import *
 def GGS_DataToolbox_Main(config_name=None):
     
     '''
-    GGS: Data Toolbox main function.
+    Process the glider guidance system data toolbox by running decompression, conversion,
+    data compilation, and product generation based on the provided configuration.
 
     Args:
-    - config_name (str): The name of the config file without the extension.
-    - path (str): The path directory to save output to. Options: 'local' or a specific directory path.
-    
+      config_name (str): The name of the config file without the extension.
+      path (str): The directory path to save output to. Options: 'local' or a specific directory path.
+      
     Returns:
-    - None
+      None
     '''
 
     current_directory = os.path.abspath(os.path.dirname(__file__))
@@ -57,21 +58,21 @@ def GGS_DataToolbox_Main(config_name=None):
     if config is None:
         print("Failed to import configuration.")
         return
-    
+
     if 'DECOMPRESSION' in config:
         decompression_config = config['DECOMPRESSION']
         if decompression_config.get('run_decompression'):
             run_file_decompression()
         else:
             pass
-    
+
     if 'CONVERSION' in config:
         conversion_config = config['CONVERSION']
         if conversion_config.get('run_conversion'):
             run_ascii_converter()
         else:
             pass
-    
+
     if 'DATA' in config:
         data_config = config['DATA']
         if data_config.get('run_dataframe'):
@@ -95,7 +96,7 @@ def GGS_DataToolbox_Main(config_name=None):
             run_data_sorter(root_directory, glider_info)
         else:
             pass
-    
+
     if 'ADVANCED' in config:
         advanced_config = config['ADVANCED']
         if advanced_config.get('run_data_cleanup'):
@@ -106,4 +107,15 @@ def GGS_DataToolbox_Main(config_name=None):
 
 ### MAIN:
 if __name__ == "__main__":
+    
+    '''
+    Create the application, run the main Data Toolbox function, and start the event loop.
+
+    Args:
+      None
+      
+    Returns:
+      None
+    '''
+
     GGS_DataToolbox_Main(config_name="config")
