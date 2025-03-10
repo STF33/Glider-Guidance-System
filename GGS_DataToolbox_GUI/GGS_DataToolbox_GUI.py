@@ -11,8 +11,7 @@ import sys
 import os
 import shutil
 import json
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                             QPushButton, QFrame, QCheckBox, QLineEdit, QTextEdit)
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QCheckBox, QLineEdit, QTextEdit)
 from PyQt6.QtCore import Qt
 
 from GGS_DataToolbox_Main import GGS_DataToolbox_Main
