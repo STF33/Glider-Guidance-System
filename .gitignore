@@ -3,10 +3,6 @@ __DEVELOPMENT__/
 GGS_CurrentMapper/__pycache__/
 GGS_CurrentMapper/__ARCHIVE__/
 
-GGS_DataToolbox/__pycache__/
-GGS_DataToolbox/__ARCHIVE__/
-GGS_DataToolbox/cache/*
-
 GGS_DataToolbox_GUI/__pycache__/
 GGS_DataToolbox_GUI/__ARCHIVE__/
 GGS_DataToolbox/cache/*
