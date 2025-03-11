@@ -56,6 +56,6 @@ def run_ascii_converter():
     current_directory = os.path.abspath(os.path.dirname(__file__))
     ascii_directory = os.path.join(current_directory, 'DBD_Files/ProcessedAscii')
     os.makedirs(ascii_directory, exist_ok=True)
-    file_types = ['.sbd', '.dbd', '.tbd', '.ebd']
+    file_types = ['.sbd', '.mbd', '.dbd', '.tbd', '.nbd', '.ebd']
     for file_type in file_types:
         ascii_converter(file_type)
