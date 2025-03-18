@@ -22,6 +22,6 @@
         "run_data_sorter": false
     },
     "ADVANCED": {
-        "run_data_cleanup": true
+        "run_data_cleanup": false
     }
 }
