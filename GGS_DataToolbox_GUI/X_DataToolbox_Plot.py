@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox, QListWidget, QListWidgetItem, QMessageBox, QSplitter)
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
@@ -35,6 +36,8 @@ class InteractivePlotGUI(QWidget):
         super().__init__()
         self.dataframe = dataframe
         self.selected_variables = []
+        self.variable_colors = {}
+        self.available_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         self.initUI()
     
     ### FUNCTION:
@@ -51,8 +54,7 @@ class InteractivePlotGUI(QWidget):
         '''
 
         if "time" not in self.dataframe.columns:
-            QMessageBox.warning(self, "Missing Time Column",
-                                "The merged dataframe must have a 'time' column.")
+            QMessageBox.warning(self, "Missing Time Column", "The merged dataframe must have a 'time' column.")
             self.close()
             return
 
@@ -98,27 +100,34 @@ class InteractivePlotGUI(QWidget):
     ### FUNCTION:
     def toggle_variable(self):
 
-        '''
-        Toggle the inclusion of a variable for plotting when the user clicks the "Add/Remove" button.
+      '''
+      Toggle the inclusion of a variable for plotting when the user clicks the "Add/Remove" button.
+      
+      Args:
+        None
         
-        Args:
-          None
-          
-        Returns:
-          None
-        '''
+      Returns:
+        None
+      '''
 
-        var = self.variable_selector.currentText()
-        if var in self.selected_variables:
-            self.selected_variables.remove(var)
-            for i in range(self.variable_list.count()):
-                if self.variable_list.item(i).text() == var:
-                    self.variable_list.takeItem(i)
-                    break
-        else:
-            self.selected_variables.append(var)
-            self.variable_list.addItem(QListWidgetItem(var))
-    
+      var = self.variable_selector.currentText()
+      if var in self.selected_variables:
+          self.selected_variables.remove(var)
+          del self.variable_colors[var]
+          for i in range(self.variable_list.count()):
+              if self.variable_list.item(i).text() == var:
+                  self.variable_list.takeItem(i)
+                  break
+      else:
+          self.selected_variables.append(var)
+          used_colors = [self.variable_colors[v] for v in self.selected_variables if v in self.variable_colors]
+          available_colors = [color for color in self.available_colors if color not in used_colors]
+          color = available_colors[0] if available_colors else self.available_colors[len(self.selected_variables) % len(self.available_colors)]
+          self.variable_colors[var] = color
+          item = QListWidgetItem(var)
+          item.setForeground(QColor(color))
+          self.variable_list.addItem(item)
+
     ### FUNCTION:
     def update_plot(self):
 
@@ -147,7 +156,6 @@ class InteractivePlotGUI(QWidget):
         unit_axes = {}
         axes_list = [host]
         variable_handles = []
-        colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
         
         for idx, var in enumerate(self.selected_variables):
             unit = units_dict.get(var, "unknown")
@@ -169,16 +177,13 @@ class InteractivePlotGUI(QWidget):
             if var == 'm_depth':
                 ax.invert_yaxis()
             
-            color = colors[idx % len(colors)]
+            color = self.variable_colors[var]
             handle = ax.scatter(x_data_cleaned, y_data, color=color, label=var, marker='o')
             ax.plot(x_data_cleaned, y_data, color=color)
             variable_handles.append(handle)
-            y_min = y_data.min()
-            y_max = y_data.max()
-            buffer = 0.05 * (y_max - y_min) if y_max != y_min else 1
+            
             if ax.get_ylabel() == "":
-                ax.set_ylabel(f"{var} ({unit})", color=color)
-            ax.tick_params(axis='y', colors=color)
+                ax.set_ylabel(f"{unit}")
         
         host.xaxis_date()
         locator = mdates.AutoDateLocator()
@@ -186,9 +191,10 @@ class InteractivePlotGUI(QWidget):
         host.xaxis.set_major_locator(locator)
         host.xaxis.set_major_formatter(formatter)
         
-        host.legend(handles=variable_handles, labels=[handle.get_label() for handle in variable_handles],
-                    loc="upper center", bbox_to_anchor=(0.5, 1.15),
-                    ncol=len(variable_handles), borderaxespad=0)
+        legend_handles = [handle for handle in variable_handles]
+        legend_labels = [handle.get_label() for handle in variable_handles]
+        host.legend(handles=legend_handles, labels=legend_labels, loc="upper center", bbox_to_anchor=(0.5, 1.15),
+                    ncol=len(legend_handles), borderaxespad=0, frameon=True)
         
         n_extra = len(axes_list) - 1
         new_right = max(right_margin - 0.05 * n_extra, 0.5)
@@ -217,3 +223,4 @@ def run_plot(dataframe):
         app = QApplication(sys.argv)
     plot_window = InteractivePlotGUI(dataframe)
     plot_window.show()
+    
