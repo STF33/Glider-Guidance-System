@@ -14,7 +14,7 @@ import os
 ### FUNCTION:
 def define_directories_to_clean():
     
-    '''
+    """
     Define directories that contain run-specific data files.
     
     Args:
@@ -22,7 +22,7 @@ def define_directories_to_clean():
       
     Returns:
       directories_to_clean (list): A list of directory paths.
-    '''
+    """
 
     current_directory = os.path.dirname(__file__)
     directories_to_clean = [
@@ -38,7 +38,7 @@ def define_directories_to_clean():
 ### FUNCTION:
 def run_data_cleanup(directories_to_clean):
     
-    '''
+    """
     Delete data files in the specified directories.
     
     Args:
@@ -46,9 +46,10 @@ def run_data_cleanup(directories_to_clean):
       
     Returns:
       None
-    '''
+    """
     
     print(f"\n### RUNNING: DATA LIBRARY CLEANUP ###\n")
+    
     for directory in directories_to_clean:
         if os.path.exists(directory):
             for item in os.listdir(directory):

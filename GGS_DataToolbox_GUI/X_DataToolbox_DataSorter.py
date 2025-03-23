@@ -17,7 +17,7 @@ from datetime import datetime
 ### FUNCTION:
 def organize_data_files(input_data_folder, output_folder):
 
-    '''
+    """
     Organize data files into mission-specific folders.
 
     Args:
@@ -26,7 +26,7 @@ def organize_data_files(input_data_folder, output_folder):
       
     Returns:
       None
-    '''
+    """
 
     file_groups = {}
 
@@ -59,7 +59,7 @@ def organize_data_files(input_data_folder, output_folder):
 ### FUNCTION:
 def organize_log_files(input_log_folder, output_folder):
 
-    '''
+    """
     Organize log files by matching them with corresponding data files.
 
     Args:
@@ -68,7 +68,7 @@ def organize_log_files(input_log_folder, output_folder):
       
     Returns:
       None
-    '''
+    """
 
     for filename in os.listdir(input_log_folder):
         file_path = os.path.join(input_log_folder, filename)
@@ -98,7 +98,7 @@ def organize_log_files(input_log_folder, output_folder):
 ### FUNCTION:
 def run_data_sorter(root_directory, glider_info):
 
-    '''
+    """
     Run the data sorting process to organize data and log files.
 
     Args:
@@ -107,9 +107,10 @@ def run_data_sorter(root_directory, glider_info):
       
     Returns:
       None
-    '''
+    """
     
     print(f"\n### RUNNING: DATA SORTER ###\n")
+    
     datetime_string = datetime.now().strftime("%Y%m%dT%H%M%S")
     glider_unit, glider_version, glider_type = glider_info
     data_sort_directory = os.path.join(root_directory, f"GliderDataSorter")

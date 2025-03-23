@@ -22,7 +22,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 ### CLASS:
 class InteractivePlotGUI(QWidget):
 
-    '''
+    """
     Create an interactive plot GUI using PyQt and Matplotlib.
     
     Args:
@@ -30,7 +30,7 @@ class InteractivePlotGUI(QWidget):
       
     Returns:
       None
-    '''
+    """
 
     def __init__(self, dataframe):
         super().__init__()
@@ -43,7 +43,7 @@ class InteractivePlotGUI(QWidget):
     ### FUNCTION:
     def initUI(self):
 
-        '''
+        """
         Initialize the interactive plot GUI layout, including the plot area and control panel.
         
         Args:
@@ -51,7 +51,7 @@ class InteractivePlotGUI(QWidget):
           
         Returns:
           None
-        '''
+        """
 
         if "time" not in self.dataframe.columns:
             QMessageBox.warning(self, "Missing Time Column", "The merged dataframe must have a 'time' column.")
@@ -100,7 +100,7 @@ class InteractivePlotGUI(QWidget):
     ### FUNCTION:
     def toggle_variable(self):
 
-      '''
+      """
       Toggle the inclusion of a variable for plotting when the user clicks the "Add/Remove" button.
       
       Args:
@@ -108,7 +108,7 @@ class InteractivePlotGUI(QWidget):
         
       Returns:
         None
-      '''
+      """
 
       var = self.variable_selector.currentText()
       if var in self.selected_variables:
@@ -131,7 +131,7 @@ class InteractivePlotGUI(QWidget):
     ### FUNCTION:
     def update_plot(self):
 
-        '''
+        """
         Update the plot based on the selected variables, grouping y-axes by unit and adjusting layout.
         
         Args:
@@ -139,7 +139,7 @@ class InteractivePlotGUI(QWidget):
           
         Returns:
           None
-        '''
+        """
 
         self.figure.clf()
 
@@ -207,7 +207,7 @@ plot_window = None
 ### FUNCTION:
 def run_plot(dataframe):
 
-    '''
+    """
     Launch the interactive plot GUI with the provided dataframe.
 
     Args:
@@ -215,7 +215,7 @@ def run_plot(dataframe):
       
     Returns:
       None
-    '''
+    """
 
     global plot_window
     app = QApplication.instance()

@@ -14,7 +14,7 @@ import os
 ### FUNCTION:
 def file_decompression(file_type, new_extension):
 
-    '''
+    """
     Decompress files of a specified type to a new extension.
     
     Args:
@@ -23,7 +23,7 @@ def file_decompression(file_type, new_extension):
       
     Returns:
       None
-    '''
+    """
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
@@ -43,7 +43,7 @@ def file_decompression(file_type, new_extension):
 ### FUNCTION:
 def run_file_decompression():
 
-    '''
+    """
     Run the decompression process for multiple file type mappings.
     
     Args:
@@ -51,9 +51,10 @@ def run_file_decompression():
       
     Returns:
       None
-    '''
+    """
     
     print(f"\n### RUNNING: DECOMPRESSION ###\n")
+    
     current_directory = os.path.abspath(os.path.dirname(__file__))
     decompressed_directory = os.path.join(current_directory, 'DBD_Files/Decompressed')
     os.makedirs(decompressed_directory, exist_ok=True)

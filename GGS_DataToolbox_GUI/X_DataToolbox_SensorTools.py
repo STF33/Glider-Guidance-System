@@ -12,13 +12,24 @@ This module provides functions for parsing ASCII data files and compiling sensor
 import os
 import pandas as pd
 import numpy as np
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLineEdit, QComboBox, QPushButton, QLabel, QScrollArea, QWidget
+from PyQt6.QtCore import Qt
 
 # =========================
+
+OPERATORS = {
+    '<': lambda series, val: series < val,
+    '<=': lambda series, val: series <= val,
+    '=': lambda series, val: series == val,
+    '==': lambda series, val: series == val,
+    '>=': lambda series, val: series >= val,
+    '>': lambda series, val: series > val
+}
 
 ### FUNCTION:
 def read_ascii(directory, file_name):
     
-    '''
+    """
     Read and parse an ASCII file into a dictionary format.
     
     Expected format:
@@ -38,7 +49,7 @@ def read_ascii(directory, file_name):
          "metadata": dict of metadata,
          "data": dict mapping each sensor name to a dict with keys "units", "rate", and "values" (a list of floats).
       file_identifier (str): The identifier for the file (from metadata if available, else the file name).
-    '''
+    """
 
     filepath = os.path.join(directory, file_name)
     with open(filepath, 'r') as f:
@@ -138,7 +149,7 @@ def read_ascii(directory, file_name):
 ### FUNCTION:
 def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_files=None):
     
-    '''
+    """
     Convert a list of ASCII files into a master dictionary.
     
     If selected_files is provided, only those files (full file names) are processed.
@@ -155,7 +166,7 @@ def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_fil
       processed (int): Number of files processed.
       first_file (str): Name of the first processed file.
       last_file (str): Name of the last processed file.
-    '''
+    """
 
     if files_read is None:
         files_read = []
@@ -198,7 +209,7 @@ def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_fil
 ### FUNCTION:
 def pull_sensor_rate(sensor, master_dict):
     
-    '''
+    """
     Retrieve the data rate for a specified sensor from the master dictionary.
     
     Args:
@@ -207,7 +218,7 @@ def pull_sensor_rate(sensor, master_dict):
       
     Returns:
       rate (str): Sensor rate from the first file that contains it, or None.
-    '''
+    """
 
     for content in master_dict.values():
         if "data" in content and sensor in content["data"]:
@@ -217,7 +228,7 @@ def pull_sensor_rate(sensor, master_dict):
 ### FUNCTION:
 def pull_sensor_units(sensor, master_dict):
     
-    '''
+    """
     Retrieve the units for a specified sensor from the master dictionary.
     
     Args:
@@ -226,7 +237,7 @@ def pull_sensor_units(sensor, master_dict):
       
     Returns:
       units (str): Sensor units from the first file that contains it, or None.
-    '''
+    """
 
     for content in master_dict.values():
         if "data" in content and sensor in content["data"]:
@@ -236,7 +247,7 @@ def pull_sensor_units(sensor, master_dict):
 ### FUNCTION:
 def pull_sensor_data(sensor, master_dict):
     
-    '''
+    """
     Retrieve the concatenated data values for a specified sensor across all files.
     
     Args:
@@ -245,7 +256,7 @@ def pull_sensor_data(sensor, master_dict):
       
     Returns:
       data (list): List of all sensor values (floats) across files.
-    '''
+    """
 
     data = []
     for content in master_dict.values():
@@ -256,7 +267,7 @@ def pull_sensor_data(sensor, master_dict):
 ### FUNCTION:
 def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
     
-    '''
+    """
     Retrieve data for a list of sensors from the master dictionary and append it to a DataFrame.
     
     This function:
@@ -272,7 +283,7 @@ def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
       
     Returns:
       chosen_dataframe (pd.DataFrame): Updated DataFrame with sensor data.
-    '''
+    """
 
     data_dict = {}
     for sensor in sensor_list:
@@ -301,13 +312,13 @@ SCIENCE_EXT_PRIORITY = {'.ebd': 1, '.nbd': 2, '.tbd': 3}
 ### FUNCTION:
 def group_files_by_category(directory):
     
-    '''
+    """
     Group files (ending with ".asc") into flight and science groups based on their extension.
     
     Returns:
       flight_files (list): List of files belonging to the flight group.
       science_files (list): List of files belonging to the science group.
-    '''
+    """
 
     flight_files = []
     science_files = []
@@ -326,7 +337,7 @@ def group_files_by_category(directory):
 ### FUNCTION:
 def select_priority_files(file_list, priority_map):
     
-    '''
+    """
     From a list of files (all ending with ".asc"), group by their base name (excluding the extension part before ".asc")
     and select one file per group based on the given priority mapping.
     
@@ -336,7 +347,7 @@ def select_priority_files(file_list, priority_map):
     
     Returns:
       selected_files (list): List of file names chosen based on the priority.
-    '''
+    """
 
     groups = {}
     for file in file_list:
@@ -354,12 +365,12 @@ def select_priority_files(file_list, priority_map):
 ### FUNCTION:
 def process_files(file_list, directory):
     
-    '''
+    """
     Process a given list of files from the specified directory using read_ascii.
     
     Returns:
       master_dict, files_read, processed, first_file, last_file.
-    '''
+    """
 
     files_read = []
     master_dict = {}
@@ -388,7 +399,7 @@ def process_files(file_list, directory):
 ### FUNCTION:
 def get_units_dict(sensor_list, master_dict):
     
-    '''
+    """
     Build a dictionary mapping each sensor in sensor_list to its unit,
     based on the first file in master_dict that provides a value.
     
@@ -398,7 +409,7 @@ def get_units_dict(sensor_list, master_dict):
     
     Returns:
       units_dict (dict): Mapping from sensor name to its unit (or an empty string if not found).
-    '''
+    """
 
     units_dict = {}
     for sensor in sensor_list:
@@ -413,7 +424,7 @@ def get_units_dict(sensor_list, master_dict):
 ### FUNCTION:
 def merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list):
     
-    '''
+    """
     Merge the flight and science DataFrames by creating a new column "time" in each,
     then concatenates and sorts by "time". Also, build a dictionary of units for each sensor.
     
@@ -430,7 +441,7 @@ def merge_flight_science(flight_df, science_df, flight_master, science_master, s
     Returns:
       glider_df (pd.DataFrame): Merged DataFrame sorted by the new "time" column,
                                 with units stored in glider_df.attrs["units"].
-    '''
+    """
 
     if not flight_df.empty and "m_present_time" in flight_df.columns:
         flight_df = flight_df.copy()
@@ -461,7 +472,7 @@ def merge_flight_science(flight_df, science_df, flight_master, science_master, s
 ### FUNCTION:
 def run_dataframe(input_directory, sensor_list):
     
-    '''
+    """
     Process sensor data from ASCII files in a directory and compile them into a single merged DataFrame.
     
     Args:
@@ -470,7 +481,7 @@ def run_dataframe(input_directory, sensor_list):
       
     Returns:
       glider_df (pd.DataFrame): The merged sensor data with a "time" column, and unit metadata in attrs.
-    '''
+    """
 
     flight_files, science_files = group_files_by_category(input_directory)
     
@@ -501,3 +512,142 @@ def run_dataframe(input_directory, sensor_list):
     glider_df = merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list)
 
     return glider_df
+
+### CLASS:
+class DataFilterDialog(QDialog):
+
+    """
+    Create a dialog for adding multiple data filter criteria.
+    
+    Args:
+      dataframe (pd.DataFrame): The input dataframe to be filtered.
+      
+    Returns:
+      None
+    """
+
+    def __init__(self, dataframe, parent=None):
+        super().__init__(parent)
+        self.dataframe = dataframe.copy()
+        self.filter_rows = []
+        self.filtered_df = None
+        self.initUI()
+    
+    def initUI(self):
+
+        """
+        Initialize the filter dialog layout with a scroll area and buttons.
+        
+        Args:
+          None
+          
+        Returns:
+          None
+        """
+
+        self.setWindowTitle("Data Filter")
+        self.setMinimumSize(500, 300)
+        self.layout = QVBoxLayout(self)
+        
+        self.filterWidget = QWidget()
+        self.filterLayout = QVBoxLayout(self.filterWidget)
+        self.filterWidget.setLayout(self.filterLayout)
+        
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.filterWidget)
+        self.layout.addWidget(self.scroll)
+        
+        self.addFilterButton = QPushButton("+ Add Filter")
+        self.addFilterButton.clicked.connect(self.add_filter_row)
+        self.layout.addWidget(self.addFilterButton)
+        
+        self.runFilterButton = QPushButton("Run Data Filter")
+        self.runFilterButton.clicked.connect(self.apply_filters)
+        self.layout.addWidget(self.runFilterButton)
+    
+    def add_filter_row(self):
+
+        """
+        Add a new filter row to the dialog.
+        
+        Each row contains a QLineEdit for the variable, a QComboBox for the operator,
+        and a QLineEdit for the value.
+        
+        Args:
+          None
+          
+        Returns:
+          None
+        """
+
+        row_widget = QWidget()
+        row_layout = QHBoxLayout(row_widget)
+        
+        var_edit = QLineEdit()
+        var_edit.setPlaceholderText("Variable")
+        row_layout.addWidget(var_edit)
+        
+        op_combo = QComboBox()
+        op_combo.addItems(list(OPERATORS.keys()))
+        row_layout.addWidget(op_combo)
+        
+        val_edit = QLineEdit()
+        val_edit.setPlaceholderText("Value")
+        row_layout.addWidget(val_edit)
+        
+        self.filterLayout.addWidget(row_widget)
+        self.filter_rows.append((var_edit, op_combo, val_edit))
+    
+    def apply_filters(self):
+
+        """
+        Apply all filter rows to the dataframe and close the dialog.
+        
+        Args:
+          None
+          
+        Returns:
+          None
+        """
+
+        df_filtered = self.dataframe.copy()
+        for var_edit, op_combo, val_edit in self.filter_rows:
+            var = var_edit.text().strip()
+            op = op_combo.currentText().strip()
+            val_str = val_edit.text().strip()
+            if var == "" or val_str == "":
+                continue
+            try:
+                try:
+                    val = float(val_str)
+                except ValueError:
+                    val = val_str
+                if var not in df_filtered.columns:
+                    print(f"Warning: Variable '{var}' not found in dataframe. Skipping filter.")
+                    continue
+                condition = OPERATORS[op](pd.to_numeric(df_filtered[var], errors='coerce'), val)
+                df_filtered = df_filtered[condition]
+            except Exception as e:
+                print(f"Error applying filter on {var} {op} {val_str}: {e}")
+        self.filtered_df = df_filtered
+        self.accept()
+
+### FUNCTION:
+def run_data_filter(dataframe):
+
+    """
+    Run the data filter dialog on the input dataframe.
+    
+    Args:
+      dataframe (pd.DataFrame): The input dataframe to filter.
+      
+    Returns:
+      filtered_df (pd.DataFrame): The filtered dataframe after applying user-selected criteria.
+    """
+
+    dialog = DataFilterDialog(dataframe)
+    if dialog.exec() == QDialog.DialogCode.Accepted:
+        return dialog.filtered_df
+    else:
+        return dataframe

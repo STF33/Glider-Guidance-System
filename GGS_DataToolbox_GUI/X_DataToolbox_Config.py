@@ -17,7 +17,7 @@ import os
 ### FUNCTION:
 def GGS_config_import(config_name):
     
-    '''
+    """
     Import a Glider Guidance System mission configuration from a JSON file.
     
     Args:
@@ -25,7 +25,7 @@ def GGS_config_import(config_name):
       
     Returns:
       config (dict): Glider Guidance System mission configuration.
-    '''
+    """
 
     print(f"\n### IMPORTING GGS CONFIGURATION: {config_name} ###\n")
 
@@ -72,7 +72,7 @@ def GGS_config_import(config_name):
 ### FUNCTION:
 def GGS_config_process(config, path="default"):
     
-    '''
+    """
     Process the imported configuration and create an output directory based on glider parameters.
     
     Args:
@@ -81,7 +81,7 @@ def GGS_config_process(config, path="default"):
       
     Returns:
       root_directory (str): The directory where the configuration was saved.
-    '''
+    """
 
     print("\n### PROCESSING GGS CONFIGURATION ###\n")
 
@@ -114,6 +114,7 @@ def GGS_config_process(config, path="default"):
         for key, value in settings.items():
             formatted_value = str(value) if not isinstance(value, dt.datetime) else value.strftime('%Y-%m-%dT%H:%M:%S%z')
             output_str += f"{key}: {formatted_value}\n"
+    
     print(output_str)
     print("### END OF CONFIGURATION ###")
     print("\n")

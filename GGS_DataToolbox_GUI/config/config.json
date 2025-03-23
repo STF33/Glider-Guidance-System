@@ -1,6 +1,6 @@
 {
     "GLIDER": {
-        "glider_unit": "",
+        "glider_unit": "test",
         "glider_version": "",
         "glider_type": ""
     },
@@ -8,17 +8,18 @@
         "sensor_list": []
     },
     "DECOMPRESSION": {
-        "run_decompression": false
+        "run_decompression": true
     },
     "CONVERSION": {
-        "run_conversion": false
+        "run_conversion": true
     },
     "DATA": {
-        "run_dataframe": false
+        "run_dataframe": true,
+        "run_data_filter": true
     },
     "PRODUCTS": {
-        "run_plot": false,
-        "run_excel": false,
+        "run_plot": true,
+        "run_excel": true,
         "run_data_sorter": false
     },
     "ADVANCED": {

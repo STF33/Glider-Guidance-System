@@ -21,7 +21,7 @@ from X_DataToolbox_Excel import *
 ### FUNCTION:
 def GGS_DataToolbox_Main(config_name=None):
     
-    '''
+    """
     Process the glider guidance system data toolbox by running decompression, conversion,
     data compilation, and product generation based on the provided configuration.
 
@@ -31,7 +31,7 @@ def GGS_DataToolbox_Main(config_name=None):
       
     Returns:
       None
-    '''
+    """
 
     current_directory = os.path.abspath(os.path.dirname(__file__))
 
@@ -43,8 +43,6 @@ def GGS_DataToolbox_Main(config_name=None):
     os.makedirs(logfile_directory, exist_ok=True)
     ascii_directory = os.path.join(current_directory, 'DBD_Files/ProcessedAscii')
     os.makedirs(ascii_directory, exist_ok=True)
-    renamed_directory = os.path.join(current_directory, 'DBD_Files/RenamedBinary')
-    os.makedirs(renamed_directory, exist_ok=True)
 
     config = GGS_config_import(config_name)
     root_directory = GGS_config_process(config, path="default")
@@ -81,6 +79,10 @@ def GGS_DataToolbox_Main(config_name=None):
             dataframe = run_dataframe(input_directory, sensor_list)
         else:
             pass
+        if data_config.get('run_data_filter'):
+            dataframe = run_data_filter(dataframe)
+        else:
+            pass
 
     if 'PRODUCTS' in config:
         product_config = config['PRODUCTS']
@@ -108,7 +110,7 @@ def GGS_DataToolbox_Main(config_name=None):
 ### MAIN:
 if __name__ == "__main__":
     
-    '''
+    """
     Create the application, run the main Data Toolbox function, and start the event loop.
 
     Args:
@@ -116,6 +118,6 @@ if __name__ == "__main__":
       
     Returns:
       None
-    '''
+    """
 
     GGS_DataToolbox_Main(config_name="config")
