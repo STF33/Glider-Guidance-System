@@ -28,7 +28,6 @@ def define_directories_to_clean():
     directories_to_clean = [
         os.path.join(current_directory, 'DBD_Files'),
         os.path.join(current_directory, 'DBD_Files', 'ProcessedAscii'),
-        os.path.join(current_directory, 'DBD_Files', 'RenamedBinary'),
         os.path.join(current_directory, 'DBD_Files', 'Decompressed'),
         os.path.join(current_directory, 'DBD_Files', 'Logfiles')
     ]
@@ -54,10 +53,10 @@ def run_data_cleanup(directories_to_clean):
         if os.path.exists(directory):
             for item in os.listdir(directory):
                 item_path = os.path.join(directory, item)
-                if os.path.isfile(item_path):
+                if os.path.isfile(item_path) and item != '.gitignore':
                     os.remove(item_path)
                     print(f"Deleted file: {item_path}")
                 else:
-                    print(f"Skipped folder: {item_path}")
+                    print(f"Skipped item: {item_path}")
         else:
             print(f"Directory does not exist: {directory}")

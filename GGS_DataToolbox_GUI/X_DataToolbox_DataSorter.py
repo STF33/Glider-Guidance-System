@@ -43,6 +43,51 @@ def organize_data_files(input_data_folder, output_folder):
             if mission_name not in file_groups:
                 file_groups[mission_name] = []
             file_groups[mission_name].append(base_name)
+        elif filename.endswith('.mbd'):
+            with open(os.path.join(input_data_folder, filename), 'r', encoding='utf-8', errors='ignore') as file:
+                lines = file.readlines()
+                mission_name_line = lines[7]
+                mission_name = mission_name_line.split('mission_name:')[1].strip()
+            base_name = os.path.splitext(filename)[0]
+            if mission_name not in file_groups:
+                file_groups[mission_name] = []
+            file_groups[mission_name].append(base_name)
+        elif filename.endswith('.sbd'):
+            with open(os.path.join(input_data_folder, filename), 'r', encoding='utf-8', errors='ignore') as file:
+                lines = file.readlines()
+                mission_name_line = lines[7]
+                mission_name = mission_name_line.split('mission_name:')[1].strip()
+            base_name = os.path.splitext(filename)[0]
+            if mission_name not in file_groups:
+                file_groups[mission_name] = []
+            file_groups[mission_name].append(base_name)
+        elif filename.endswith('.ebd'):
+            with open(os.path.join(input_data_folder, filename), 'r', encoding='utf-8', errors='ignore') as file:
+                lines = file.readlines()
+                mission_name_line = lines[7]
+                mission_name = mission_name_line.split('mission_name:')[1].strip()
+            base_name = os.path.splitext(filename)[0]
+            if mission_name not in file_groups:
+                file_groups[mission_name] = []
+            file_groups[mission_name].append(base_name)
+        elif filename.endswith('.nbd'):
+            with open(os.path.join(input_data_folder, filename), 'r', encoding='utf-8', errors='ignore') as file:
+                lines = file.readlines()
+                mission_name_line = lines[7]
+                mission_name = mission_name_line.split('mission_name:')[1].strip()
+            base_name = os.path.splitext(filename)[0]
+            if mission_name not in file_groups:
+                file_groups[mission_name] = []
+            file_groups[mission_name].append(base_name)
+        elif filename.endswith('.tbd'):
+            with open(os.path.join(input_data_folder, filename), 'r', encoding='utf-8', errors='ignore') as file:
+                lines = file.readlines()
+                mission_name_line = lines[7]
+                mission_name = mission_name_line.split('mission_name:')[1].strip()
+            base_name = os.path.splitext(filename)[0]
+            if mission_name not in file_groups:
+                file_groups[mission_name] = []
+            file_groups[mission_name].append(base_name)
 
     for mission_name, base_names in file_groups.items():
         mission_folder = os.path.join(output_folder, mission_name)
