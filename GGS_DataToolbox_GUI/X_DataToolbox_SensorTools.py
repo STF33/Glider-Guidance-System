@@ -29,7 +29,7 @@ OPERATORS = {
 ### FUNCTION:
 def read_ascii(directory, file_name):
     
-    """
+    '''
     Read and parse an ASCII file into a dictionary format.
     
     Expected format:
@@ -41,15 +41,15 @@ def read_ascii(directory, file_name):
       - The remaining lines are data rows with whitespace‐separated numeric values.
     
     Args:
-      directory (str): The directory containing the ASCII file.
-      file_name (str): The name of the ASCII file.
+    - directory (str): The directory containing the ASCII file.
+    - file_name (str): The name of the ASCII file.
       
     Returns:
-      result (dict): A dictionary with keys:
-         "metadata": dict of metadata,
-         "data": dict mapping each sensor name to a dict with keys "units", "rate", and "values" (a list of floats).
-      file_identifier (str): The identifier for the file (from metadata if available, else the file name).
-    """
+    - result (dict): A dictionary with keys:
+        - "metadata": dict of metadata,
+        - "data": dict mapping each sensor name to a dict with keys "units", "rate", and "values" (a list of floats).
+    - file_identifier (str): The identifier for the file (from metadata if available, else the file name).
+    '''
 
     filepath = os.path.join(directory, file_name)
     with open(filepath, 'r') as f:
@@ -149,24 +149,24 @@ def read_ascii(directory, file_name):
 ### FUNCTION:
 def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_files=None):
     
-    """
+    '''
     Convert a list of ASCII files into a master dictionary.
     
     If selected_files is provided, only those files (full file names) are processed.
     
     Args:
-      directory (str): The directory containing the ASCII files.
-      files_read (list): Optional list of files already processed.
-      max_files (int): Maximum number of files to process.
-      selected_files (list): Optional list of file names to process.
+    - directory (str): The directory containing the ASCII files.
+    - files_read (list): Optional list of files already processed.
+    - max_files (int): Maximum number of files to process.
+    - selected_files (list): Optional list of file names to process.
       
     Returns:
-      master_dict (dict): Dictionary with keys as the base file names and values as parsed results.
-      files_read (list): Updated list of processed file names.
-      processed (int): Number of files processed.
-      first_file (str): Name of the first processed file.
-      last_file (str): Name of the last processed file.
-    """
+    - master_dict (dict): Dictionary with keys as the base file names and values as parsed results.
+    - files_read (list): Updated list of processed file names.
+    - processed (int): Number of files processed.
+    - first_file (str): Name of the first processed file.
+    - last_file (str): Name of the last processed file.
+    '''
 
     if files_read is None:
         files_read = []
@@ -209,16 +209,16 @@ def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_fil
 ### FUNCTION:
 def pull_sensor_rate(sensor, master_dict):
     
-    """
+    '''
     Retrieve the data rate for a specified sensor from the master dictionary.
     
     Args:
-      sensor (str): Sensor name.
-      master_dict (dict): Master dictionary of parsed files.
+    - sensor (str): Sensor name.
+    - master_dict (dict): Master dictionary of parsed files.
       
     Returns:
-      rate (str): Sensor rate from the first file that contains it, or None.
-    """
+    - rate (str): Sensor rate from the first file that contains it, or None.
+    '''
 
     for content in master_dict.values():
         if "data" in content and sensor in content["data"]:
@@ -228,16 +228,16 @@ def pull_sensor_rate(sensor, master_dict):
 ### FUNCTION:
 def pull_sensor_units(sensor, master_dict):
     
-    """
+    '''
     Retrieve the units for a specified sensor from the master dictionary.
     
     Args:
-      sensor (str): Sensor name.
-      master_dict (dict): Master dictionary of parsed files.
+    - sensor (str): Sensor name.
+    - master_dict (dict): Master dictionary of parsed files.
       
     Returns:
-      units (str): Sensor units from the first file that contains it, or None.
-    """
+    - units (str): Sensor units from the first file that contains it, or None.
+    '''
 
     for content in master_dict.values():
         if "data" in content and sensor in content["data"]:
@@ -247,16 +247,16 @@ def pull_sensor_units(sensor, master_dict):
 ### FUNCTION:
 def pull_sensor_data(sensor, master_dict):
     
-    """
+    '''
     Retrieve the concatenated data values for a specified sensor across all files.
     
     Args:
-      sensor (str): Sensor name.
-      master_dict (dict): Master dictionary of parsed files.
+    - sensor (str): Sensor name.
+    - master_dict (dict): Master dictionary of parsed files.
       
     Returns:
-      data (list): List of all sensor values (floats) across files.
-    """
+    - data (list): List of all sensor values (floats) across files.
+    '''
 
     data = []
     for content in master_dict.values():
@@ -267,23 +267,17 @@ def pull_sensor_data(sensor, master_dict):
 ### FUNCTION:
 def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
     
-    """
+    '''
     Retrieve data for a list of sensors from the master dictionary and append it to a DataFrame.
     
-    This function:
-      - Builds a dictionary of sensor data lists.
-      - Determines the maximum length among these lists.
-      - Pads any shorter lists with NaN so that all lists are equal in length.
-      - Creates a DataFrame from the dictionary and concatenates it with the chosen_dataframe.
-    
     Args:
-      sensor_list (list): List of sensor names.
-      chosen_dataframe (pd.DataFrame): DataFrame to which sensor data will be appended.
-      master_dict (dict): Master dictionary of parsed files.
+    - sensor_list (list): List of sensor names.
+    - chosen_dataframe (pd.DataFrame): DataFrame to which sensor data will be appended.
+    - master_dict (dict): Master dictionary of parsed files.
       
     Returns:
-      chosen_dataframe (pd.DataFrame): Updated DataFrame with sensor data.
-    """
+    - chosen_dataframe (pd.DataFrame): Updated DataFrame with sensor data.
+    '''
 
     data_dict = {}
     for sensor in sensor_list:
@@ -312,13 +306,16 @@ SCIENCE_EXT_PRIORITY = {'.ebd': 1, '.nbd': 2, '.tbd': 3}
 ### FUNCTION:
 def group_files_by_category(directory):
     
-    """
+    '''
     Group files (ending with ".asc") into flight and science groups based on their extension.
-    
+
+    Args:
+    - directory (str): The directory containing the files to be grouped.
+
     Returns:
-      flight_files (list): List of files belonging to the flight group.
-      science_files (list): List of files belonging to the science group.
-    """
+    - flight_files (list): List of files belonging to the flight group.
+    - science_files (list): List of files belonging to the science group.
+    '''
 
     flight_files = []
     science_files = []
@@ -337,17 +334,16 @@ def group_files_by_category(directory):
 ### FUNCTION:
 def select_priority_files(file_list, priority_map):
     
-    """
-    From a list of files (all ending with ".asc"), group by their base name (excluding the extension part before ".asc")
-    and select one file per group based on the given priority mapping.
+    '''
+    From a list of files (all ending with ".asc"), group by their base name (excluding the extension part before ".asc") and select one file per group based on the given priority mapping.
     
     Args:
-      file_list (list): List of file names.
-      priority_map (dict): Mapping from extension (e.g. ".dbd") to a numeric priority (lower value = higher priority).
+    - file_list (list): List of file names.
+    - priority_map (dict): Mapping from extension (e.g. ".dbd") to a numeric priority (lower value = higher priority).
     
     Returns:
-      selected_files (list): List of file names chosen based on the priority.
-    """
+    - selected_files (list): List of file names chosen based on the priority.
+    '''
 
     groups = {}
     for file in file_list:
@@ -365,12 +361,20 @@ def select_priority_files(file_list, priority_map):
 ### FUNCTION:
 def process_files(file_list, directory):
     
-    """
+    '''
     Process a given list of files from the specified directory using read_ascii.
-    
+
+    Args:
+    - file_list (list): List of files to be processed.
+    - directory (str): The directory containing the files.
+
     Returns:
-      master_dict, files_read, processed, first_file, last_file.
-    """
+    - master_dict (dict): Dictionary containing the processed file data.
+    - files_read (list): List of files that were successfully read.
+    - processed (int): Number of files that were processed.
+    - first_file (str): The first file that was processed.
+    - last_file (str): The last file that was processed.
+    '''
 
     files_read = []
     master_dict = {}
@@ -399,17 +403,16 @@ def process_files(file_list, directory):
 ### FUNCTION:
 def get_units_dict(sensor_list, master_dict):
     
-    """
-    Build a dictionary mapping each sensor in sensor_list to its unit,
-    based on the first file in master_dict that provides a value.
-    
+    '''
+    Build a dictionary mapping each sensor in sensor_list to its unit based on the first file in master_dict that provides a value.
+
     Args:
-      sensor_list (list): List of sensor names.
-      master_dict (dict): Master dictionary of parsed files.
-    
+    - sensor_list (list): List of sensor names.
+    - master_dict (dict): Master dictionary of parsed files.
+
     Returns:
-      units_dict (dict): Mapping from sensor name to its unit (or an empty string if not found).
-    """
+    - units_dict (dict): Mapping from sensor name to its unit (or an empty string if not found).
+    '''
 
     units_dict = {}
     for sensor in sensor_list:
@@ -424,24 +427,22 @@ def get_units_dict(sensor_list, master_dict):
 ### FUNCTION:
 def merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list):
     
-    """
-    Merge the flight and science DataFrames by creating a new column "time" in each,
-    then concatenates and sorts by "time". Also, build a dictionary of units for each sensor.
-    
-    For flight_df, "time" is computed from the column 'm_present_time',
-    and for science_df, "time" is computed from 'sci_m_present_time'.
-    
+    '''
+    Merge the flight and science DataFrames by creating a new column "time" in each, then concatenates and sorts by "time". Also, build a dictionary of units for each sensor.
+
+    For flight_df, "time" is computed from the column 'm_present_time'.
+    For science_df, "time" is computed from 'sci_m_present_time'.
+
     Args:
-      flight_df (pd.DataFrame): DataFrame from flight files.
-      science_df (pd.DataFrame): DataFrame from science files.
-      flight_master (dict): Master dictionary from flight files.
-      science_master (dict): Master dictionary from science files.
-      sensor_list (list): List of sensor names used.
-    
+    - flight_df (pd.DataFrame): DataFrame from flight files.
+    - science_df (pd.DataFrame): DataFrame from science files.
+    - flight_master (dict): Master dictionary from flight files.
+    - science_master (dict): Master dictionary from science files.
+    - sensor_list (list): List of sensor names used.
+
     Returns:
-      glider_df (pd.DataFrame): Merged DataFrame sorted by the new "time" column,
-                                with units stored in glider_df.attrs["units"].
-    """
+    - glider_df (pd.DataFrame): Merged DataFrame sorted by the new "time" column with units stored in glider_df.attrs["units"].
+    '''
 
     if not flight_df.empty and "m_present_time" in flight_df.columns:
         flight_df = flight_df.copy()
@@ -472,16 +473,16 @@ def merge_flight_science(flight_df, science_df, flight_master, science_master, s
 ### FUNCTION:
 def run_dataframe(input_directory, sensor_list):
     
-    """
+    '''
     Process sensor data from ASCII files in a directory and compile them into a single merged DataFrame.
     
     Args:
-      input_directory (str): Directory containing ASCII files.
-      sensor_list (list): List of sensors to include. If empty, all unique sensors are used.
+    - input_directory (str): Directory containing ASCII files.
+    - sensor_list (list): List of sensors to include. If empty, all unique sensors are used.
       
     Returns:
-      glider_df (pd.DataFrame): The merged sensor data with a "time" column, and unit metadata in attrs.
-    """
+    - glider_df (pd.DataFrame): The merged sensor data with a "time" column, and unit metadata in attrs.
+    '''
 
     flight_files, science_files = group_files_by_category(input_directory)
     
@@ -516,15 +517,15 @@ def run_dataframe(input_directory, sensor_list):
 ### CLASS:
 class DataFilterDialog(QDialog):
 
-    """
+    '''
     Create a dialog for adding multiple data filter criteria.
     
     Args:
-      dataframe (pd.DataFrame): The input dataframe to be filtered.
+    - dataframe (pd.DataFrame): The input dataframe to be filtered.
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     def __init__(self, dataframe, parent=None):
         super().__init__(parent)
@@ -535,15 +536,15 @@ class DataFilterDialog(QDialog):
     
     def initUI(self):
 
-        """
+        '''
         Initialize the filter dialog layout with a scroll area and buttons.
         
         Args:
-          None
+        - None
           
         Returns:
-          None
-        """
+        - None
+        '''
 
         self.setWindowTitle("Data Filter")
         self.setMinimumSize(500, 300)
@@ -568,18 +569,15 @@ class DataFilterDialog(QDialog):
     
     def add_filter_row(self):
 
-        """
-        Add a new filter row to the dialog.
-        
-        Each row contains a QLineEdit for the variable, a QComboBox for the operator,
-        and a QLineEdit for the value.
+        '''
+        Add a new filter row to the dialog. Each row contains a QLineEdit for the variable, a QComboBox for the operator, and a QLineEdit for the value.
         
         Args:
-          None
+        - None
           
         Returns:
-          None
-        """
+        - None
+        '''
 
         row_widget = QWidget()
         row_layout = QHBoxLayout(row_widget)
@@ -601,15 +599,15 @@ class DataFilterDialog(QDialog):
     
     def apply_filters(self):
 
-        """
+        '''
         Apply all filter rows to the dataframe and close the dialog.
         
         Args:
-          None
+        - None
           
         Returns:
-          None
-        """
+        - None
+        '''
 
         df_filtered = self.dataframe.copy()
         for var_edit, op_combo, val_edit in self.filter_rows:
@@ -636,15 +634,15 @@ class DataFilterDialog(QDialog):
 ### FUNCTION:
 def run_data_filter(dataframe):
 
-    """
+    '''
     Run the data filter dialog on the input dataframe.
     
     Args:
-      dataframe (pd.DataFrame): The input dataframe to filter.
+    - dataframe (pd.DataFrame): The input dataframe to filter.
       
     Returns:
-      filtered_df (pd.DataFrame): The filtered dataframe after applying user-selected criteria.
-    """
+    - filtered_df (pd.DataFrame): The filtered dataframe after applying user-selected criteria.
+    '''
 
     dialog = DataFilterDialog(dataframe)
     if dialog.exec() == QDialog.DialogCode.Accepted:

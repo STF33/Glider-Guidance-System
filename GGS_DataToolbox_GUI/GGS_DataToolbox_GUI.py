@@ -22,15 +22,15 @@ config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config",
 ### CLASS:
 class GUI_DataFileBox(QFrame):
     
-    """
+    '''
     A drag-and-drop file box for selecting data files.
-    
+
     Args:
-      parent (QWidget, optional): The parent widget.
-    
+    - parent (QWidget, optional): The parent widget.
+
     Returns:
-      None
-    """
+    - None
+    '''
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -48,30 +48,30 @@ class GUI_DataFileBox(QFrame):
 
     def dragEnterEvent(self, event):
         
-        """
+        '''
         Handle the drag enter event to accept file URLs.
-        
+
         Args:
-          event (QDragEnterEvent): The drag enter event.
-        
+        - event (QDragEnterEvent): The drag enter event.
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event):
         
-        """
+        '''
         Handle the drop event by collecting the dropped file paths and updating the label.
-        
+
         Args:
-          event (QDropEvent): The drop event.
-        
+        - event (QDropEvent): The drop event.
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         new_files = [url.toLocalFile() for url in event.mimeData().urls()]
         self.file_list.extend(new_files)
@@ -79,15 +79,15 @@ class GUI_DataFileBox(QFrame):
 
     def GUI_DataFileBox_Copy(self, script_directory):
         
-        """
+        '''
         Copy the files from the file list to the DBD_Files directory.
-        
+
         Args:
-          script_directory (str): The base directory where the DBD_Files folder exists.
-        
+        - script_directory (str): The base directory where the DBD_Files folder exists.
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         dbd_root = os.path.join(script_directory, "DBD_Files")
         os.makedirs(dbd_root, exist_ok=True)
@@ -98,15 +98,15 @@ class GUI_DataFileBox(QFrame):
 ### CLASS:
 class GUI_CacheFileBox(QFrame):
     
-    """
+    '''
     A drag-and-drop file box for selecting cache files.
-    
+
     Args:
-      parent (QWidget, optional): The parent widget.
-    
+    - parent (QWidget, optional): The parent widget.
+
     Returns:
-      None
-    """
+    - None
+    '''
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -124,30 +124,30 @@ class GUI_CacheFileBox(QFrame):
 
     def dragEnterEvent(self, event):
         
-        """
+        '''
         Handle the drag enter event to accept file URLs.
-        
+
         Args:
-          event (QDragEnterEvent): The drag enter event.
-        
+        - event (QDragEnterEvent): The drag enter event.
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event):
         
-        """
+        '''
         Handle the drop event by collecting the dropped file paths and updating the label.
-        
+
         Args:
-          event (QDropEvent): The drop event.
-        
+        - event (QDropEvent): The drop event.
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         new_files = [url.toLocalFile() for url in event.mimeData().urls()]
         self.file_list.extend(new_files)
@@ -155,15 +155,15 @@ class GUI_CacheFileBox(QFrame):
 
     def GUI_CacheFileBox_Copy(self, script_directory):
         
-        """
+        '''
         Copy the files from the file list to the cache folder.
-        
+
         Args:
-          script_directory (str): The base directory where the cache folder will be created.
-        
+        - script_directory (str): The base directory where the cache folder will be created.
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         cache_dir = os.path.join(script_directory, "cache")
         os.makedirs(cache_dir, exist_ok=True)
@@ -174,15 +174,15 @@ class GUI_CacheFileBox(QFrame):
 ### CLASS:
 class GUI_LogFileBox(QFrame):
     
-    """
+    '''
     A drag-and-drop file box for selecting log files.
     
     Args:
-      parent (QWidget, optional): The parent widget.
+    - parent (QWidget, optional): The parent widget.
     
     Returns:
-      None
-    """
+    - None
+    '''
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -200,30 +200,30 @@ class GUI_LogFileBox(QFrame):
 
     def dragEnterEvent(self, event):
         
-        """
+        '''
         Handle the drag enter event to accept file URLs.
         
         Args:
-          event (QDragEnterEvent): The drag enter event.
+        - event (QDragEnterEvent): The drag enter event.
         
         Returns:
-          None
-        """
+        - None
+        '''
 
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event):
         
-        """
+        '''
         Handle the drop event by collecting the dropped file paths and updating the label.
         
         Args:
-          event (QDropEvent): The drop event.
+        - event (QDropEvent): The drop event.
         
         Returns:
-          None
-        """
+        - None
+        '''
 
         new_files = [url.toLocalFile() for url in event.mimeData().urls()]
         self.file_list.extend(new_files)
@@ -231,15 +231,15 @@ class GUI_LogFileBox(QFrame):
 
     def GUI_LogFileBox_Copy(self, script_directory):
         
-        """
+        '''
         Copy the files from the file list to the Logfiles folder.
         
         Args:
-          script_directory (str): The base directory where the Logfiles folder will be created.
+        - script_directory (str): The base directory where the Logfiles folder will be created.
         
         Returns:
-          None
-        """
+        - None
+        '''
 
         log_dir = os.path.join(script_directory, "DBD_Files", "Logfiles")
         os.makedirs(log_dir, exist_ok=True)
@@ -250,15 +250,15 @@ class GUI_LogFileBox(QFrame):
 ### CLASS:
 class GUI_MainWindow(QWidget):
     
-    """
+    '''
     Main interface for the Data Toolbox GUI.
     
     Args:
-      None
+    - None
     
     Returns:
-      None
-    """
+    - None
+    '''
 
     def __init__(self):
         super().__init__()
@@ -276,6 +276,7 @@ class GUI_MainWindow(QWidget):
           "Plot": ("PRODUCTS", "run_plot"),
           "Excel": ("PRODUCTS", "run_excel"),
           "Data Sorter": ("PRODUCTS", "run_data_sorter"),
+          "Logfile Search": ("PRODUCTS", "run_logfile_search"),
           "Cleanup": ("ADVANCED", "run_data_cleanup")
         }
         
@@ -314,7 +315,7 @@ class GUI_MainWindow(QWidget):
         self.GUI_Main_CreateSection(right_section, "DECOMPRESSION", [self.options["Decompression"]])
         self.GUI_Main_CreateSection(right_section, "CONVERSION", [self.options["Ascii Conversion"]])
         self.GUI_Main_CreateSection(right_section, "DATA", [self.options["Dataframe"], self.options["Data Filter"]])
-        self.GUI_Main_CreateSection(right_section, "PRODUCTS", [self.options["Plot"], self.options["Excel"], self.options["Data Sorter"]])
+        self.GUI_Main_CreateSection(right_section, "PRODUCTS", [self.options["Plot"], self.options["Excel"], self.options["Data Sorter"], self.options["Logfile Search"]])
         self.GUI_Main_CreateSection(right_section, "ADVANCED", [self.options["Cleanup"]])
         
         self.runButton = QPushButton("Run")
@@ -328,17 +329,17 @@ class GUI_MainWindow(QWidget):
 
     def GUI_Main_CreateSection(self, layout, title, widgets):
         
-        """
+        '''
         Create a labeled section in the GUI and add the provided widgets.
         
         Args:
-          layout (QLayout): The parent layout to add the section to.
-          title (str): The title of the section.
-          widgets (list): A list of widgets or strings to add to the section.
+        - layout (QLayout): The parent layout to add the section to.
+        - title (str): The title of the section.
+        - widgets (list): A list of widgets or strings to add to the section.
         
         Returns:
-          None
-        """
+        - None
+        '''
 
         section_label = QLabel(title)
         section_label.setStyleSheet("font-size: 16px; font-weight: bold;")
@@ -352,15 +353,15 @@ class GUI_MainWindow(QWidget):
 
     def GUI_Main_ConfigLoad(self):
         
-        """
+        '''
         Load the configuration from the JSON file and update the GUI fields.
         
         Args:
-        None
+        - None
         
         Returns:
-        None
-        """
+        - None
+        '''
 
         if os.path.exists(config_path):
             with open(config_path, "r") as f:
@@ -376,15 +377,15 @@ class GUI_MainWindow(QWidget):
 
     def GUI_Main_ConfigSave(self):
         
-        """
+        '''
         Save the current GUI configuration to the JSON config file.
         
         Args:
-          None
+        - None
         
         Returns:
-          None
-        """
+        - None
+        '''
 
         sensor_text = self.sensor_list.toPlainText().strip()
         if sensor_text == "":
@@ -416,15 +417,15 @@ class GUI_MainWindow(QWidget):
 
     def GUI_Main_RunFunction(self):
         
-        """
+        '''
         Save the configuration, copy the dragged files to their designated folders, and run the main Data Toolbox function.
         
         Args:
-          None
-        
+        - None
+
         Returns:
-          None
-        """
+        - None
+        '''
 
         self.GUI_Main_ConfigSave()
         self.dataFileBox.GUI_DataFileBox_Copy(self.script_directory)
@@ -435,15 +436,15 @@ class GUI_MainWindow(QWidget):
 ### MAIN:
 if __name__ == "__main__":
     
-    """
+    '''
     Create the application, instantiate the GUI_MainWindow, and start the event loop.
     
     Args:
-      None
+    - None
     
     Returns:
-      None
-    """
+    - None
+    '''
 
     app = QApplication(sys.argv)
     window = GUI_MainWindow()

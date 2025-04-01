@@ -16,17 +16,17 @@ from openpyxl import load_workbook
 ### FUNCTION:
 def run_excel(root_directory, glider_info, data_frame):
 
-    """
+    '''
     Save the DataFrame to an Excel file.
 
     Args:
-      root_directory (str): The root directory from the configuration file.
-      glider_info (tuple): A tuple containing glider unit, version, and type information.
-      data_frame (pd.DataFrame): The DataFrame containing sensor data.
+    - root_directory (str): The root directory from the configuration file.
+    - glider_info (tuple): A tuple containing glider unit, version, and type information.
+    - data_frame (pd.DataFrame): The DataFrame containing sensor data.
 
     Returns:
-      None
-    """
+    - None
+    '''
     
     print(f"\n### RUNNING: EXCEL ###\n")
     

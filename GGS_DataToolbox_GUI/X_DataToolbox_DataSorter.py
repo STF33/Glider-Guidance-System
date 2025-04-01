@@ -17,16 +17,16 @@ from datetime import datetime
 ### FUNCTION:
 def organize_data_files(input_data_folder, output_folder):
 
-    """
+    '''
     Organize data files into mission-specific folders.
 
     Args:
-      input_data_folder (str): The directory containing the input data files.
-      output_folder (str): The directory where the organized data files will be saved.
+    - input_data_folder (str): The directory containing the input data files.
+    - output_folder (str): The directory where the organized data files will be saved.
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     file_groups = {}
 
@@ -104,16 +104,16 @@ def organize_data_files(input_data_folder, output_folder):
 ### FUNCTION:
 def organize_log_files(input_log_folder, output_folder):
 
-    """
+    '''
     Organize log files by matching them with corresponding data files.
 
     Args:
-      input_log_folder (str): The directory containing the input log files.
-      output_folder (str): The directory where the organized log files will be saved.
+    - input_log_folder (str): The directory containing the input log files.
+    - output_folder (str): The directory where the organized log files will be saved.
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     for filename in os.listdir(input_log_folder):
         file_path = os.path.join(input_log_folder, filename)
@@ -143,16 +143,16 @@ def organize_log_files(input_log_folder, output_folder):
 ### FUNCTION:
 def run_data_sorter(root_directory, glider_info):
 
-    """
+    '''
     Run the data sorting process to organize data and log files.
 
     Args:
-      root_directory (str): The root directory from the configuration file.
-      glider_info (tuple): A tuple containing glider unit, version, and type information.
+    - root_directory (str): The root directory from the configuration file.
+    - glider_info (tuple): A tuple containing glider unit, version, and type information.
       
     Returns:
-      None
-    """
+    - None
+    '''
     
     print(f"\n### RUNNING: DATA SORTER ###\n")
     

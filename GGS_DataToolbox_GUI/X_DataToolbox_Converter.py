@@ -14,15 +14,15 @@ import os
 ### FUNCTION:
 def ascii_converter(file_type):
 
-    """
+    '''
     Convert binary files of a specified type to ASCII format.
 
     Args:
-      file_type (str): The file extension of the binary files to convert.
+    - file_type (str): The file extension of the binary files to convert.
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
@@ -42,15 +42,15 @@ def ascii_converter(file_type):
 ### FUNCTION:
 def run_ascii_converter():
 
-    """
+    '''
     Run the ASCII conversion process for multiple binary file types.
 
     Args:
-      None
+    - None
       
     Returns:
-      None
-    """
+    - None
+    '''
     
     print(f"\n### RUNNING: CONVERTER ###\n")
     

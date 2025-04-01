@@ -15,23 +15,23 @@ from X_DataToolbox_Converter import *
 from X_DataToolbox_Decompression import *
 from X_DataToolbox_SensorTools import *
 from X_DataToolbox_Excel import *
+from X_DataToolbox_LogfileSearch import *
 
 # =========================
 
 ### FUNCTION:
 def GGS_DataToolbox_Main(config_name=None):
     
-    """
-    Process the glider guidance system data toolbox by running decompression, conversion,
-    data compilation, and product generation based on the provided configuration.
+    '''
+    Process the glider guidance system data toolbox by running decompression, conversion, data compilation, and product generation based on the provided configuration.
 
     Args:
-      config_name (str): The name of the config file without the extension.
-      path (str): The directory path to save output to. Options: 'local' or a specific directory path.
+    - config_name (str): The name of the config file without the extension.
+    - path (str): The directory path to save output to. Options: 'local' or a specific directory path.
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     current_directory = os.path.abspath(os.path.dirname(__file__))
 
@@ -98,6 +98,10 @@ def GGS_DataToolbox_Main(config_name=None):
             run_data_sorter(root_directory, glider_info)
         else:
             pass
+        if product_config.get('run_logfile_search'):
+            run_logfile_search(root_directory)
+        else:
+            pass
 
     if 'ADVANCED' in config:
         advanced_config = config['ADVANCED']
@@ -110,14 +114,14 @@ def GGS_DataToolbox_Main(config_name=None):
 ### MAIN:
 if __name__ == "__main__":
     
-    """
+    '''
     Create the application, run the main Data Toolbox function, and start the event loop.
 
     Args:
-      None
+    - None
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     GGS_DataToolbox_Main(config_name="config")

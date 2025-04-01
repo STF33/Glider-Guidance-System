@@ -14,16 +14,16 @@ import os
 ### FUNCTION:
 def file_decompression(file_type, new_extension):
 
-    """
+    '''
     Decompress files of a specified type to a new extension.
     
     Args:
-      file_type (str): The file extension of the compressed files to decompress.
-      new_extension (str): The new file extension after decompression.
+    - file_type (str): The file extension of the compressed files to decompress.
+    - new_extension (str): The new file extension after decompression.
       
     Returns:
-      None
-    """
+    - None
+    '''
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
@@ -43,15 +43,15 @@ def file_decompression(file_type, new_extension):
 ### FUNCTION:
 def run_file_decompression():
 
-    """
+    '''
     Run the decompression process for multiple file type mappings.
     
     Args:
-      None
+    - None
       
     Returns:
-      None
-    """
+    - None
+    '''
     
     print(f"\n### RUNNING: DECOMPRESSION ###\n")
     

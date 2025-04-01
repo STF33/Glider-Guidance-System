@@ -20,7 +20,8 @@
     "PRODUCTS": {
         "run_plot": false,
         "run_excel": false,
-        "run_data_sorter": false
+        "run_data_sorter": false,
+        "run_logfile_search": false
     },
     "ADVANCED": {
         "run_data_cleanup": true
