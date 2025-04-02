@@ -20,7 +20,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 # =========================
 
 ### CLASS:
-class InteractivePlotGUI(QWidget):
+class PlotGUI(QWidget):
 
     '''
     Create an interactive plot GUI using PyQt and Matplotlib.
@@ -221,6 +221,6 @@ def run_plot(dataframe):
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
-    plot_window = InteractivePlotGUI(dataframe)
+    plot_window = PlotGUI(dataframe)
     plot_window.show()
     
