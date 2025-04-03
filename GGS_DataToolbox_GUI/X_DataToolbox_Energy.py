@@ -100,6 +100,43 @@ class EnergyEvaluation(QDialog):
             }
             
             run_json(self.root_directory, self.glider_info, results_dict)
+
+        if glider_type == "Slocum Sentinel":
+            required_columns = ['m_bms1_batt_pack_0_inst_current', 'm_bms1_batt_pack_1_inst_current',
+                                'm_bms2_batt_pack_0_inst_current', 'm_bms2_batt_pack_1_inst_current',
+                                'm_bms3_batt_pack_0_inst_current', 'm_bms3_batt_pack_1_inst_current',
+                                'm_battery', 'm_battery_amp_hours_remaining', 'm_battery_watt_hours_remaining']
+    
+            if not all(col in self.dataframe.columns for col in required_columns):
+                print("Warning: Required columns are missing in the dataframe.")
+                return self.dataframe
+    
+            self.dataframe['time'] = pd.to_datetime(self.dataframe['time'])
+            self.dataframe.set_index('time', inplace=True)
+
+            daily_amp_hr_usage = self.dataframe['m_battery_amp_hours_remaining'].diff().resample('D').sum().mean()
+            
+            daily_watt_hr_usage = self.dataframe['m_battery_watt_hours_remaining'].diff().resample('D').sum().mean()
+
+            avg_bms1_pack0_coulomb_current = self.dataframe['m_bms1_batt_pack_0_inst_current'].mean()
+            avg_bms1_pack1_coulomb_current = self.dataframe['m_bms1_batt_pack_1_inst_current'].mean()
+            avg_bms2_pack0_coulomb_current = self.dataframe['m_bms2_batt_pack_0_inst_current'].mean()
+            avg_bms2_pack1_coulomb_current = self.dataframe['m_bms2_batt_pack_1_inst_current'].mean()
+            avg_bms3_pack0_coulomb_current = self.dataframe['m_bms3_batt_pack_0_inst_current'].mean()
+            avg_bms3_pack1_coulomb_current = self.dataframe['m_bms3_batt_pack_1_inst_current'].mean()
+            
+            results_dict = {
+                'Average Amp-Hour Usage per Day': daily_amp_hr_usage,
+                'Watt-Hour Usage per Day': daily_watt_hr_usage,
+                'Average bms1 pack0 Coulomb Current': avg_bms1_pack0_coulomb_current,
+                'Average bms1 pack1 Coulomb Current': avg_bms1_pack1_coulomb_current,
+                'Average bms2 pack0 Coulomb Current': avg_bms2_pack0_coulomb_current,
+                'Average bms2 pack1 Coulomb Current': avg_bms2_pack1_coulomb_current,
+                'Average bms3 pack0 Coulomb Current': avg_bms3_pack0_coulomb_current,
+                'Average bms4 pack1 Coulomb Current': avg_bms3_pack1_coulomb_current,
+            }
+            
+            run_json(self.root_directory, self.glider_info, results_dict)
         
         self.accept()
 

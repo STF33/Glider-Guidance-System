@@ -270,18 +270,14 @@ class GUI_MainWindow(QWidget):
         
         self.config_map = {
             "Decompression": ("DECOMPRESSION", "run_decompression"),
-
             "Ascii Conversion": ("CONVERSION", "run_conversion"),
-            
             "Dataframe": ("DATA", "run_dataframe"),
             "Data Filter": ("DATA", "run_data_filter"),
             "Logfile Search": ("DATA", "run_logfile_search"),
-
-            "Data Sorter": ("DATA", "run_data_sorter"), 
+            "Data Sorter": ("DATA", "run_data_sorter"),
             "Plot": ("PRODUCTS", "run_plot"),
             "Excel": ("PRODUCTS", "run_excel"),    
             "Energy Evaluation": ("PRODUCTS", "run_energy_evaluation"),
-
             "Cleanup": ("ADVANCED", "run_data_cleanup")
         }
         
