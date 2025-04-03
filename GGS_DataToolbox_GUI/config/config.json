@@ -15,13 +15,14 @@
     },
     "DATA": {
         "run_dataframe": false,
-        "run_data_filter": false
+        "run_data_filter": false,
+        "run_logfile_search": false,
+        "run_data_sorter": false
     },
     "PRODUCTS": {
         "run_plot": false,
         "run_excel": false,
-        "run_data_sorter": false,
-        "run_logfile_search": false
+        "run_energy_evaluation": false
     },
     "ADVANCED": {
         "run_data_cleanup": true

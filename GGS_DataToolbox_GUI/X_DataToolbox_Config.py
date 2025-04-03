@@ -52,11 +52,14 @@ def GGS_config_import(config_name):
             
             data_config = config['DATA']
             data_config['run_dataframe'] = data_config.get('run_dataframe', False)
+            data_config['run_data_filter'] = data_config.get('run_dataframe', False)
+            data_config['run_data_sorter'] = data_config.get('run_data_sorter', False)
+            data_config['run_logfile_search'] = data_config.get('run_logfile_search', False)
 
             product_config = config['PRODUCTS']
             product_config['run_plot'] = product_config.get('run_plot', False)
             product_config['run_excel'] = product_config.get('run_excel', False)
-            product_config['run_data_sorter'] = product_config.get('run_data_sorter', False)
+            product_config['run_energy_evaluation'] = product_config.get('run_energy_evaluation', False)
             
             advanced_config = config['ADVANCED']
             advanced_config['run_data_cleanup'] = advanced_config.get('run_data_cleanup', False)

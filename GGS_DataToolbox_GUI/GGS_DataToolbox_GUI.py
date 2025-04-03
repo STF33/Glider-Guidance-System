@@ -269,15 +269,20 @@ class GUI_MainWindow(QWidget):
         self.tasks = {}
         
         self.config_map = {
-          "Decompression": ("DECOMPRESSION", "run_decompression"),
-          "Ascii Conversion": ("CONVERSION", "run_conversion"),
-          "Dataframe": ("DATA", "run_dataframe"),
-          "Data Filter": ("DATA", "run_data_filter"),
-          "Plot": ("PRODUCTS", "run_plot"),
-          "Excel": ("PRODUCTS", "run_excel"),
-          "Data Sorter": ("PRODUCTS", "run_data_sorter"),
-          "Logfile Search": ("PRODUCTS", "run_logfile_search"),
-          "Cleanup": ("ADVANCED", "run_data_cleanup")
+            "Decompression": ("DECOMPRESSION", "run_decompression"),
+
+            "Ascii Conversion": ("CONVERSION", "run_conversion"),
+            
+            "Dataframe": ("DATA", "run_dataframe"),
+            "Data Filter": ("DATA", "run_data_filter"),
+            "Logfile Search": ("DATA", "run_logfile_search"),
+
+            "Data Sorter": ("DATA", "run_data_sorter"), 
+            "Plot": ("PRODUCTS", "run_plot"),
+            "Excel": ("PRODUCTS", "run_excel"),    
+            "Energy Evaluation": ("PRODUCTS", "run_energy_evaluation"),
+
+            "Cleanup": ("ADVANCED", "run_data_cleanup")
         }
         
         main_layout = QVBoxLayout()
@@ -314,8 +319,8 @@ class GUI_MainWindow(QWidget):
         self.GUI_Main_CreateSection(right_section, "SENSORS", ["List:", self.sensor_list])
         self.GUI_Main_CreateSection(right_section, "DECOMPRESSION", [self.options["Decompression"]])
         self.GUI_Main_CreateSection(right_section, "CONVERSION", [self.options["Ascii Conversion"]])
-        self.GUI_Main_CreateSection(right_section, "DATA", [self.options["Dataframe"], self.options["Data Filter"]])
-        self.GUI_Main_CreateSection(right_section, "PRODUCTS", [self.options["Plot"], self.options["Excel"], self.options["Data Sorter"], self.options["Logfile Search"]])
+        self.GUI_Main_CreateSection(right_section, "DATA", [self.options["Dataframe"], self.options["Data Filter"], self.options["Data Sorter"], self.options["Logfile Search"]])
+        self.GUI_Main_CreateSection(right_section, "PRODUCTS", [self.options["Plot"], self.options["Excel"], self.options["Energy Evaluation"]])
         self.GUI_Main_CreateSection(right_section, "ADVANCED", [self.options["Cleanup"]])
         
         self.runButton = QPushButton("Run")

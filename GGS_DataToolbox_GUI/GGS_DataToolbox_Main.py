@@ -16,6 +16,8 @@ from X_DataToolbox_Decompression import *
 from X_DataToolbox_SensorTools import *
 from X_DataToolbox_Excel import *
 from X_DataToolbox_LogfileSearch import *
+from X_DataToolbox_DataFilter import *
+from X_DataToolbox_Energy import *
 
 # =========================
 
@@ -83,6 +85,14 @@ def GGS_DataToolbox_Main(config_name=None):
             dataframe = run_data_filter(dataframe)
         else:
             pass
+        if data_config.get('run_data_sorter'):
+            run_data_sorter(root_directory, glider_info)
+        else:
+            pass
+        if data_config.get('run_logfile_search'):
+            run_logfile_search(root_directory)
+        else:
+            pass
 
     if 'PRODUCTS' in config:
         product_config = config['PRODUCTS']
@@ -94,12 +104,8 @@ def GGS_DataToolbox_Main(config_name=None):
             run_excel(root_directory, glider_info, dataframe)
         else:
             pass
-        if product_config.get('run_data_sorter'):
-            run_data_sorter(root_directory, glider_info)
-        else:
-            pass
-        if product_config.get('run_logfile_search'):
-            run_logfile_search(root_directory)
+        if product_config.get('run_energy_evaluation'):
+            run_energy_evaluation(root_directory, glider_info, dataframe)
         else:
             pass
 
