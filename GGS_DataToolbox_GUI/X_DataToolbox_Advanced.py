@@ -13,14 +13,15 @@ import json
 import os
 
 # =========================
+# CONFIG HANDLING
+# =========================
 
-### FUNCTION:
 def GGS_config_import(config_name):
-    
-    '''
+
+    ''' 
     Import a Glider Guidance System mission configuration from a JSON file.
     
-    Args:
+    Arguments:
     - config_name (str): Name of the configuration file to import.
       
     Returns:
@@ -28,10 +29,10 @@ def GGS_config_import(config_name):
     '''
 
     print(f"\n### IMPORTING GGS CONFIGURATION: {config_name} ###\n")
-
+    
     current_directory = os.path.dirname(__file__)
     config_path = os.path.join(current_directory, "config", f"{config_name}.json")
-
+    
     try:
         with open(config_path, 'r') as file:
             config = json.load(file)
@@ -43,7 +44,7 @@ def GGS_config_import(config_name):
            
             sensors_config = config['SENSORS']
             sensors_config['sensor_list'] = sensors_config.get('sensor_list', [])
-
+            
             decompression_config = config['DECOMPRESSION']
             decompression_config['run_decompression'] = decompression_config.get('run_decompression', False)
             
@@ -52,10 +53,10 @@ def GGS_config_import(config_name):
             
             data_config = config['DATA']
             data_config['run_dataframe'] = data_config.get('run_dataframe', False)
-            data_config['run_data_filter'] = data_config.get('run_dataframe', False)
+            data_config['run_data_filter'] = data_config.get('run_data_filter', False)
             data_config['run_data_sorter'] = data_config.get('run_data_sorter', False)
             data_config['run_logfile_search'] = data_config.get('run_logfile_search', False)
-
+            
             product_config = config['PRODUCTS']
             product_config['run_plot'] = product_config.get('run_plot', False)
             product_config['run_excel'] = product_config.get('run_excel', False)
@@ -67,18 +68,17 @@ def GGS_config_import(config_name):
     except Exception as e:
         print(f"Error during config import: {e}")
         return None
-
+    
     print("Configuration import success!")
-
+    
     return config
 
-### FUNCTION:
 def GGS_config_process(config, path="default"):
-    
-    '''
+
+    ''' 
     Process the imported configuration and create an output directory based on glider parameters.
     
-    Args:
+    Arguments:
     - config (dict): Glider Guidance System mission configuration.
     - path (str): Directory path to save output to. Use "default" to save to the user's Downloads directory.
       
@@ -87,7 +87,7 @@ def GGS_config_process(config, path="default"):
     '''
 
     print("\n### PROCESSING GGS CONFIGURATION ###\n")
-
+    
     try:
         glider_unit = config['GLIDER']['glider_unit']
     except:
@@ -103,14 +103,14 @@ def GGS_config_process(config, path="default"):
     except:
         glider_type = "UnknownType"
         print(f"Error using provided 'glider_type'. Defaulting glider type to 'UnknownType'.")
-
+    
     if path == "default":
         root_directory = os.path.join(os.path.expanduser("~"), "Downloads", f"GGS_{glider_unit}-{glider_version}-{glider_type}")
     else:
         root_directory = os.path.join(path, f"GGS_{glider_unit}-{glider_version}-{glider_type}")
     
     os.makedirs(root_directory, exist_ok=True)
-
+    
     output_str = "Configuration:\n"
     for section, settings in config.items():
         output_str += f"\n--> {section}\n"
@@ -123,3 +123,55 @@ def GGS_config_process(config, path="default"):
     print("\n")
     
     return root_directory
+
+# =========================
+# PROGRAM CLEANUP
+# =========================
+
+def define_directories_to_clean():
+
+    ''' 
+    Define directories that contain run-specific data files.
+    
+    Arguments:
+    - None
+      
+    Returns:
+    - directories_to_clean (list): A list of directory paths.
+    '''
+    
+    current_directory = os.path.dirname(__file__)
+    directories_to_clean = [
+        os.path.join(current_directory, 'DBD_Files'),
+        os.path.join(current_directory, 'DBD_Files', 'ProcessedAscii'),
+        os.path.join(current_directory, 'DBD_Files', 'Decompressed'),
+        os.path.join(current_directory, 'DBD_Files', 'Logfiles')
+    ]
+    
+    return directories_to_clean
+
+def run_data_cleanup(directories_to_clean):
+
+    ''' 
+    Delete data files in the specified directories.
+    
+    Arguments:
+    - directories_to_clean (list): A list of directory paths.
+      
+    Returns:
+    - None
+    '''
+
+    print(f"\n### RUNNING: DATA LIBRARY CLEANUP ###\n")
+    
+    for directory in directories_to_clean:
+        if os.path.exists(directory):
+            for item in os.listdir(directory):
+                item_path = os.path.join(directory, item)
+                if os.path.isfile(item_path) and item != '.gitignore':
+                    os.remove(item_path)
+                    print(f"Deleted file: {item_path}")
+                else:
+                    print(f"Skipped item: {item_path}")
+        else:
+            print(f"Directory does not exist: {directory}")
