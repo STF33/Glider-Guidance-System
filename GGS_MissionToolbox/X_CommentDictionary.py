@@ -535,7 +535,7 @@ def comment_dictionary(config_dictionary):
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"# Number of half cycles to do = {b_arg_value} = {num_yos_to_do} yos"
                     elif b_arg == "d_target_depth(m)":
                         b_arg_comments[behavior][sub_behavior][b_arg] = f"#"
-                        if -1 < b_arg_value < 1000:
+                        if -1 < b_arg_value <= 1000:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" Dive to {b_arg_value} meters" 
                         else:
                             b_arg_comments[behavior][sub_behavior][b_arg] += f" WARNING: OUT OF LIMITS"

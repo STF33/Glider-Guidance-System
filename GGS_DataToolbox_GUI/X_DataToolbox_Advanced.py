@@ -16,7 +16,7 @@ import os
 # CONFIG HANDLING
 # =========================
 
-def GGS_config_import(config_name):
+def config_import(config_name):
 
     ''' 
     Import a Glider Guidance System mission configuration from a JSON file.
@@ -63,7 +63,7 @@ def GGS_config_import(config_name):
             product_config['run_energy_evaluation'] = product_config.get('run_energy_evaluation', False)
             
             advanced_config = config['ADVANCED']
-            advanced_config['run_data_cleanup'] = advanced_config.get('run_data_cleanup', False)
+            advanced_config['cleanup_run'] = advanced_config.get('cleanup_run', False)
     
     except Exception as e:
         print(f"Error during config import: {e}")
@@ -73,7 +73,7 @@ def GGS_config_import(config_name):
     
     return config
 
-def GGS_config_process(config, path="default"):
+def config_process(config, path="default"):
 
     ''' 
     Process the imported configuration and create an output directory based on glider parameters.
@@ -128,7 +128,7 @@ def GGS_config_process(config, path="default"):
 # PROGRAM CLEANUP
 # =========================
 
-def define_directories_to_clean():
+def cleanup_define_directories():
 
     ''' 
     Define directories that contain run-specific data files.
@@ -150,7 +150,7 @@ def define_directories_to_clean():
     
     return directories_to_clean
 
-def run_data_cleanup(directories_to_clean):
+def cleanup_run(directories_to_clean):
 
     ''' 
     Delete data files in the specified directories.

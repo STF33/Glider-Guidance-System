@@ -13,8 +13,9 @@ import shutil
 import json
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QCheckBox, QLineEdit, QTextEdit, QTabWidget, QFormLayout, QGroupBox, QMessageBox, QMenuBar, QStatusBar)
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 
-from GGS_DataToolbox_Main import GGS_DataToolbox_Main
+from GGS_DataToolbox_Main import *
 from X_DataToolbox_Data import *
 from X_DataToolbox_Products import *
 from X_DataToolbox_Advanced import *
@@ -101,7 +102,7 @@ class FileDropBox(QFrame):
             shutil.copy(file, dest_folder)
         print(f"Files copied to {dest_folder}")
 
-class MainGUI(QMainWindow):
+class GGS_DataToolbox_GUI(QMainWindow):
 
     ''' 
     Main GUI window with a tabbed interface.
@@ -118,15 +119,17 @@ class MainGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Glider Guidance System: Data Toolbox")
+        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "XXX_GUI_Icon.png")
+        self.setWindowIcon(QIcon(icon_path))
         self.resize(900, 700)
         self.script_directory = os.path.dirname(os.path.abspath(__file__))
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         self.product_tabs = {}
-        self.initUI()
-        self.load_configuration()
+        self.GUI_init()
+        self.GUI_config_load()
 
-    def initUI(self):
+    def GUI_init(self):
 
         ''' 
         Initialize the main GUI user interface.
@@ -144,7 +147,7 @@ class MainGUI(QMainWindow):
         exit_action.triggered.connect(self.close)
         help_menu = menu_bar.addMenu("Help")
         about_action = help_menu.addAction("About")
-        about_action.triggered.connect(self.show_about)
+        about_action.triggered.connect(self.GUI_init_about)
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -152,10 +155,10 @@ class MainGUI(QMainWindow):
         self.tabs = QTabWidget()
         main_layout.addWidget(self.tabs)
         self.home_tab = QWidget()
-        self.init_home_tab()
+        self.GUI_init_home()
         self.tabs.addTab(self.home_tab, "Home")
 
-    def init_home_tab(self):
+    def GUI_init_home(self):
 
         ''' 
         Initialize the Home tab with configuration, file inputs, and processing options.
@@ -222,10 +225,10 @@ class MainGUI(QMainWindow):
         layout.addWidget(files_group)
         
         self.runButton = QPushButton("Run")
-        self.runButton.clicked.connect(self.run_process)
+        self.runButton.clicked.connect(self.GUI_run)
         layout.addWidget(self.runButton, alignment=Qt.AlignmentFlag.AlignCenter)
 
-    def show_about(self):
+    def GUI_init_about(self):
 
         ''' 
         Show an About message box.
@@ -237,9 +240,9 @@ class MainGUI(QMainWindow):
         - None
         '''
 
-        QMessageBox.information(self, "About", "Glider Guidance System Data Toolbox\nVersion 2.0")
+        QMessageBox.information(self, "About", "Glider Guidance System: Data Toolbox\nDeveloped by Sal Fricano\nTeledyne Webb Research // All Rights Reserved\n\nhttps://github.com/STF33/Glider-Guidance-System")
 
-    def load_configuration(self):
+    def GUI_config_load(self):
 
         ''' 
         Load configuration from JSON file and update GUI fields.
@@ -263,7 +266,7 @@ class MainGUI(QMainWindow):
                     self.options[option].setChecked(config[section][key])
             self.statusBar.showMessage("Configuration loaded", 3000)
 
-    def save_configuration(self):
+    def GUI_config_save(self):
 
         ''' 
         Save current configuration to JSON file.
@@ -303,30 +306,7 @@ class MainGUI(QMainWindow):
             json.dump(config, f, indent=4)
         self.statusBar.showMessage("Configuration saved", 3000)
 
-    def run_process(self):
-
-        ''' 
-        Save configuration, copy files to working directories, run main process, and add product tabs.
-        
-        Arguments:
-        - None
-        
-        Returns:
-        - None
-        '''
-
-        self.save_configuration()
-        self.dataFileBox.copy_files(os.path.join(self.script_directory, "DBD_Files"))
-        self.cacheFileBox.copy_files(os.path.join(self.script_directory, "cache"))
-        self.logFileBox.copy_files(os.path.join(self.script_directory, "DBD_Files", "Logfiles"))
-        self.statusBar.showMessage("Files copied. Running main process...", 3000)
-        dataframe, root_directory = GGS_DataToolbox_Main(config_name="config")
-        if self.options["Plot"].isChecked() and dataframe is not None:
-            self.add_plot_tab(dataframe)
-        if self.options["Energy Evaluation"].isChecked() and dataframe is not None:
-            self.add_energy_tab(dataframe, root_directory)
-
-    def add_plot_tab(self, dataframe):
+    def GUI_tab_plot(self, dataframe):
 
         ''' 
         Add a Plot tab if not already present.
@@ -339,14 +319,14 @@ class MainGUI(QMainWindow):
         '''
 
         if "Plot" not in self.product_tabs:
-            plot_widget = PlotGUI(dataframe)
+            plot_widget = plot(dataframe)
             self.product_tabs["Plot"] = plot_widget
             self.tabs.addTab(plot_widget, "Plot")
             self.statusBar.showMessage("Plot tab added", 3000)
         else:
             self.statusBar.showMessage("Plot tab already exists", 3000)
 
-    def add_energy_tab(self, dataframe, root_directory):
+    def GUI_tab_energy(self, dataframe, root_directory):
 
         ''' 
         Add an Energy Evaluation tab if not already present.
@@ -361,15 +341,38 @@ class MainGUI(QMainWindow):
 
         if "Energy Evaluation" not in self.product_tabs:
             glider_info = (self.glider_unit.text(), self.glider_version.text(), self.glider_type.text())
-            energy_widget = run_energy_evaluation(root_directory, glider_info, dataframe)
+            energy_widget = energy_run(root_directory, glider_info, dataframe)
             self.product_tabs["Energy Evaluation"] = energy_widget
             self.tabs.addTab(energy_widget, "Energy Eval")
             self.statusBar.showMessage("Energy Evaluation tab added", 3000)
         else:
             self.statusBar.showMessage("Energy Evaluation tab already exists", 3000)
 
+    def GUI_run(self):
+
+        ''' 
+        Save configuration, copy files to working directories, run main process, and add product tabs.
+        
+        Arguments:
+        - None
+        
+        Returns:
+        - None
+        '''
+
+        self.GUI_config_save()
+        self.dataFileBox.copy_files(os.path.join(self.script_directory, "DBD_Files"))
+        self.cacheFileBox.copy_files(os.path.join(self.script_directory, "cache"))
+        self.logFileBox.copy_files(os.path.join(self.script_directory, "DBD_Files", "Logfiles"))
+        self.statusBar.showMessage("Files copied. Running main process...", 3000)
+        dataframe, root_directory = GGS_DataToolbox_Main(config_name="config")
+        if self.options["Plot"].isChecked() and dataframe is not None:
+            self.GUI_tab_plot(dataframe)
+        if self.options["Energy Evaluation"].isChecked() and dataframe is not None:
+            self.GUI_tab_energy(dataframe, root_directory)
+            
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainGUI()
+    window = GGS_DataToolbox_GUI()
     window.show()
     sys.exit(app.exec())

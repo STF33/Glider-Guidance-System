@@ -19,7 +19,7 @@ import pandas as pd
 # ASCII CONVERSION
 # =========================
 
-def ascii_converter(file_type):
+def converter_exe(file_type):
 
     ''' 
     Convert binary files of a specified type to ASCII format.
@@ -46,7 +46,7 @@ def ascii_converter(file_type):
     
     print(f'Converting {file_type} files to ASCII complete')
 
-def run_ascii_converter():
+def converter_run():
 
     ''' 
     Run the ASCII conversion process for multiple binary file types.
@@ -66,13 +66,13 @@ def run_ascii_converter():
     
     file_types = ['.sbd', '.mbd', '.dbd', '.tbd', '.nbd', '.ebd']
     for file_type in file_types:
-        ascii_converter(file_type)
+        converter_exe(file_type)
 
 # =========================
 # FILE DECOMPRESSION
 # =========================
 
-def file_decompression(file_type, new_extension):
+def decompressor_exe(file_type, new_extension):
 
     '''
     Decompress files of a specified type to a new extension.
@@ -100,7 +100,7 @@ def file_decompression(file_type, new_extension):
     
     print(f'Decompressing {file_type} files complete')
 
-def run_file_decompression():
+def decompressor_run():
 
     '''
     Run the decompression process for multiple file type mappings.
@@ -130,7 +130,7 @@ def run_file_decompression():
     }
     
     for file_type, new_extension in file_mappings.items():
-        file_decompression(file_type, new_extension)
+        decompressor_exe(file_type, new_extension)
 
 # =========================
 # DATA HANDLING
@@ -139,7 +139,7 @@ def run_file_decompression():
 FLIGHT_EXT_PRIORITY = {'.dbd': 1, '.mbd': 2, '.sbd': 3}
 SCIENCE_EXT_PRIORITY = {'.ebd': 1, '.nbd': 2, '.tbd': 3}
 
-def read_ascii(directory, file_name):
+def glider_read_ascii(directory, file_name):
 
     ''' 
     Read and parse an ASCII file into a dictionary format.
@@ -258,9 +258,9 @@ def read_ascii(directory, file_name):
     
     return result, file_identifier
 
-def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_files=None):
+def glider_dbd_dictionary(directory, files_read=None, max_files=30, selected_files=None):
 
-    ''' 
+    '''
     Convert a list of ASCII files into a master dictionary.
     
     If selected_files is provided, only those files (full file names) are processed.
@@ -300,7 +300,7 @@ def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_fil
             continue
         if any(file.endswith(ext) for ext in valid_extensions):
             try:
-                result, file_id = read_ascii(directory, file)
+                result, file_id = glider_read_ascii(directory, file)
                 file_key = os.path.splitext(file)[0]
                 master_dict[file_key] = result
                 files_read.append(file)
@@ -317,15 +317,15 @@ def dbd_directory_to_dict(directory, files_read=None, max_files=30, selected_fil
         print("No files processed.")
     return master_dict, files_read, processed, first_file, last_file
 
-def pull_sensor_rate(sensor, master_dict):
+def glider_sensor_rate(sensor, master_dict):
 
-    ''' 
+    '''
     Retrieve the data rate for a specified sensor from the master dictionary.
     
     Arguments:
     - sensor (str): Sensor name.
     - master_dict (dict): Master dictionary of parsed files.
-      
+    
     Returns:
     - rate (str): Sensor rate from the first file that contains it, or None.
     '''
@@ -335,7 +335,7 @@ def pull_sensor_rate(sensor, master_dict):
             return content["data"][sensor]["rate"]
     return None
 
-def pull_sensor_units(sensor, master_dict):
+def glider_sensor_units(sensor, master_dict):
 
     ''' 
     Retrieve the units for a specified sensor from the master dictionary.
@@ -353,7 +353,7 @@ def pull_sensor_units(sensor, master_dict):
             return content["data"][sensor].get("units", "")
     return None
 
-def pull_sensor_data(sensor, master_dict):
+def glider_sensor_data(sensor, master_dict):
 
     ''' 
     Retrieve the concatenated data values for a specified sensor across all files.
@@ -372,7 +372,7 @@ def pull_sensor_data(sensor, master_dict):
             data.extend(content["data"][sensor]["values"])
     return data
 
-def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
+def glider_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
 
     ''' 
     Retrieve data for a list of sensors from the master dictionary and append it to a DataFrame.
@@ -389,7 +389,7 @@ def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
     data_dict = {}
     for sensor in sensor_list:
         try:
-            sensor_values = pull_sensor_data(sensor, master_dict)
+            sensor_values = glider_sensor_data(sensor, master_dict)
             data_dict[sensor] = sensor_values
         except Exception as e:
             print(f"Warning: Could not retrieve data for sensor '{sensor}': {e}")
@@ -404,7 +404,7 @@ def pull_sensor_list_data(sensor_list, chosen_dataframe, master_dict):
     chosen_dataframe = pd.concat([chosen_dataframe, df_new], ignore_index=True)
     return chosen_dataframe
 
-def group_files_by_category(directory):
+def glider_group_file_category(directory):
 
     ''' 
     Group files (ending with ".asc") into flight and science groups based on their extension.
@@ -431,7 +431,7 @@ def group_files_by_category(directory):
             science_files.append(file)
     return flight_files, science_files
 
-def select_priority_files(file_list, priority_map):
+def glider_select_priority(file_list, priority_map):
 
     ''' 
     From a list of files (all ending with ".asc"), group by their base name (excluding the extension part before ".asc")
@@ -457,10 +457,10 @@ def select_priority_files(file_list, priority_map):
         selected_files.append(best_file)
     return selected_files
 
-def process_files(file_list, directory):
+def glider_process_files(file_list, directory):
 
     ''' 
-    Process a given list of files from the specified directory using read_ascii.
+    Process a given list of files from the specified directory using glider_read_ascii.
     
     Arguments:
     - file_list (list): List of files to be processed.
@@ -481,7 +481,7 @@ def process_files(file_list, directory):
     last_file = None
     for file in file_list:
         try:
-            result, file_id = read_ascii(directory, file)
+            result, file_id = glider_read_ascii(directory, file)
             file_key = os.path.splitext(file)[0]
             master_dict[file_key] = result
             files_read.append(file)
@@ -498,7 +498,7 @@ def process_files(file_list, directory):
         print("No files processed.")
     return master_dict, files_read, processed, first_file, last_file
 
-def get_units_dict(sensor_list, master_dict):
+def glider_units_dictionary(sensor_list, master_dict):
 
     ''' 
     Build a dictionary mapping each sensor in sensor_list to its unit based on the first file in master_dict that provides a value.
@@ -521,7 +521,7 @@ def get_units_dict(sensor_list, master_dict):
         units_dict[sensor] = unit
     return units_dict
 
-def merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list):
+def glider_merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list):
 
     ''' 
     Merge the flight and science DataFrames by creating a new column "time" in each, then concatenate and sort by "time".
@@ -559,11 +559,11 @@ def merge_flight_science(flight_df, science_df, flight_master, science_master, s
     combined_master = {}
     combined_master.update(flight_master)
     combined_master.update(science_master)
-    units_dict = get_units_dict(sensor_list, combined_master)
+    units_dict = glider_units_dictionary(sensor_list, combined_master)
     glider_df.attrs["units"] = units_dict
     return glider_df
 
-def run_dataframe(input_directory, sensor_list):
+def glider_dataframe_run(input_directory, sensor_list):
 
     ''' 
     Process sensor data from ASCII files in a directory and compile them into a single merged DataFrame.
@@ -576,13 +576,13 @@ def run_dataframe(input_directory, sensor_list):
     - glider_df (pd.DataFrame): The merged sensor data with a "time" column, and unit metadata in attrs.
     '''
 
-    flight_files, science_files = group_files_by_category(input_directory)
-    selected_flight = select_priority_files(flight_files, FLIGHT_EXT_PRIORITY)
-    selected_science = select_priority_files(science_files, SCIENCE_EXT_PRIORITY)
+    flight_files, science_files = glider_group_file_category(input_directory)
+    selected_flight = glider_select_priority(flight_files, FLIGHT_EXT_PRIORITY)
+    selected_science = glider_select_priority(science_files, SCIENCE_EXT_PRIORITY)
     print("Processing flight files:")
-    flight_master, _, flight_processed, f_first, f_last = process_files(selected_flight, input_directory)
+    flight_master, _, flight_processed, f_first, f_last = glider_process_files(selected_flight, input_directory)
     print("Processing science files:")
-    science_master, _, science_processed, s_first, s_last = process_files(selected_science, input_directory)
+    science_master, _, science_processed, s_first, s_last = glider_process_files(selected_science, input_directory)
     if not sensor_list:
         flight_sensors = set()
         for content in flight_master.values():
@@ -593,10 +593,10 @@ def run_dataframe(input_directory, sensor_list):
         sensor_list = list(flight_sensors.union(science_sensors))
         print(f"Sensor list was empty. Using union of all sensors: {sensor_list}")
     flight_df = pd.DataFrame()
-    flight_df = pull_sensor_list_data(sensor_list, flight_df, flight_master)
+    flight_df = glider_sensor_list_data(sensor_list, flight_df, flight_master)
     science_df = pd.DataFrame()
-    science_df = pull_sensor_list_data(sensor_list, science_df, science_master)
-    glider_df = merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list)
+    science_df = glider_sensor_list_data(sensor_list, science_df, science_master)
+    glider_df = glider_merge_flight_science(flight_df, science_df, flight_master, science_master, sensor_list)
     return glider_df
 
 # =========================
@@ -611,7 +611,7 @@ OPERATORS = {
     '>': lambda series, val: series > val
 }
 
-class DataFilter(QDialog):
+class datafilter(QDialog):
 
     ''' 
     Create a dialog for adding multiple data filter criteria.
@@ -628,9 +628,9 @@ class DataFilter(QDialog):
         self.dataframe = dataframe.copy()
         self.filter_rows = []
         self.filtered_df = None
-        self.initUI()
+        self.datafilter_init()
     
-    def initUI(self):
+    def datafilter_init(self):
 
         ''' 
         Initialize the filter dialog layout with a scroll area and buttons.
@@ -656,14 +656,14 @@ class DataFilter(QDialog):
         self.layout.addWidget(self.scroll)
         
         self.addFilterButton = QPushButton("+ Add Filter")
-        self.addFilterButton.clicked.connect(self.add_filter_row)
+        self.addFilterButton.clicked.connect(self.datafilter_add_filter)
         self.layout.addWidget(self.addFilterButton)
         
         self.runFilterButton = QPushButton("Run Data Filter")
-        self.runFilterButton.clicked.connect(self.apply_filters)
+        self.runFilterButton.clicked.connect(self.datafilter_apply_filters)
         self.layout.addWidget(self.runFilterButton)
     
-    def add_filter_row(self):
+    def datafilter_add_filter(self):
 
         ''' 
         Add a new filter row to the dialog. Each row contains a QLineEdit for the variable,
@@ -694,7 +694,7 @@ class DataFilter(QDialog):
         self.filterLayout.addWidget(row_widget)
         self.filter_rows.append((var_edit, op_combo, val_edit))
     
-    def apply_filters(self):
+    def datafilter_apply_filters(self):
 
         ''' 
         Apply all filter rows to the dataframe and close the dialog.
@@ -728,7 +728,7 @@ class DataFilter(QDialog):
         self.filtered_df = df_filtered
         self.accept()
 
-def run_data_filter(dataframe):
+def datafilter_run(dataframe):
 
     ''' 
     Run the data filter dialog on the input dataframe.
@@ -740,7 +740,7 @@ def run_data_filter(dataframe):
     - filtered_df (pd.DataFrame): The filtered dataframe after applying user-selected criteria.
     '''
 
-    dialog = DataFilter(dataframe)
+    dialog = datafilter(dataframe)
     if dialog.exec() == QDialog.DialogCode.Accepted:
         return dialog.filtered_df
     else:

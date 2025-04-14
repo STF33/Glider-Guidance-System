@@ -26,7 +26,7 @@ import json
 
 # =========================
 
-class PlotGUI(QWidget):
+class plot(QWidget):
 
     ''' 
     Create an interactive plot GUI using PyQt and Matplotlib.
@@ -44,9 +44,9 @@ class PlotGUI(QWidget):
         self.selected_variables = []
         self.variable_colors = {}
         self.available_colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-        self.initUI()
+        self.plot_init()
     
-    def initUI(self):
+    def plot_init(self):
 
         ''' 
         Initialize the interactive plot GUI layout, including the plot area and control panel.
@@ -86,13 +86,13 @@ class PlotGUI(QWidget):
         top_control_layout.addWidget(QLabel("Select Variable:"))
         top_control_layout.addWidget(self.variable_selector)
         self.add_remove_button = QPushButton("Add/Remove")
-        self.add_remove_button.clicked.connect(self.toggle_variable)
+        self.add_remove_button.clicked.connect(self.plot_toggle_variable)
         top_control_layout.addWidget(self.add_remove_button)
         control_layout.addLayout(top_control_layout)
         self.variable_list = QListWidget()
         control_layout.addWidget(self.variable_list)
         self.plot_button = QPushButton("Update Plot")
-        self.plot_button.clicked.connect(self.update_plot)
+        self.plot_button.clicked.connect(self.plot_update_plot)
         control_layout.addWidget(self.plot_button)
         splitter.addWidget(control_widget)
         splitter.setStretchFactor(1, 1)
@@ -101,7 +101,7 @@ class PlotGUI(QWidget):
         self.setLayout(main_layout)
         self.setWindowTitle("Interactive Plot GUI")
     
-    def toggle_variable(self):
+    def plot_toggle_variable(self):
 
         ''' 
         Toggle the inclusion of a variable for plotting when the user clicks the "Add/Remove" button.
@@ -131,7 +131,7 @@ class PlotGUI(QWidget):
             item.setForeground(QColor(color))
             self.variable_list.addItem(item)
     
-    def update_plot(self):
+    def plot_update_plot(self):
 
         ''' 
         Update the plot based on the selected variables, grouping y-axes by unit and adjusting layout.
@@ -207,26 +207,26 @@ class PlotGUI(QWidget):
         
         self.canvas.draw()
 
-def run_plot(dataframe):
+def plot_run(dataframe):
 
     ''' 
-    Create and return an instance of PlotGUI with the provided dataframe.
+    Create and return an instance of plot with the provided dataframe.
     This widget can then be embedded within a tab of the main GUI.
     
     Arguments:
     - dataframe (pd.DataFrame): The merged sensor data containing a "time" column and sensor values.
       
     Returns:
-    - plot_widget (PlotGUI): The PlotGUI widget ready for embedding.
+    - plot_widget (plot): The plot widget ready for embedding.
     '''
 
-    return PlotGUI(dataframe)
+    return plot(dataframe)
 
 # =========================
 # EXCEL PROCESSING
 # =========================
 
-def run_excel(root_directory, glider_info, data_frame):
+def excel_run(root_directory, glider_info, data_frame):
 
     ''' 
     Save the DataFrame to an Excel file.
@@ -260,7 +260,7 @@ def run_excel(root_directory, glider_info, data_frame):
 # DATA SORTING
 # =========================
 
-def organize_data_files(input_data_folder, output_folder):
+def datasorter_organize_data_files(input_data_folder, output_folder):
 
     ''' 
     Organize data files into mission-specific folders.
@@ -346,7 +346,7 @@ def organize_data_files(input_data_folder, output_folder):
         if sys_log_exists:
             shutil.copy(sys_log_path, mission_folder)
 
-def organize_log_files(input_log_folder, output_folder):
+def datasorter_organize_log_files(input_log_folder, output_folder):
 
     ''' 
     Organize log files by matching them with corresponding data files.
@@ -382,7 +382,7 @@ def organize_log_files(input_log_folder, output_folder):
                                     shutil.move(src_file, dest_file)
                                     break
 
-def run_data_sorter(root_directory, glider_info):
+def datasorter_run(root_directory, glider_info):
 
     ''' 
     Run the data sorting process to organize data and log files.
@@ -398,21 +398,21 @@ def run_data_sorter(root_directory, glider_info):
     print(f"\n### RUNNING: DATA SORTER ###\n")
     datetime_string = datetime.now().strftime("%Y%m%dT%H%M%S")
     glider_unit, glider_version, glider_type = glider_info
-    data_sort_directory = os.path.join(root_directory, f"GliderDataSorter")
+    data_sort_directory = os.path.join(root_directory, f"DataSorter")
     runtime_directory = os.path.join(data_sort_directory, f"{glider_unit}-{glider_type}-{glider_version}-{datetime_string}")
     os.makedirs(runtime_directory, exist_ok=True)
     current_directory = os.path.abspath(os.path.dirname(__file__))
     logfile_directory = os.path.join(current_directory, 'DBD_Files', 'Logfiles')
     data_directory = os.path.join(current_directory, 'DBD_Files')
-    organize_data_files(data_directory, runtime_directory)
-    organize_log_files(logfile_directory, runtime_directory)
+    datasorter_organize_data_files(data_directory, runtime_directory)
+    datasorter_organize_log_files(logfile_directory, runtime_directory)
     print(f"\nGlider Data/Log Files saved to: {runtime_directory}\n")
 
 # =========================
 # LOGFILE SEARCH
 # =========================
 
-class LogfileSearchDialog(QDialog):
+class logsearch(QDialog):
 
     ''' 
     Create a popup dialog to collect multiple logfile search strings from the user.
@@ -428,9 +428,9 @@ class LogfileSearchDialog(QDialog):
         super().__init__(parent)
         self.search_strings = []
         self.filter_rows = []
-        self.initUI()
+        self.logsearch_init()
     
-    def initUI(self):
+    def logsearch_init(self):
 
         ''' 
         Initialize the dialog layout.
@@ -456,16 +456,16 @@ class LogfileSearchDialog(QDialog):
         self.layout.addWidget(self.scrollArea)
         
         self.addButton = QPushButton("+ Add Search String")
-        self.addButton.clicked.connect(self.add_search_row)
+        self.addButton.clicked.connect(self.logsearch_add_search)
         self.layout.addWidget(self.addButton)
         
         self.runButton = QPushButton("Run Logfile Search")
-        self.runButton.clicked.connect(self.apply_search)
+        self.runButton.clicked.connect(self.logsearch_apply_search)
         self.layout.addWidget(self.runButton)
         
-        self.add_search_row()
+        self.logsearch_add_search()
     
-    def add_search_row(self):
+    def logsearch_add_search(self):
 
         ''' 
         Add a new row containing a QLineEdit for entering a search string.
@@ -485,7 +485,7 @@ class LogfileSearchDialog(QDialog):
         self.scrollLayout.addWidget(rowWidget)
         self.filter_rows.append(searchEdit)
     
-    def apply_search(self):
+    def logsearch_apply_search(self):
 
         ''' 
         Gather non-empty search strings from all rows and close the dialog.
@@ -507,7 +507,7 @@ class LogfileSearchDialog(QDialog):
             return
         self.accept()
 
-def run_logfile_search(root_directory):
+def logsearch_run(root_directory):
 
     ''' 
     Run the logfile search process.
@@ -519,7 +519,9 @@ def run_logfile_search(root_directory):
     - None
     '''
 
-    dialog = LogfileSearchDialog()
+    print(f"\n### RUNNING: LOGFILE SEARCH ###\n")
+
+    dialog = logsearch()
     if dialog.exec() == QDialog.DialogCode.Accepted:
         search_strings = dialog.search_strings
     else:
@@ -553,75 +555,7 @@ def run_logfile_search(root_directory):
 # ENERGY EVALUATION
 # =========================
 
-def determine_gauge_max(value):
-
-    ''' 
-    Return a reasonable maximum for the gauge based on the value.
-    
-    Arguments:
-    - value (float or int): The value for which to determine a gauge maximum.
-      
-    Returns:
-    - (int): A suitable maximum value for the gauge.
-    '''
-
-    if value <= 10:
-        return 10
-    elif value <= 100:
-        return 100
-    elif value <= 1000:
-        return 1000
-    else:
-        return int(value * 1.2)
-
-class EnergyGaugeWidget(QWidget):
-
-    ''' 
-    A widget that displays a single energy metric as a gauge.
-    Uses QDial (read-only) to simulate a gauge along with a label showing the metric and value.
-    
-    Arguments:
-    - metric_name (str): The name of the energy metric.
-    - value (float or int): The evaluated value of the metric.
-    - parent (QWidget, optional): Parent widget.
-      
-    Returns:
-    - None
-    '''
-
-    def __init__(self, metric_name, value, parent=None):
-        super().__init__(parent)
-        self.metric_name = metric_name
-        self.value = value
-        self.max_value = determine_gauge_max(value)
-        self.initUI()
-    
-    def initUI(self):
-
-        ''' 
-        Initialize the energy gauge widget layout.
-        
-        Arguments:
-        - None
-        
-        Returns:
-        - None
-        '''
-
-        layout = QVBoxLayout(self)
-        self.dial = QDial()
-        self.dial.setMinimum(0)
-        self.dial.setMaximum(self.max_value)
-        self.dial.setValue(min(int(self.value), self.max_value))
-        self.dial.setNotchesVisible(True)
-        self.dial.setEnabled(False)
-        layout.addWidget(self.dial)
-        self.label = QLabel(f"{self.metric_name}:\n{self.value:.2f}")
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
-
-class EnergyEvaluationTab(QWidget):
+class energy(QWidget):
 
     ''' 
     A widget for energy evaluation that integrates into the main GUI as a tab.
@@ -644,9 +578,9 @@ class EnergyEvaluationTab(QWidget):
         self.glider_info = glider_info
         self.dataframe = dataframe.copy()
         self.results = {}
-        self.initUI()
+        self.energy_init()
     
-    def initUI(self):
+    def energy_init(self):
 
         ''' 
         Initialize the energy evaluation tab layout with controls and gauge display area.
@@ -666,22 +600,22 @@ class EnergyEvaluationTab(QWidget):
         control_layout.addWidget(self.type_label)
         
         self.comboBox = QComboBox()
-        self.comboBox.addItems(["Slocum G3s", "Slocum Sentinel"])
+        self.comboBox.addItems(["Slocum G3s (.dbd)", "Slocum G3s (.sbd)", "Slocum Sentinel (.dbd)", "Slocum Sentinel (.sbd)"])
         control_layout.addWidget(self.comboBox)
         
         self.runButton = QPushButton("Run Energy Evaluation")
-        self.runButton.clicked.connect(self.run_evaluation)
+        self.runButton.clicked.connect(self.energy_evaluation)
         control_layout.addWidget(self.runButton)
         main_layout.addLayout(control_layout)
         
-        self.gaugeArea = QWidget()
-        self.gaugeLayout = QGridLayout(self.gaugeArea)
-        self.gaugeArea.setLayout(self.gaugeLayout)
-        main_layout.addWidget(self.gaugeArea)
+        self.resultsArea = QWidget()
+        self.resultsLayout = QVBoxLayout(self.resultsArea)
+        self.resultsArea.setLayout(self.resultsLayout)
+        main_layout.addWidget(self.resultsArea)
         
         self.setLayout(main_layout)
     
-    def run_evaluation(self):
+    def energy_evaluation(self):
 
         ''' 
         Run the energy evaluation based on the selected glider type and update the gauge display.
@@ -694,9 +628,9 @@ class EnergyEvaluationTab(QWidget):
         '''
 
         glider_type = self.comboBox.currentText()
-        results_dict = {}
+        energy_dictionary = {}
         
-        if glider_type == "Slocum G3s":
+        if glider_type == "Slocum G3s (.dbd)":
             required_columns = ['m_coulomb_amphr_total', 'm_coulomb_current', 'm_battery', 'time']
             if not all(col in self.dataframe.columns for col in required_columns):
                 QMessageBox.warning(self, "Missing Data", "Required columns are missing in the dataframe for Slocum G3s.")
@@ -707,13 +641,13 @@ class EnergyEvaluationTab(QWidget):
             daily_amp_hr_usage = df['m_coulomb_amphr_total'].diff().resample('D').sum().mean()
             daily_watt_hr_usage = (df['m_coulomb_amphr_total'].diff() * df['m_battery']).resample('D').sum().mean()
             avg_coulomb_current = df['m_coulomb_current'].mean()
-            results_dict = {
+            energy_dictionary = {
                 'Average Amp-Hour Usage per Day': daily_amp_hr_usage,
                 'Watt-Hour Usage per Day': daily_watt_hr_usage,
                 'Average Coulomb Current': avg_coulomb_current
             }
         
-        elif glider_type == "Slocum Sentinel":
+        elif glider_type == "Slocum Sentinel (.dbd)":
             required_columns = [
                 'm_bms1_batt_pack_0_inst_current', 'm_bms1_batt_pack_1_inst_current',
                 'm_bms2_batt_pack_0_inst_current', 'm_bms2_batt_pack_1_inst_current',
@@ -734,7 +668,7 @@ class EnergyEvaluationTab(QWidget):
             avg_bms2_pack1 = df['m_bms2_batt_pack_1_inst_current'].mean()
             avg_bms3_pack0 = df['m_bms3_batt_pack_0_inst_current'].mean()
             avg_bms3_pack1 = df['m_bms3_batt_pack_1_inst_current'].mean()
-            results_dict = {
+            energy_dictionary = {
                 'Average Amp-Hour Usage per Day': daily_amp_hr_usage,
                 'Watt-Hour Usage per Day': daily_watt_hr_usage,
                 'Average BMS1 Pack0 Current': avg_bms1_pack0,
@@ -748,24 +682,18 @@ class EnergyEvaluationTab(QWidget):
             QMessageBox.warning(self, "Unknown Glider Type", "The selected glider type is not recognized.")
             return
         
-        run_json(self.root_directory, self.glider_info, results_dict)
+        energy_json(self.root_directory, self.glider_info, energy_dictionary)
         
-        for i in reversed(range(self.gaugeLayout.count())):
-            widget_to_remove = self.gaugeLayout.itemAt(i).widget()
-            self.gaugeLayout.removeWidget(widget_to_remove)
+        for i in reversed(range(self.resultsLayout.count())):
+            widget_to_remove = self.resultsLayout.itemAt(i).widget()
+            self.resultsLayout.removeWidget(widget_to_remove)
             widget_to_remove.setParent(None)
         
-        row = 0
-        col = 0
-        for metric, value in results_dict.items():
-            gauge = EnergyGaugeWidget(metric, value)
-            self.gaugeLayout.addWidget(gauge, row, col)
-            col += 1
-            if col >= 3:
-                col = 0
-                row += 1
+        for metric, value in energy_dictionary.items():
+            label = QLabel(f"{metric}: {value:.2f}")
+            self.resultsLayout.addWidget(label)
 
-def run_json(root_directory, glider_info, data_dict):
+def energy_json(root_directory, glider_info, data_dict):
 
     ''' 
     Save the energy evaluation results to a JSON file.
@@ -788,10 +716,10 @@ def run_json(root_directory, glider_info, data_dict):
     print(f"All data saved to {output_file}")
 
 
-def run_energy_evaluation(root_directory, glider_info, dataframe):
+def energy_run(root_directory, glider_info, dataframe):
 
     ''' 
-    Create and return an instance of EnergyEvaluationTab with the provided parameters.
+    Create and return an instance of energy with the provided parameters.
     This widget is designed to be embedded as a tab in the main GUI.
     
     Arguments:
@@ -800,7 +728,7 @@ def run_energy_evaluation(root_directory, glider_info, dataframe):
     - dataframe (pd.DataFrame): The input dataframe containing power variables.
       
     Returns:
-    - EnergyEvaluationTab (EnergyEvaluationTab): The energy evaluation widget.
+    - energy (energy): The energy evaluation widget.
     '''
 
-    return EnergyEvaluationTab(root_directory, glider_info, dataframe)
+    return energy(root_directory, glider_info, dataframe)

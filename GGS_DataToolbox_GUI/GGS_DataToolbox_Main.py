@@ -39,8 +39,8 @@ def GGS_DataToolbox_Main(config_name=None):
     ascii_directory = os.path.join(current_directory, 'DBD_Files', 'ProcessedAscii')
     os.makedirs(ascii_directory, exist_ok=True)
 
-    config = GGS_config_import(config_name)
-    root_directory = GGS_config_process(config, path="default")
+    config = config_import(config_name)
+    root_directory = config_process(config, path="default")
     glider_config = config['GLIDER']
     glider_info = (glider_config.get('glider_unit'), glider_config.get('glider_version'), glider_config.get('glider_type'))
     sensor_config = config['SENSORS']
@@ -53,41 +53,39 @@ def GGS_DataToolbox_Main(config_name=None):
     if 'DECOMPRESSION' in config:
         decompression_config = config['DECOMPRESSION']
         if decompression_config.get('run_decompression'):
-            run_file_decompression()
+            decompressor_run()
     if 'CONVERSION' in config:
         conversion_config = config['CONVERSION']
         if conversion_config.get('run_conversion'):
-            run_ascii_converter()
+            converter_run()
 
     dataframe = None
     if 'DATA' in config:
         data_config = config['DATA']
         if data_config.get('run_dataframe'):
             input_directory = os.path.join(current_directory, 'DBD_Files', 'ProcessedAscii')
-            dataframe = run_dataframe(input_directory, sensor_list)
+            dataframe = glider_dataframe_run(input_directory, sensor_list)
         if data_config.get('run_data_filter') and dataframe is not None:
-            dataframe = run_data_filter(dataframe)
+            dataframe = datafilter_run(dataframe)
         if data_config.get('run_data_sorter'):
-            run_data_sorter(root_directory, glider_info)
+            datasorter_run(root_directory, glider_info)
         if data_config.get('run_logfile_search'):
-            run_logfile_search(root_directory)
+            logsearch_run(root_directory)
 
     if 'PRODUCTS' in config:
         product_config = config['PRODUCTS']
         if product_config.get('run_plot') and dataframe is not None:
-            run_plot(dataframe)
+            plot_run(dataframe)
         if product_config.get('run_excel') and dataframe is not None:
-            run_excel(root_directory, glider_info, dataframe)
+            excel_run(root_directory, glider_info, dataframe)
         if product_config.get('run_energy_evaluation') and dataframe is not None:
-            run_energy_evaluation(root_directory, glider_info, dataframe)
+            energy_run(root_directory, glider_info, dataframe)
 
     if 'ADVANCED' in config:
         advanced_config = config['ADVANCED']
         if advanced_config.get('run_data_cleanup'):
-            directories_to_clean = define_directories_to_clean()
-            run_data_cleanup(directories_to_clean)
+            directories_to_clean = cleanup_define_directories()
+            cleanup_run(directories_to_clean)
 
     return dataframe, root_directory
 
-if __name__ == "__main__":
-    GGS_DataToolbox_Main(config_name="config")
