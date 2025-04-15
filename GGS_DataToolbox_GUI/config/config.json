@@ -5,9 +5,7 @@
         "glider_type": ""
     },
     "SENSORS": {
-        "sensor_list": [
-            "m_depth"
-        ]
+        "sensor_list": []
     },
     "DECOMPRESSION": {
         "run_decompression": false
