@@ -119,7 +119,7 @@ class GGS_DataToolbox_GUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Glider Guidance System: Data Toolbox")
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "XXX_GUI_Icon.png")
+        icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "XXX_GUI_Icon.png"))
         self.setWindowIcon(QIcon(icon_path))
         self.resize(900, 700)
         self.script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -185,7 +185,7 @@ class GGS_DataToolbox_GUI(QMainWindow):
         sensors_group = QGroupBox("Sensors")
         sensor_layout = QVBoxLayout()
         self.sensor_list = QTextEdit()
-        self.sensor_list.setToolTip("Enter sensor list as a JSON array, e.g. [\"sensor1\", \"sensor2\"]")
+        self.sensor_list.setToolTip("Enter sensor list separated by commas, example: m_depth, sci_water_temp, sci_water_cond")
         sensor_layout.addWidget(QLabel("Sensor List:"))
         sensor_layout.addWidget(self.sensor_list)
         sensors_group.setLayout(sensor_layout)
@@ -257,17 +257,18 @@ class GGS_DataToolbox_GUI(QMainWindow):
         if os.path.exists(config_path):
             with open(config_path, "r") as f:
                 config = json.load(f)
-            self.glider_unit.setText(config["GLIDER"].get("glider_unit", ""))
-            self.glider_version.setText(config["GLIDER"].get("glider_version", ""))
-            self.glider_type.setText(config["GLIDER"].get("glider_type", ""))
-            self.sensor_list.setText(json.dumps(config["SENSORS"].get("sensor_list", [])))
+                self.glider_unit.setText(config["GLIDER"].get("glider_unit", ""))
+                self.glider_version.setText(config["GLIDER"].get("glider_version", ""))
+                self.glider_type.setText(config["GLIDER"].get("glider_type", ""))
+                sensor_list = config["SENSORS"].get("sensor_list", [])
+                self.sensor_list.setText(", ".join(sensor_list))
             for option, (section, key) in self.config_map.items():
                 if section in config and key in config[section]:
                     self.options[option].setChecked(config[section][key])
             self.statusBar.showMessage("Configuration loaded", 3000)
 
     def GUI_config_save(self):
-
+        
         ''' 
         Save current configuration to JSON file.
         
@@ -277,15 +278,15 @@ class GGS_DataToolbox_GUI(QMainWindow):
         Returns:
         - None
         '''
-
+        
         sensor_text = self.sensor_list.toPlainText().strip()
         if sensor_text == "":
             sensor_list_value = []
         else:
             try:
-                sensor_list_value = json.loads(sensor_text)
+                sensor_list_value = [sensor.strip() for sensor in sensor_text.split(",")]
             except Exception as e:
-                print(f"Error decoding sensor_list: {e}")
+                print(f"Error processing sensor_list: {e}")
                 sensor_list_value = []
         config = {
             "GLIDER": {

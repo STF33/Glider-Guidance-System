@@ -244,17 +244,21 @@ def excel_run(root_directory, glider_info, data_frame):
     
     glider_unit, glider_version, glider_type = glider_info
     output_file = os.path.join(root_directory, f"{glider_unit}-{glider_version}-{glider_type}_DataOutput.xlsx")
-    writer = pd.ExcelWriter(output_file, engine='openpyxl')
-    data_frame.to_excel(writer, index=False)
-    writer.close()
     
-    workbook = load_workbook(output_file)
-    worksheet = workbook.active
-    for col in worksheet.columns:
-        worksheet.column_dimensions[col[0].column_letter].width = 20
-    workbook.save(output_file)
-    
-    print(f"All data saved to {output_file}")
+    try:
+        writer = pd.ExcelWriter(output_file, engine='openpyxl')
+        data_frame.to_excel(writer, index=False)
+        writer.close()
+        workbook = load_workbook(output_file)
+        worksheet = workbook.active
+        for col in worksheet.columns:
+            worksheet.column_dimensions[col[0].column_letter].width = 20
+        workbook.save(output_file)
+        print(f"All data saved to {output_file}")
+    except PermissionError:
+        print(f"Error: The file {output_file} is open or cannot be accessed. Please close the file and try again.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 # =========================
 # DATA SORTING
@@ -600,7 +604,7 @@ class energy(QWidget):
         control_layout.addWidget(self.type_label)
         
         self.comboBox = QComboBox()
-        self.comboBox.addItems(["Slocum G3s (.dbd)", "Slocum G3s (.sbd)", "Slocum Sentinel (.dbd)", "Slocum Sentinel (.sbd)"])
+        self.comboBox.addItems(["Slocum G3s (.dbd)", "Slocum Sentinel (.dbd)", "Slocum (basic)"])
         control_layout.addWidget(self.comboBox)
         
         self.runButton = QPushButton("Run Energy Evaluation")
@@ -678,6 +682,27 @@ class energy(QWidget):
                 'Average BMS3 Pack0 Current': avg_bms3_pack0,
                 'Average BMS3 Pack1 Current': avg_bms3_pack1,
             }
+        
+        elif glider_type == "Slocum (basic)":
+            required_columns = ['m_coulomb_amphr_total', 'time']
+            if not all(col in self.dataframe.columns for col in required_columns):
+                QMessageBox.warning(self, "Missing Data", "Required columns are missing in the dataframe for Slocum Sentinel.")
+                return
+            df = self.dataframe.copy()
+            df['time'] = pd.to_datetime(df['time'])
+            df.set_index('time', inplace=True)
+            
+            min_timestamp = df.index.min()
+            max_timestamp = df.index.max()
+            min_coulomb_amphr_total = df['m_coulomb_amphr_total'].min()
+            max_coulomb_amphr_total = df['m_coulomb_amphr_total'].max()
+            delta_amphr_total = max_coulomb_amphr_total - min_coulomb_amphr_total
+            delta_datetime = (max_timestamp - min_timestamp).days
+            amphr_per_day = delta_amphr_total / delta_datetime if delta_datetime != 0 else 0
+            energy_dictionary = {
+                'amphr_per_day': amphr_per_day
+            }
+
         else:
             QMessageBox.warning(self, "Unknown Glider Type", "The selected glider type is not recognized.")
             return

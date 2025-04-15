@@ -204,4 +204,4 @@ def create_mission(config_name="unknown"):
     print(f"The mission files have been saved to: '{os.path.join(os.path.expanduser('~'), 'Downloads', config_name)}'")
 
 if __name__ == "__main__":
-    create_mission(config_name="g3s-field-lowpower")
+    create_mission(config_name="unit1000-sandiego-recovery")
